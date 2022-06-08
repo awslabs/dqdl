@@ -1,0 +1,2 @@
+grammar DataQualityDefinitionLanguage;
+r : 'rules { }' ;
