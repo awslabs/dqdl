@@ -1,2 +1,3 @@
 grammar DataQualityDefinitionLanguage;
-r : 'rules { }' ;
+r : 'rules { dqRule+ }' ;
+dqRule : 'IsComplete' | 'IsUnique' | 'HasRowCount' ;
