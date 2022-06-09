@@ -3,3 +3,7 @@ gen
 .antlr/
 *.iml
 *.tokens
+*.iml
+
+antlr-grammar
+antlr-generated-src
