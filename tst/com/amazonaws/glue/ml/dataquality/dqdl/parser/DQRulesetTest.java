@@ -14,6 +14,7 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleset;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DQRulesetTest {
 
@@ -21,9 +22,11 @@ public class DQRulesetTest {
 
     @Test
     public void test() {
-        String dqdl = "rules { IsComplete, IsUnique }";
+        String dqdl = "rules { IsComplete \"col_1\", IsUnique \"col_2\", HasRowCount 100 }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
-        assertEquals(2, dqRuleset.getRules().size());
+        assertEquals(3, dqRuleset.getRules().size());
+        assertTrue(dqRuleset.getRules().get(2).getExpectedRowCount().isPresent());
+        assertEquals(100, dqRuleset.getRules().get(2).getExpectedRowCount().get());
     }
 }
