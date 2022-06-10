@@ -4,10 +4,23 @@ rules : RULES_SECTION_START LCURL dqRules RCURL ;
 
 dqRules: dqRule (COMMA dqRule)* ;
 
-dqRule : 'IsComplete' | 'IsUnique' | 'HasRowCount' ;
+dqRule : columnRuleType COLUMN_NAME
+       | columnRuleType COLUMN_NAME
+       | datasetRuleType INT;
+
+columnRuleType : 'IsComplete'
+               | 'IsUnique'
+               ;
+
+datasetRuleType: 'HasRowCount';
 
 RULES_SECTION_START : 'rules' ;
 COMMA : ',' ;
+QUOTE : '"';
 LCURL : '{' ;
 RCURL : '}' ;
-WS: [ \t]+ -> skip ;
+
+COLUMN_NAME : QUOTE [a-zA-Z0-9_]+ QUOTE ;
+INT : [0-9]+ ;
+
+WS: [ \t\n]+ -> skip ;
