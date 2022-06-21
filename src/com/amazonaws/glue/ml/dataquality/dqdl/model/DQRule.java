@@ -13,22 +13,18 @@ package com.amazonaws.glue.ml.dataquality.dqdl.model;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.Optional;
+import java.util.List;
 
 @AllArgsConstructor
 @Getter
 public class DQRule {
-    private final String ruleType;
-    private final Optional<String> target;
-    private final Optional<Integer> expectedRowCount;
+    private final List<DQConstraint> constraints;
+    private final DQConstraintOperator operator;
 
     @Override
     public String toString() {
-        return "DQRule{" +
-            "ruleType='" + ruleType + '\'' + "," +
-            (target.map(s -> ("target='" + s + '\'' + ",")).orElse("")) +
-            (expectedRowCount.map(s -> ("expectedRowCount='" + s + '\'' + ",")).orElse("")) +
-            '}';
+        StringBuilder sb = new StringBuilder();
+        constraints.forEach(constraint -> sb.append(constraint.toString()).append("\n"));
+        return "DQRule {" + "\n" + sb.toString() + "}";
     }
 }
-

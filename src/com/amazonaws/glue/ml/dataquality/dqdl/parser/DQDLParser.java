@@ -12,6 +12,8 @@ package com.amazonaws.glue.ml.dataquality.dqdl.parser;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageLexer;
 import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageParser;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.DQConstraint;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.DQConstraintOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleset;
 import lombok.NoArgsConstructor;
@@ -20,7 +22,11 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenStream;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -31,21 +37,54 @@ public class DQDLParser {
         TokenStream tokens = new CommonTokenStream(new DataQualityDefinitionLanguageLexer(input));
         DataQualityDefinitionLanguageParser parser = new DataQualityDefinitionLanguageParser(tokens);
         List<DQRule> dqRules = parser.rules().dqRules().dqRule().stream().map(dqRuleContext -> {
-            if (dqRuleContext.COLUMN_NAME() != null) {
+            if (dqRuleContext.AND().size() > 0) {
                 return new DQRule(
-                    dqRuleContext.columnRuleType().getText(),
-                    Optional.of(dqRuleContext.COLUMN_NAME().getText()),
-                    Optional.empty()
+                    dqRuleContext.constraint().stream().map(this::getDQConstraint).collect(Collectors.toList()),
+                    DQConstraintOperator.AND
                 );
-            } else if (dqRuleContext.INT() != null) {
+            } else if (dqRuleContext.OR().size() > 0) {
                 return new DQRule(
-                    dqRuleContext.datasetRuleType().getText(),
-                    Optional.empty(),
-                    Optional.of(Integer.parseInt(dqRuleContext.INT().getText()))
+                    dqRuleContext.constraint().stream().map(this::getDQConstraint).collect(Collectors.toList()),
+                    DQConstraintOperator.OR
+                );
+            } else if (dqRuleContext.constraint(0) != null) {
+                return new DQRule(
+                    Collections.singletonList(getDQConstraint(dqRuleContext.constraint(0))),
+                    DQConstraintOperator.AND
                 );
             }
-            return new DQRule(dqRuleContext.getText(), Optional.empty(), Optional.empty());
-        }).collect(Collectors.toList());
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+
         return new DQRuleset(dqRules);
+    }
+
+    private DQConstraint getDQConstraint(DataQualityDefinitionLanguageParser.ConstraintContext constraintContext) {
+        Map<String, String> parameters = new HashMap<>();
+        if (constraintContext.rowCountConstraint() != null) {
+            String thresholdExpression = constraintContext.rowCountConstraint().numericThresholdExpression().getText();
+            return new DQConstraint("RowCount", parameters, Optional.of(thresholdExpression));
+        } else if (constraintContext.isCompleteConstraint() != null) {
+            parameters.put("target-column", constraintContext.isCompleteConstraint().columnName().getText());
+            return new DQConstraint("IsComplete", parameters, Optional.empty());
+        } else if (constraintContext.isUniqueConstraint() != null) {
+            parameters.put("target-column", constraintContext.isUniqueConstraint().columnName().getText());
+            return new DQConstraint("IsUnique", parameters, Optional.empty());
+        } else if (constraintContext.columnHasDataTypeConstraint() != null) {
+            parameters.put("target-column", constraintContext.columnHasDataTypeConstraint().columnName().getText());
+            parameters.put("expected-type", constraintContext.columnHasDataTypeConstraint().columnType().getText());
+            return new DQConstraint("ColumnHasDataType", parameters, Optional.empty());
+        } else if (constraintContext.isPrimaryKeyConstraint() != null) {
+            parameters.put("target-column", constraintContext.isPrimaryKeyConstraint().columnName().getText());
+            return new DQConstraint("IsPrimaryKey", parameters, Optional.empty());
+        } else if (constraintContext.columnValuesConstraint() != null) {
+            parameters.put("target-column", constraintContext.columnValuesConstraint().columnName().getText());
+            String thresholdExpression = constraintContext.columnValuesConstraint().dateThresholdExpression() != null
+                ? constraintContext.columnValuesConstraint().dateThresholdExpression().getText()
+                : constraintContext.columnValuesConstraint().numericThresholdExpression().getText();
+            return new DQConstraint("IsPrimaryKey", parameters, Optional.of(thresholdExpression));
+        }
+
+        return null;
     }
 }
