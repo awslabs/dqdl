@@ -61,19 +61,49 @@ public class DQDLParser {
 
     private DQConstraint getDQConstraint(DataQualityDefinitionLanguageParser.ConstraintContext constraintContext) {
         Map<String, String> parameters = new HashMap<>();
-        if (constraintContext.rowCountConstraint() != null) {
-            String thresholdExpression = constraintContext.rowCountConstraint().numericThresholdExpression().getText();
+
+        if (constraintContext.jobStatusConstraint() != null) {
+            String thresholdExpression =
+                constraintContext.jobStatusConstraint().jobStatusExpression().getText();
+            return new DQConstraint("JobStatus", parameters, Optional.of(thresholdExpression));
+        } else if (constraintContext.jobDurationConstraint() != null) {
+            String thresholdExpression =
+                constraintContext.jobDurationConstraint().numericThresholdExpression().getText();
+            return new DQConstraint("JobDuration", parameters, Optional.of(thresholdExpression));
+        } else if (constraintContext.rowCountConstraint() != null) {
+            String thresholdExpression =
+                constraintContext.rowCountConstraint().numericThresholdExpression().getText();
             return new DQConstraint("RowCount", parameters, Optional.of(thresholdExpression));
+        } else if (constraintContext.fileCountConstraint() != null) {
+            String thresholdExpression =
+                constraintContext.fileCountConstraint().numericThresholdExpression().getText();
+            return new DQConstraint("FileCount", parameters, Optional.of(thresholdExpression));
         } else if (constraintContext.isCompleteConstraint() != null) {
             parameters.put("target-column", constraintContext.isCompleteConstraint().columnName().getText());
             return new DQConstraint("IsComplete", parameters, Optional.empty());
-        } else if (constraintContext.isUniqueConstraint() != null) {
-            parameters.put("target-column", constraintContext.isUniqueConstraint().columnName().getText());
-            return new DQConstraint("IsUnique", parameters, Optional.empty());
         } else if (constraintContext.columnHasDataTypeConstraint() != null) {
             parameters.put("target-column", constraintContext.columnHasDataTypeConstraint().columnName().getText());
             parameters.put("expected-type", constraintContext.columnHasDataTypeConstraint().columnType().getText());
             return new DQConstraint("ColumnHasDataType", parameters, Optional.empty());
+        } else if (constraintContext.columnNamesMatchPatternConstraint() != null) {
+            parameters.put("pattern", constraintContext.columnNamesMatchPatternConstraint().REGEX().getText());
+            return new DQConstraint("ColumnNamesMatchPattern", parameters, Optional.empty());
+        } else if (constraintContext.columnExistsConstraint() != null) {
+            parameters.put("target-column", constraintContext.columnExistsConstraint().columnName().getText());
+            return new DQConstraint("ColumnExists", parameters, Optional.empty());
+        } else if (constraintContext.datasetColumnCountConstraint() != null) {
+            String thresholdExpression =
+                constraintContext.datasetColumnCountConstraint().numericThresholdExpression().getText();
+            return new DQConstraint("DatasetColumnCount", parameters, Optional.of(thresholdExpression));
+        } else if (constraintContext.columnCorrelationConstraint() != null) {
+            String thresholdExpression =
+                constraintContext.columnCorrelationConstraint().percentageThresholdExpression().getText();
+            parameters.put("first-column", constraintContext.columnCorrelationConstraint().columnName(0).getText());
+            parameters.put("second-column", constraintContext.columnCorrelationConstraint().columnName(1).getText());
+            return new DQConstraint("ColumnCorrelation", parameters, Optional.of(thresholdExpression));
+        } else if (constraintContext.isUniqueConstraint() != null) {
+            parameters.put("target-column", constraintContext.isUniqueConstraint().columnName().getText());
+            return new DQConstraint("IsUnique", parameters, Optional.empty());
         } else if (constraintContext.isPrimaryKeyConstraint() != null) {
             parameters.put("target-column", constraintContext.isPrimaryKeyConstraint().columnName().getText());
             return new DQConstraint("IsPrimaryKey", parameters, Optional.empty());
@@ -82,7 +112,7 @@ public class DQDLParser {
             String thresholdExpression = constraintContext.columnValuesConstraint().dateThresholdExpression() != null
                 ? constraintContext.columnValuesConstraint().dateThresholdExpression().getText()
                 : constraintContext.columnValuesConstraint().numericThresholdExpression().getText();
-            return new DQConstraint("IsPrimaryKey", parameters, Optional.of(thresholdExpression));
+            return new DQConstraint("ColumnValues", parameters, Optional.of(thresholdExpression));
         }
 
         return null;
