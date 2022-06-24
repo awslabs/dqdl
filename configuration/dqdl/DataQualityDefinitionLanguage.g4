@@ -16,6 +16,7 @@ AND : 'and'
 OR : 'or'
    | 'OR'
    ;
+
 BETWEEN : 'between' ;
 EQUAL_TO : '=' ;
 GREATER_THAN : '>' ;
@@ -24,48 +25,48 @@ LESS_THAN : '<' ;
 LESS_THAN_EQUAL_TO : '<=' ;
 IN: 'in' ;
 
-DIGIT: [0-9] ;
-DATE : QUOTE DIGIT DIGIT DIGIT DIGIT '-' DIGIT DIGIT '-' DIGIT DIGIT QUOTE;
-STRING : QUOTE [a-zA-Z0-9_-]+ QUOTE ;
-INT : DIGIT+ ;
-DECIMAL: ( '0.' INT  | '1.0');
 WS: [ \t\n]+ -> skip ;
 
-REGEX: SINGLE_QUOTE .+? SINGLE_QUOTE ;
+
+DIGIT: [0-9] ;
+DATE : QUOTE DIGIT DIGIT DIGIT DIGIT '-' DIGIT DIGIT '-' DIGIT DIGIT QUOTE;
+INT : DIGIT+ ;
+DECIMAL: ( '0.' INT  | '1.0');
+IDENTIFIER: [a-zA-Z0-9]+ ;
+QUOTED_STRING : QUOTE ~('\r' | '\n' | '"')+ QUOTE ;
 
 // Data Structures
 intArray: LBRAC (INT|DIGIT) (COMMA (INT|DIGIT))* RBRAC ;
-stringArray: LBRAC STRING (COMMA STRING)* RBRAC ;
+quotedStringArray: LBRAC QUOTED_STRING (COMMA QUOTED_STRING)* RBRAC ;
 
 // Sections
-RULES_SECTION_START : 'rules' ;
+rulesSectionStart : 'rules' ;
 
 // Expressions
 dateNow: 'now()' ;
+
 dateExpression: DATE
               | dateNow
               | LPAREN dateNow ('-'|'+') (DIGIT|INT) RPAREN
               ;
+dateArray: LBRAC dateExpression (COMMA dateExpression)* RBRAC ;
 
-jobStatusExpression: EQUAL_TO STRING
-                   | IN stringArray
+
+jobStatusExpression: EQUAL_TO QUOTED_STRING
+                   | IN quotedStringArray
                    ;
 
-numericThresholdExpression: BETWEEN (DIGIT|INT) AND (DIGIT|INT) // TODO: Figure out why (DIGIT|INT) is needed
-                          | GREATER_THAN (DIGIT|INT)
-                          | GREATER_THAN_EQUAL_TO (DIGIT|INT)
-                          | LESS_THAN (DIGIT|INT)
-                          | LESS_THAN_EQUAL_TO (DIGIT|INT)
-                          | EQUAL_TO (DIGIT|INT)
-                          ;
+number: DIGIT
+      | INT
+      | DECIMAL;
 
-percentageThresholdExpression: BETWEEN DECIMAL AND DECIMAL
-                             | GREATER_THAN DECIMAL
-                             | GREATER_THAN_EQUAL_TO DECIMAL
-                             | LESS_THAN DECIMAL
-                             | LESS_THAN_EQUAL_TO DECIMAL
-                             | EQUAL_TO DECIMAL
-                             ;
+numericThresholdExpression: BETWEEN number AND number
+                          | GREATER_THAN number
+                          | GREATER_THAN_EQUAL_TO number
+                          | LESS_THAN number
+                          | LESS_THAN_EQUAL_TO number
+                          | EQUAL_TO number
+                          ;
 
 dateThresholdExpression: BETWEEN dateExpression AND dateExpression
                        | GREATER_THAN dateExpression
@@ -75,53 +76,29 @@ dateThresholdExpression: BETWEEN dateExpression AND dateExpression
                        | EQUAL_TO dateExpression
                        ;
 
-setExpression: IN intArray
-             | IN stringArray
+setExpression: IN dateArray
+             | IN intArray
+             | IN quotedStringArray
              ;
 
-// Parameters
-columnName: STRING ;
-columnType: STRING ;
 
-// Rule Types
-jobStatusConstraint: 'JobStatus' jobStatusExpression ;
-jobDurationConstraint: 'JobDuration' numericThresholdExpression ;
-rowCountConstraint: 'RowCount' numericThresholdExpression ;
-// dataSynchronizationConstraint
-fileCountConstraint: 'FileCount' numericThresholdExpression ;
-isCompleteConstraint: 'IsComplete' columnName ;
-columnHasDataTypeConstraint: 'ColumnHasDataType' columnName columnType ;
-columnNamesMatchPatternConstraint: 'ColumnNamesMatchPattern' REGEX ;
-columnExistsConstraint: 'ColumnExists' columnName ;
-datasetColumnCountConstraint: 'DatasetColumnCount' numericThresholdExpression ;
-columnCorrelationConstraint: 'ColumnCorrelation' columnName columnName percentageThresholdExpression ;
-isUniqueConstraint: 'IsUnique' columnName ;
-isPrimaryKeyConstraint: 'IsPrimaryKey' columnName ;
-columnValuesConstraint: 'ColumnValues' columnName (numericThresholdExpression|dateThresholdExpression|setExpression);
+ruleType: IDENTIFIER ;
+parameter: (QUOTED_STRING|INT|DIGIT) ;
+condition: jobStatusExpression
+         | numericThresholdExpression
+         | dateThresholdExpression
+         | setExpression
+         ;
 
-// Rule Definition
-constraint : jobStatusConstraint
-           | jobDurationConstraint
-           | rowCountConstraint
-           | fileCountConstraint
-           | isCompleteConstraint
-           | columnHasDataTypeConstraint
-           | columnNamesMatchPatternConstraint
-           | columnExistsConstraint
-           | datasetColumnCountConstraint
-           | columnCorrelationConstraint
-           | isUniqueConstraint
-           | isPrimaryKeyConstraint
-           | columnValuesConstraint
-           ;
+dqRule: ruleType parameter* condition?;
 
-dqRule: constraint
-      | '(' constraint ')' (AND '(' constraint ')')*
-      | '(' constraint ')' (OR '(' constraint ')')*
+topLevelRule: dqRule
+      | '(' dqRule ')' (AND '(' dqRule ')')*
+      | '(' dqRule ')' (OR '(' dqRule ')')*
       ;
 
 // Rules Definition
-dqRules: dqRule (COMMA dqRule)* ;
+dqRules: topLevelRule (COMMA topLevelRule)* ;
 
 // Top Level Document
-rules : RULES_SECTION_START LCURL dqRules RCURL ;
+rules : rulesSectionStart LCURL dqRules RCURL ;
