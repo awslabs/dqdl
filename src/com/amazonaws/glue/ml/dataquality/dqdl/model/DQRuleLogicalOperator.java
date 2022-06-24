@@ -10,7 +10,7 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
-public enum DQConstraintOperator {
+public enum DQRuleLogicalOperator {
     AND,
     OR
 }

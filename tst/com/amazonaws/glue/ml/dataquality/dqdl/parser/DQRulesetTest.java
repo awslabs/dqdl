@@ -19,13 +19,31 @@ public class DQRulesetTest {
     DQDLParser dqdlParser = new DQDLParser();
 
     @Test
+    public void test_isPrimaryCheck() {
+        String dqdl = "rules { IsPrimaryKey \"colA\" }";
+        DQRuleset dqRuleset = dqdlParser.parse(dqdl);
+        System.out.println(dqRuleset);
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("IsPrimaryKey", dqRuleset.getRules().get(0).getRuleType());
+    }
+
+    @Test
     public void test_jobStatusRuleWithEqualityCheck() {
         String dqdl = "rules { JobStatus = \"SUCCEEDED\" }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals(1, dqRuleset.getRules().get(0).getConstraints().size());
-        assertEquals("JobStatus", dqRuleset.getRules().get(0).getConstraints().get(0).getConstraintType());
+        assertEquals("JobStatus", dqRuleset.getRules().get(0).getRuleType());
+    }
+
+    @Test
+    public void test_isPrimaryCheckAndJobStatus() {
+        String dqdl = "rules { IsPrimaryKey \"colA\", JobStatus = \"READY\" }";
+        DQRuleset dqRuleset = dqdlParser.parse(dqdl);
+        System.out.println(dqRuleset);
+        assertEquals(2, dqRuleset.getRules().size());
+        assertEquals("IsPrimaryKey", dqRuleset.getRules().get(0).getRuleType());
+        assertEquals("JobStatus", dqRuleset.getRules().get(1).getRuleType());
     }
 
     @Test
@@ -34,8 +52,7 @@ public class DQRulesetTest {
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals(1, dqRuleset.getRules().get(0).getConstraints().size());
-        assertEquals("JobStatus", dqRuleset.getRules().get(0).getConstraints().get(0).getConstraintType());
+        assertEquals("JobStatus", dqRuleset.getRules().get(0).getRuleType());
     }
 
     @Test
@@ -44,8 +61,7 @@ public class DQRulesetTest {
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals(1, dqRuleset.getRules().get(0).getConstraints().size());
-        assertEquals("JobDuration", dqRuleset.getRules().get(0).getConstraints().get(0).getConstraintType());
+        assertEquals("JobDuration", dqRuleset.getRules().get(0).getRuleType());
     }
 
     @Test
@@ -54,8 +70,7 @@ public class DQRulesetTest {
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals(1, dqRuleset.getRules().get(0).getConstraints().size());
-        assertEquals("RowCount", dqRuleset.getRules().get(0).getConstraints().get(0).getConstraintType());
+        assertEquals("RowCount", dqRuleset.getRules().get(0).getRuleType());
     }
 
     @Test
@@ -64,38 +79,34 @@ public class DQRulesetTest {
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals(1, dqRuleset.getRules().get(0).getConstraints().size());
-        assertEquals("FileCount", dqRuleset.getRules().get(0).getConstraints().get(0).getConstraintType());
+        assertEquals("FileCount", dqRuleset.getRules().get(0).getRuleType());
     }
 
     @Test
-    public void test_isCompleteRule() {
-        String dqdl = "rules { (IsComplete \"col_1\") }";
+    public void test_completenessRule() {
+        String dqdl = "rules { (Completeness \"col_1\" between 0.5 and 0.8) }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals(1, dqRuleset.getRules().get(0).getConstraints().size());
-        assertEquals("IsComplete", dqRuleset.getRules().get(0).getConstraints().get(0).getConstraintType());
+        assertEquals("Completeness", dqRuleset.getRules().get(0).getRuleType());
     }
 
     @Test
     public void test_columnHasDataType() {
-        String dqdl = "rules { (ColumnHasDataType \"col_1\" \"String\") }";
+        String dqdl = "rules { (ColumnDataType \"col_1\" = \"String\") }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals(1, dqRuleset.getRules().get(0).getConstraints().size());
-        assertEquals("ColumnHasDataType", dqRuleset.getRules().get(0).getConstraints().get(0).getConstraintType());
+        assertEquals("ColumnDataType", dqRuleset.getRules().get(0).getRuleType());
     }
 
     @Test
     public void test_columnNamesMatchPatternRule() {
-        String dqdl = "rules { (ColumnNamesMatchPattern 'aws_.*_[a-zA-Z0-9]+') }";
+        String dqdl = "rules { (ColumnNamesMatchPattern \"aws_.*_[a-zA-Z0-9]+\") }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals(1, dqRuleset.getRules().get(0).getConstraints().size());
-        assertEquals("ColumnNamesMatchPattern", dqRuleset.getRules().get(0).getConstraints().get(0).getConstraintType());
+        assertEquals("ColumnNamesMatchPattern", dqRuleset.getRules().get(0).getRuleType());
     }
 
     @Test
@@ -104,18 +115,16 @@ public class DQRulesetTest {
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals(1, dqRuleset.getRules().get(0).getConstraints().size());
-        assertEquals("ColumnExists", dqRuleset.getRules().get(0).getConstraints().get(0).getConstraintType());
+        assertEquals("ColumnExists", dqRuleset.getRules().get(0).getRuleType());
     }
 
     @Test
     public void test_datasetColumnCountRule() {
-        String dqdl = "rules { DatasetColumnCount >= 100 }";
+        String dqdl = "rules { DatasetColumnsCount >= 100 }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals(1, dqRuleset.getRules().get(0).getConstraints().size());
-        assertEquals("DatasetColumnCount", dqRuleset.getRules().get(0).getConstraints().get(0).getConstraintType());
+        assertEquals("DatasetColumnsCount", dqRuleset.getRules().get(0).getRuleType());
     }
 
     @Test
@@ -124,18 +133,16 @@ public class DQRulesetTest {
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals(1, dqRuleset.getRules().get(0).getConstraints().size());
-        assertEquals("ColumnCorrelation", dqRuleset.getRules().get(0).getConstraints().get(0).getConstraintType());
+        assertEquals("ColumnCorrelation", dqRuleset.getRules().get(0).getRuleType());
     }
 
     @Test
     public void test_isUniqueRule() {
-        String dqdl = "rules { (IsUnique \"col_1\") }";
+        String dqdl = "rules { (Uniqueness \"col_1\" between 0.1 and 0.2) }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals(1, dqRuleset.getRules().get(0).getConstraints().size());
-        assertEquals("IsUnique", dqRuleset.getRules().get(0).getConstraints().get(0).getConstraintType());
+        assertEquals("Uniqueness", dqRuleset.getRules().get(0).getRuleType());
     }
 
     @Test
@@ -144,8 +151,7 @@ public class DQRulesetTest {
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals(1, dqRuleset.getRules().get(0).getConstraints().size());
-        assertEquals("IsPrimaryKey", dqRuleset.getRules().get(0).getConstraints().get(0).getConstraintType());
+        assertEquals("IsPrimaryKey", dqRuleset.getRules().get(0).getRuleType());
     }
 
     @Test
@@ -154,8 +160,7 @@ public class DQRulesetTest {
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals(1, dqRuleset.getRules().get(0).getConstraints().size());
-        assertEquals("ColumnValues", dqRuleset.getRules().get(0).getConstraints().get(0).getConstraintType());
+        assertEquals("ColumnValues", dqRuleset.getRules().get(0).getRuleType());
     }
 
     @Test
@@ -164,13 +169,17 @@ public class DQRulesetTest {
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals(1, dqRuleset.getRules().get(0).getConstraints().size());
-        assertEquals("ColumnValues", dqRuleset.getRules().get(0).getConstraints().get(0).getConstraintType());
+        assertEquals("ColumnValues", dqRuleset.getRules().get(0).getRuleType());
     }
 
     @Test
     public void test_multipleRules() {
-        String dqdl = "rules { IsComplete \"col_1\", (IsUnique \"col_2\") AND (IsComplete \"col_2\"), RowCount = 100 }";
+        String dqdl =
+            "rules {" +
+            "    Completeness \"col_1\" < 0.5, " +
+            "    (Uniqueness \"col_2\" between 0.2 and 0.4) AND (Completeness \"col_2\" > 0.7)," +
+            "    RowCount = 100" +
+            "}";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(3, dqRuleset.getRules().size());

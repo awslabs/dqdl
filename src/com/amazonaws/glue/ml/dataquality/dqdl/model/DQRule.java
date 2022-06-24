@@ -14,17 +14,36 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Map;
 
 @AllArgsConstructor
 @Getter
 public class DQRule {
-    private final List<DQConstraint> constraints;
-    private final DQConstraintOperator operator;
+    private final String ruleType;
+    private final Map<String, String> parameters;
+    private final String thresholdExpression;
+    private final DQRuleLogicalOperator operator;
+    private final List<DQRule> nestedRules;
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        constraints.forEach(constraint -> sb.append(constraint.toString()).append("\n"));
-        return "DQRule {" + "\n" + sb.toString() + "}";
+        sb.append(ruleType);
+        if (parameters != null && parameters.size() > 0) {
+            sb.append(" | ");
+            parameters.forEach((k, v) -> {
+                sb.append(String.format("%s = %s", k, v)).append(", ");
+            });
+        }
+        if (!"".equals(thresholdExpression)) {
+            sb.append(" | ").append(thresholdExpression);
+        }
+
+        if (nestedRules.size() > 0) {
+            sb.append("\n");
+            nestedRules.forEach(sb::append);
+        }
+
+        return sb.toString();
     }
 }
