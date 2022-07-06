@@ -20,7 +20,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_isPrimaryCheck() {
-        String dqdl = "rules { IsPrimaryKey \"colA\" }";
+        String dqdl = "Rules = { IsPrimaryKey \"colA\" }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
@@ -29,7 +29,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_jobStatusRuleWithEqualityCheck() {
-        String dqdl = "rules { JobStatus = \"SUCCEEDED\" }";
+        String dqdl = "Rules = { JobStatus = \"SUCCEEDED\" }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
@@ -38,7 +38,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_isPrimaryCheckAndJobStatus() {
-        String dqdl = "rules { IsPrimaryKey \"colA\", JobStatus = \"READY\" }";
+        String dqdl = "Rules = { IsPrimaryKey \"colA\", JobStatus = \"READY\" }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(2, dqRuleset.getRules().size());
@@ -48,7 +48,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_jobStatusRuleWithSetOfStatus() {
-        String dqdl = "rules { JobStatus in [\"SUCCEEDED\", \"READY\" ] }";
+        String dqdl = "Rules = { JobStatus in [\"SUCCEEDED\", \"READY\" ] }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
@@ -57,7 +57,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_jobDurationRule() {
-        String dqdl = "rules { JobDuration between 10 and 1000 }";
+        String dqdl = "Rules = { JobDuration between 10 and 1000 }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
@@ -66,7 +66,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_rowCountRule() {
-        String dqdl = "rules { RowCount = 100 }";
+        String dqdl = "Rules = { RowCount = 100 }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
@@ -75,7 +75,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_fileCountRule() {
-        String dqdl = "rules { FileCount between 10 and 100 }";
+        String dqdl = "Rules = { FileCount between 10 and 100 }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
@@ -84,7 +84,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_completenessRule() {
-        String dqdl = "rules { (Completeness \"col_1\" between 0.5 and 0.8) }";
+        String dqdl = "Rules = { (Completeness \"col_1\" between 0.5 and 0.8) }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
@@ -93,7 +93,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_columnHasDataType() {
-        String dqdl = "rules { (ColumnDataType \"col_1\" = \"String\") }";
+        String dqdl = "Rules = { (ColumnDataType \"col_1\" = \"String\") }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
@@ -102,7 +102,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_columnNamesMatchPatternRule() {
-        String dqdl = "rules { (ColumnNamesMatchPattern \"aws_.*_[a-zA-Z0-9]+\") }";
+        String dqdl = "Rules = { (ColumnNamesMatchPattern \"aws_.*_[a-zA-Z0-9]+\") }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
@@ -111,7 +111,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_columnExistsRule() {
-        String dqdl = "rules { (ColumnExists \"load_dt\") }";
+        String dqdl = "Rules = { (ColumnExists \"load_dt\") }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
@@ -120,7 +120,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_datasetColumnCountRule() {
-        String dqdl = "rules { DatasetColumnsCount >= 100 }";
+        String dqdl = "Rules = { DatasetColumnsCount >= 100 }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
@@ -129,7 +129,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_columnCorrelationRule() {
-        String dqdl = "rules { ColumnCorrelation \"col_1\" \"col_2\" between 0.4 and 0.8 }";
+        String dqdl = "Rules = { ColumnCorrelation \"col_1\" \"col_2\" between 0.4 and 0.8 }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
@@ -138,7 +138,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_isUniqueRule() {
-        String dqdl = "rules { (Uniqueness \"col_1\" between 0.1 and 0.2) }";
+        String dqdl = "Rules = { (Uniqueness \"col_1\" between 0.1 and 0.2) }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
@@ -147,7 +147,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_isPrimaryKey() {
-        String dqdl = "rules { (IsPrimaryKey \"col_1\") }";
+        String dqdl = "Rules = { (IsPrimaryKey \"col_1\") }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
@@ -156,7 +156,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_columnValues() {
-        String dqdl = "rules { ColumnValues \"col_1\" between \"2022-06-01\" and \"2022-06-30\" }";
+        String dqdl = "Rules = { ColumnValues \"col_1\" between \"2022-06-01\" and \"2022-06-30\" }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
@@ -165,7 +165,7 @@ public class DQRulesetTest {
 
     @Test
     public void test_dataFreshnessRuleBasedOnColumnValues() {
-        String dqdl = "rules { ColumnValues \"load_dt\" > (now() - 1) }";
+        String dqdl = "Rules = { ColumnValues \"load_dt\" > (now() - 1) }";
         DQRuleset dqRuleset = dqdlParser.parse(dqdl);
         System.out.println(dqRuleset);
         assertEquals(1, dqRuleset.getRules().size());
@@ -175,7 +175,7 @@ public class DQRulesetTest {
     @Test
     public void test_multipleRules() {
         String dqdl =
-            "rules {" +
+            "Rules = {" +
             "    Completeness \"col_1\" < 0.5, " +
             "    (Uniqueness \"col_2\" between 0.2 and 0.4) AND (Completeness \"col_2\" > 0.7)," +
             "    RowCount = 100" +
