@@ -40,7 +40,7 @@ intArray: LBRAC (INT|DIGIT) (COMMA (INT|DIGIT))* RBRAC ;
 quotedStringArray: LBRAC QUOTED_STRING (COMMA QUOTED_STRING)* RBRAC ;
 
 // Sections
-rulesSectionStart : 'rules' ;
+rulesSectionStart : 'Rules' ;
 
 // Expressions
 dateNow: 'now()' ;
@@ -101,4 +101,4 @@ topLevelRule: dqRule
 dqRules: topLevelRule (COMMA topLevelRule)* ;
 
 // Top Level Document
-rules : rulesSectionStart LCURL dqRules RCURL ;
+rules : rulesSectionStart EQUAL_TO LCURL dqRules RCURL ;
