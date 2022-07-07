@@ -138,7 +138,7 @@ public class DQRuleType {
         Collections.singletonList(
             new DQRuleParameter(
                 "String",
-                "TargetColumn1",
+                "TargetColumn",
                 "Name of column to check uniqueness of."
             )
         ),
