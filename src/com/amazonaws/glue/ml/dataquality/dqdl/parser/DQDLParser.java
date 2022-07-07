@@ -12,6 +12,7 @@ package com.amazonaws.glue.ml.dataquality.dqdl.parser;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageLexer;
 import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageParser;
+import com.amazonaws.glue.ml.dataquality.dqdl.exception.DataQualityRulesetNotValidException;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleLogicalOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleType;
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public class DQDLParser {
-    public DQRuleset parse(String dqdl) {
+    public DQRuleset parse(String dqdl) throws DataQualityRulesetNotValidException {
         CharStream input = CharStreams.fromString(dqdl);
         TokenStream tokens = new CommonTokenStream(new DataQualityDefinitionLanguageLexer(input));
         DataQualityDefinitionLanguageParser parser = new DataQualityDefinitionLanguageParser(tokens);
