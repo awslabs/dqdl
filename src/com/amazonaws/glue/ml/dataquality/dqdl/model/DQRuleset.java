@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Getter
@@ -22,11 +23,10 @@ public class DQRuleset {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Rules { ").append("\n");
-        rules.forEach(dqRule -> sb.append(dqRule.toString()).append("\n"));
-        sb.append("}");
-        return sb.toString();
+        return "Rules = {" + System.lineSeparator() +
+            rules.stream()
+                .map(i -> "    " + i)
+                .collect(Collectors.joining("," + System.lineSeparator())) +
+            System.lineSeparator() + "}";
     }
 }
-
