@@ -78,7 +78,7 @@ public class DQDLParser {
 
         Map<String, String> parameterMap = new HashMap<>();
         for (int i = 0; i < parameters.size(); i++) {
-            parameterMap.put(dqRuleType.getParameters().get(i).getName(), parameters.get(0));
+            parameterMap.put(dqRuleType.getParameters().get(i).getName(), parameters.get(i));
         }
 
         String condition = "";
