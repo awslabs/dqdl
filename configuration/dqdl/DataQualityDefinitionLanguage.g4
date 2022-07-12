@@ -17,7 +17,7 @@ OR : 'or'
    | 'OR'
    ;
 
-BETWEEN : 'between' ;
+BETWEEN : 'between' | 'BETWEEN' ;
 EQUAL_TO : '=' ;
 GREATER_THAN : '>' ;
 GREATER_THAN_EQUAL_TO : '>=' ;
