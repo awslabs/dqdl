@@ -12,7 +12,6 @@ package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -36,7 +35,7 @@ public class DQRule {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
-        if (ObjectUtils.isEmpty(nestedRules)) {
+        if (nestedRules == null || nestedRules.isEmpty()) {
             sb.append(ruleType);
 
             if (parameters != null) parameters.values().forEach(p -> sb.append(" ").append(p));
