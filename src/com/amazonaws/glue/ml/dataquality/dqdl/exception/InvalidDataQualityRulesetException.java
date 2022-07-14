@@ -1,5 +1,5 @@
 /*
- * DataQualityRulesetNotValidException.java
+ * InvalidDataQualityRulesetException.java
  *
  * Copyright (c) 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -10,8 +10,8 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.exception;
 
-public class DataQualityRulesetNotValidException extends Exception {
-    public DataQualityRulesetNotValidException(String message) {
+public class InvalidDataQualityRulesetException extends Exception {
+    public InvalidDataQualityRulesetException(String message) {
         super(message);
     }
 }
