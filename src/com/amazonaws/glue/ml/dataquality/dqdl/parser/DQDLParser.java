@@ -12,7 +12,7 @@ package com.amazonaws.glue.ml.dataquality.dqdl.parser;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageLexer;
 import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageParser;
-import com.amazonaws.glue.ml.dataquality.dqdl.exception.DataQualityRulesetNotValidException;
+import com.amazonaws.glue.ml.dataquality.dqdl.exception.InvalidDataQualityRulesetException;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleLogicalOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleType;
@@ -24,47 +24,63 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public class DQDLParser {
-    public DQRuleset parse(String dqdl) throws DataQualityRulesetNotValidException {
+    public DQRuleset parse(String dqdl) throws InvalidDataQualityRulesetException {
         CharStream input = CharStreams.fromString(dqdl);
-        TokenStream tokens = new CommonTokenStream(new DataQualityDefinitionLanguageLexer(input));
-        DataQualityDefinitionLanguageParser parser = new DataQualityDefinitionLanguageParser(tokens);
-        List<DQRule> dqRules = parser.rules().dqRules().topLevelRule().stream().map(topLevelRuleContext -> {
-            if (topLevelRuleContext.AND().size() > 0) {
-                List<DQRule> nestedRules =
-                    topLevelRuleContext.dqRule().stream().map(this::getDQRule).collect(Collectors.toList());
-                return new DQRule(
-                    "Composite", null, "", DQRuleLogicalOperator.AND, nestedRules
-                );
-            } else if (topLevelRuleContext.OR().size() > 0) {
-                List<DQRule> nestedRules =
-                    topLevelRuleContext.dqRule().stream().map(this::getDQRule).collect(Collectors.toList());
-                return new DQRule(
-                    "Composite", null, "", DQRuleLogicalOperator.OR, nestedRules
-                );
-            } else if (topLevelRuleContext.dqRule(0) != null) {
-                return getDQRule(topLevelRuleContext.dqRule(0));
-            }
+        DQDLErrorListener errorListener = new DQDLErrorListener();
 
-            return null;
-        }).filter(Objects::nonNull).collect(Collectors.toList());
+        DataQualityDefinitionLanguageLexer lexer = new DataQualityDefinitionLanguageLexer(input);
+        lexer.addErrorListener(errorListener);
+        TokenStream tokens = new CommonTokenStream(lexer);
+
+        DataQualityDefinitionLanguageParser parser = new DataQualityDefinitionLanguageParser(tokens);
+        parser.addErrorListener(errorListener);
+
+        List<DQRule> dqRules = new ArrayList<>();
+        for (DataQualityDefinitionLanguageParser.TopLevelRuleContext tlc : parser.rules().dqRules().topLevelRule()) {
+            if (tlc.AND().size() > 0) {
+                List<DQRule> nestedRules = new ArrayList<>();
+                for (DataQualityDefinitionLanguageParser.DqRuleContext rc : tlc.dqRule()) {
+                    DQRule dqRule = getDQRule(rc);
+                    nestedRules.add(dqRule);
+                }
+                dqRules.add(new DQRule("Composite", null, "", DQRuleLogicalOperator.AND, nestedRules));
+            } else if (tlc.OR().size() > 0) {
+                List<DQRule> nestedRules = new ArrayList<>();
+                for (DataQualityDefinitionLanguageParser.DqRuleContext rc : tlc.dqRule()) {
+                    DQRule dqRule = getDQRule(rc);
+                    nestedRules.add(dqRule);
+                }
+                dqRules.add(new DQRule("Composite", null, "", DQRuleLogicalOperator.OR, nestedRules));
+            } else if (tlc.dqRule(0) != null) {
+                dqRules.add(getDQRule(tlc.dqRule(0)));
+            } else {
+                throw new InvalidDataQualityRulesetException("Unable to parse the ruleset");
+            }
+        }
+
+        if (!errorListener.getErrorMessages().isEmpty()) {
+            String delimiter = "," + System.lineSeparator();
+            throw new InvalidDataQualityRulesetException(String.join(delimiter, errorListener.getErrorMessages()));
+        }
 
         return new DQRuleset(dqRules);
     }
 
-    private DQRule getDQRule(DataQualityDefinitionLanguageParser.DqRuleContext dqRuleContext) {
+    private DQRule getDQRule(DataQualityDefinitionLanguageParser.DqRuleContext dqRuleContext)
+        throws InvalidDataQualityRulesetException {
         String ruleType = dqRuleContext.ruleType().getText();
         if (!DQRuleType.getRuleTypeMap().containsKey(ruleType)) {
-            System.out.printf("Rule Type: %s is not valid%n", ruleType);
-            return null;
+            throw new InvalidDataQualityRulesetException(
+                String.format("Rule Type: %s is not valid", ruleType));
         }
 
         DQRuleType dqRuleType = DQRuleType.getRuleTypeMap().get(ruleType);
@@ -72,8 +88,8 @@ public class DQDLParser {
             dqRuleContext.parameter().stream().map(ParseTree::getText).collect(Collectors.toList());
 
         if (dqRuleType.getParameters().size() != parameters.size()) {
-            System.out.printf("Unexpected number of parameters for Rule Type: %s", ruleType);
-            return null;
+            throw new InvalidDataQualityRulesetException(
+                String.format("Unexpected number of parameters for Rule Type: %s", ruleType));
         }
 
         Map<String, String> parameterMap = new HashMap<>();
@@ -84,8 +100,8 @@ public class DQDLParser {
         String condition = "";
         if (!dqRuleType.getReturnType().equals("BOOLEAN")) {
             if (dqRuleContext.condition() == null) {
-                System.out.printf("No condition provided for rule with non boolean rule type: %s", ruleType);
-                return null;
+                throw new InvalidDataQualityRulesetException(
+                    String.format("No condition provided for rule with non boolean rule type: %s", ruleType));
             }
 
             condition = dqRuleContext.condition().getText();

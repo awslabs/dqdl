@@ -1,6 +1,16 @@
+/*
+ * DQRuleTest.java
+ *
+ * Copyright (c) 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * PROPRIETARY/CONFIDENTIAL
+ *
+ * Use is subject to license terms.
+ */
+
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
-import com.amazonaws.glue.ml.dataquality.dqdl.exception.DataQualityRulesetNotValidException;
+import com.amazonaws.glue.ml.dataquality.dqdl.exception.InvalidDataQualityRulesetException;
 import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLParser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,12 +37,12 @@ class DQRuleTest {
     @MethodSource("provideRawRules")
     void test_ruleParsingAndGenerating(String rule) {
         try {
-            DQRuleset dqRuleset = parser.parse(String.format("Rules = { %s }", rule));
+            DQRuleset dqRuleset = parser.parse(String.format("Rules = [ %s ]", rule));
             assertEquals(1, dqRuleset.getRules().size());
             DQRule dqRule = dqRuleset.getRules().get(0);
             String dqRuleAsString = dqRule.toString();
             assertEquals(rule, dqRuleAsString);
-        } catch (DataQualityRulesetNotValidException e) {
+        } catch (InvalidDataQualityRulesetException e) {
             fail(e.getMessage());
         }
     }
