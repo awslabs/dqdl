@@ -101,4 +101,4 @@ topLevelRule: dqRule
 dqRules: topLevelRule (COMMA topLevelRule)* ;
 
 // Top Level Document
-rules : rulesSectionStart EQUAL_TO LCURL dqRules RCURL ;
+rules : rulesSectionStart EQUAL_TO LBRAC dqRules RBRAC ;
