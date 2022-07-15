@@ -33,6 +33,8 @@ import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public class DQDLParser {
+    private static final String PARSING_ERROR_MESSAGE_PREFIX = "Parsing Error";
+
     public DQRuleset parse(String dqdl) throws InvalidDataQualityRulesetException {
         CharStream input = CharStreams.fromString(dqdl);
         DQDLErrorListener errorListener = new DQDLErrorListener();
@@ -45,7 +47,12 @@ public class DQDLParser {
         parser.addErrorListener(errorListener);
 
         List<DQRule> dqRules = new ArrayList<>();
-        for (DataQualityDefinitionLanguageParser.TopLevelRuleContext tlc : parser.rules().dqRules().topLevelRule()) {
+        DataQualityDefinitionLanguageParser.DqRulesContext rulesContext = parser.rules().dqRules();
+        if (rulesContext == null) {
+            throw new InvalidDataQualityRulesetException(generateExceptionMessage(errorListener));
+        }
+
+        for (DataQualityDefinitionLanguageParser.TopLevelRuleContext tlc : rulesContext.topLevelRule()) {
             if (tlc.AND().size() > 0) {
                 List<DQRule> nestedRules = new ArrayList<>();
                 for (DataQualityDefinitionLanguageParser.DqRuleContext rc : tlc.dqRule()) {
@@ -63,13 +70,12 @@ public class DQDLParser {
             } else if (tlc.dqRule(0) != null) {
                 dqRules.add(getDQRule(tlc.dqRule(0)));
             } else {
-                throw new InvalidDataQualityRulesetException("Unable to parse the ruleset");
+                throw new InvalidDataQualityRulesetException(generateExceptionMessage(errorListener));
             }
         }
 
         if (!errorListener.getErrorMessages().isEmpty()) {
-            String delimiter = "," + System.lineSeparator();
-            throw new InvalidDataQualityRulesetException(String.join(delimiter, errorListener.getErrorMessages()));
+            throw new InvalidDataQualityRulesetException(generateExceptionMessage(errorListener));
         }
 
         return new DQRuleset(dqRules);
@@ -114,5 +120,15 @@ public class DQDLParser {
             DQRuleLogicalOperator.AND,
             Collections.emptyList()
         );
+    }
+
+    private String generateExceptionMessage(DQDLErrorListener errorListener) {
+        String message = PARSING_ERROR_MESSAGE_PREFIX;
+        if (!errorListener.getErrorMessages().isEmpty()) {
+            String delimiter = ", ";
+            message += ": " + String.join(delimiter, errorListener.getErrorMessages());
+        }
+
+        return message;
     }
 }
