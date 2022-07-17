@@ -103,6 +103,24 @@ class DQRulesetTest {
     }
 
     @Test
+    void test_columnHasDataTypeWithStringSetEquality() {
+        String dqdl = "Rules = [ (ColumnDataType \"col_1\" in [ \"String\", \"Boolean\" ]) ]";
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        System.out.println(dqRuleset);
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("ColumnDataType", dqRuleset.getRules().get(0).getRuleType());
+    }
+
+    @Test
+    void test_columnHasDataTypeWithNumberSetEquality() {
+        String dqdl = "Rules = [ (ColumnDataType \"col_1\" in [ 1, 2, 3 ]) ]";
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        System.out.println(dqRuleset);
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("ColumnDataType", dqRuleset.getRules().get(0).getRuleType());
+    }
+
+    @Test
     void test_columnNamesMatchPatternRule() {
         String dqdl = "Rules = [ (ColumnNamesMatchPattern \"aws_.*_[a-zA-Z0-9]+\") ]";
         DQRuleset dqRuleset = parseDQDL(dqdl);
