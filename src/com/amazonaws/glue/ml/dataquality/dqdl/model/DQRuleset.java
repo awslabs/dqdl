@@ -23,10 +23,10 @@ public class DQRuleset {
 
     @Override
     public String toString() {
-        return "Rules = {" + System.lineSeparator() +
+        return "Rules = [" + System.lineSeparator() +
             rules.stream()
                 .map(i -> "    " + i)
                 .collect(Collectors.joining("," + System.lineSeparator())) +
-            System.lineSeparator() + "}";
+            System.lineSeparator() + "]";
     }
 }
