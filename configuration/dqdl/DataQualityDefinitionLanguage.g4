@@ -31,9 +31,10 @@ WS: [ \t\n]+ -> skip ;
 DIGIT: [0-9] ;
 DATE : QUOTE DIGIT DIGIT DIGIT DIGIT '-' DIGIT DIGIT '-' DIGIT DIGIT QUOTE;
 INT : DIGIT+ ;
-DECIMAL: ( '0.' INT  | '1.0');
+DECIMAL: INT '.' INT;
 IDENTIFIER: [a-zA-Z0-9]+ ;
 QUOTED_STRING : QUOTE ~('\r' | '\n' | '"')+ QUOTE ;
+NEGATIVE: '-' ;
 
 // Data Structures
 intArray: LBRAC (INT|DIGIT) (COMMA (INT|DIGIT))* RBRAC ;
@@ -57,8 +58,11 @@ jobStatusExpression: EQUAL_TO QUOTED_STRING
                    ;
 
 number: DIGIT
+      | NEGATIVE DIGIT
       | INT
-      | DECIMAL;
+      | NEGATIVE INT
+      | DECIMAL
+      | NEGATIVE DECIMAL ;
 
 numericThresholdExpression: BETWEEN number AND number
                           | GREATER_THAN number
