@@ -73,6 +73,8 @@ class DQRuleTest {
             Arguments.of("Uniqueness \"col_1\" between -0.00000001 and 0.00000000000002"),
             Arguments.of("ColumnValues \"col_1\" between \"2022-06-01\" and \"2022-06-30\""),
             Arguments.of("ColumnValues \"load_dt\" > (now()-1)"),
+            Arguments.of("ColumnValues \"order-id\" in [1,2,3,4]"),
+            Arguments.of("ColumnValues \"order-id\" in [\"1\",\"2\",\"3\",\"4\"]"),
             Arguments.of("Sum \"col_A-B.C\" > 100.0"),
             Arguments.of("Sum \"col_A-B.C\" > -100.0"),
             Arguments.of("Mean \"col_A-B.CD\" between 10 and 20"),
