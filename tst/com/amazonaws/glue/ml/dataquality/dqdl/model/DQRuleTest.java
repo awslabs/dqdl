@@ -53,17 +53,32 @@ class DQRuleTest {
             Arguments.of("JobStatus = \"SUCCEEDED\""),
             Arguments.of("JobStatus in [\"SUCCEEDED\",\"READY\"]"),
             Arguments.of("JobDuration between 10 and 1000"),
+            Arguments.of("JobDuration between -10 and 1000"),
             Arguments.of("RowCount = 100"),
+            Arguments.of("RowCount = -100"),
             Arguments.of("FileCount between 10 and 100"),
+            Arguments.of("FileCount between -10000 and -1000"),
             Arguments.of("Completeness \"col_1\" between 0.5 and 0.8"),
+            Arguments.of("IsComplete \"col_1\""),
+            Arguments.of("Completeness \"col_1\" between -0.5 and -0.4"),
             Arguments.of("ColumnDataType \"col_1\" = \"String\""),
             Arguments.of("ColumnNamesMatchPattern \"aws_.*_[a-zA-Z0-9]+\""),
             Arguments.of("ColumnExists \"load_dt\""),
             Arguments.of("DatasetColumnsCount >= 100"),
+            Arguments.of("DatasetColumnsCount > -100.123456"),
             Arguments.of("ColumnCorrelation \"col_1\" \"col_2\" between 0.4 and 0.8"),
+            Arguments.of("ColumnCorrelation \"col_1\" \"col_2\" between -0.44444 and 0.888888"),
             Arguments.of("Uniqueness \"col_1\" between 0.1 and 0.2"),
+            Arguments.of("IsUnique \"col_1\""),
+            Arguments.of("Uniqueness \"col_1\" between -0.00000001 and 0.00000000000002"),
             Arguments.of("ColumnValues \"col_1\" between \"2022-06-01\" and \"2022-06-30\""),
-            Arguments.of("ColumnValues \"load_dt\" > (now()-1)")
+            Arguments.of("ColumnValues \"load_dt\" > (now()-1)"),
+            Arguments.of("Sum \"col_A-B.C\" > 100.0"),
+            Arguments.of("Sum \"col_A-B.C\" > -100.0"),
+            Arguments.of("Mean \"col_A-B.CD\" between 10 and 20"),
+            Arguments.of("Mean \"col_A-B.CD\" between -20 and -10"),
+            Arguments.of("StandardDeviation \"col_A-B.CD\" <= 10.0"),
+            Arguments.of("StandardDeviation \"col_A-B.CD\" <= -10000.0")
         );
     }
 

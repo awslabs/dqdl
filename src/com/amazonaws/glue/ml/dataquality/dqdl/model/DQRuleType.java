@@ -68,6 +68,19 @@ public class DQRuleType {
         "PERCENTAGE"
     );
 
+    private static final DQRuleType IS_COMPLETE_RULE_TYPE = new DQRuleType(
+        "IsComplete",
+        "Check if all values in a given column are complete (non-null)",
+        Collections.singletonList(
+            new DQRuleParameter(
+                "String",
+                "TargetColumn",
+                "Name of column to check completeness of."
+            )
+        ),
+        "BOOLEAN"
+    );
+
     private static final DQRuleType COLUMN_DATA_TYPE_RULE_TYPE = new DQRuleType(
         "ColumnDataType",
         "Check the data type of the given column",
@@ -145,6 +158,58 @@ public class DQRuleType {
         "NUMBER"
     );
 
+    private static final DQRuleType IS_UNIQUE_RULE_TYPE = new DQRuleType(
+        "IsUnique",
+        "Check if all values in a given column are unique",
+        Collections.singletonList(
+            new DQRuleParameter(
+                "String",
+                "TargetColumn",
+                "Name of column to check uniqueness of."
+            )
+        ),
+        "BOOLEAN"
+    );
+
+    private static final DQRuleType COLUMN_MEAN_RULE_TYPE = new DQRuleType(
+        "Mean",
+        "Check the mean (average) of all values in a given column",
+        Collections.singletonList(
+            new DQRuleParameter(
+                "String",
+                "TargetColumn",
+                "Name of column to check mean of."
+            )
+        ),
+        "NUMBER"
+    );
+
+    private static final DQRuleType COLUMN_SUM_RULE_TYPE = new DQRuleType(
+        "Sum",
+        "Check the sum of all values in a given column",
+        Collections.singletonList(
+            new DQRuleParameter(
+                "String",
+                "TargetColumn",
+                "Name of column to check sum of."
+            )
+        ),
+        "NUMBER"
+    );
+
+    private static final DQRuleType COLUMN_STD_DEV_RULE_TYPE = new DQRuleType(
+        "StandardDeviation",
+        "Check the standard deviation of all values in a given column",
+        Collections.singletonList(
+            new DQRuleParameter(
+                "String",
+                "TargetColumn",
+                "Name of column to check standard deviation of."
+            )
+        ),
+        "NUMBER"
+    );
+
     private static final DQRuleType IS_PRIMARY_KEY_RULE_TYPE = new DQRuleType(
         "IsPrimaryKey",
         "Check if a given column contains a primary key, by checking for uniqueness and completeness",
@@ -198,6 +263,9 @@ public class DQRuleType {
         RULE_TYPE_MAP.put(DATASET_COLUMN_COUNT_RULE_TYPE.getRuleTypeName(), DATASET_COLUMN_COUNT_RULE_TYPE);
         RULE_TYPE_MAP.put(COLUMN_CORRELATION_RULE_TYPE.getRuleTypeName(), COLUMN_CORRELATION_RULE_TYPE);
         RULE_TYPE_MAP.put(UNIQUENESS_RULE_TYPE.getRuleTypeName(), UNIQUENESS_RULE_TYPE);
+        RULE_TYPE_MAP.put(COLUMN_MEAN_RULE_TYPE.getRuleTypeName(), COLUMN_MEAN_RULE_TYPE);
+        RULE_TYPE_MAP.put(COLUMN_SUM_RULE_TYPE.getRuleTypeName(), COLUMN_SUM_RULE_TYPE);
+        RULE_TYPE_MAP.put(COLUMN_STD_DEV_RULE_TYPE.getRuleTypeName(), COLUMN_STD_DEV_RULE_TYPE);
         RULE_TYPE_MAP.put(IS_PRIMARY_KEY_RULE_TYPE.getRuleTypeName(), IS_PRIMARY_KEY_RULE_TYPE);
         RULE_TYPE_MAP.put(COLUMN_VALUES_RULE_TYPE.getRuleTypeName(), COLUMN_VALUES_RULE_TYPE);
         RULE_TYPE_MAP.put(CUSTOM_SQL_RULE_TYPE.getRuleTypeName(), CUSTOM_SQL_RULE_TYPE);
