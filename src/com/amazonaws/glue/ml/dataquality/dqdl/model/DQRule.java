@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -30,6 +31,16 @@ public class DQRule {
 
     private static final String KEYWORD_BETWEEN = "between";
     private static final String KEYWORD_AND = "and";
+
+    public DQRule(final String ruleType,
+                  final Map<String, String> parameters,
+                  final String thresholdExpression) {
+        this.ruleType = ruleType;
+        this.parameters = parameters;
+        this.thresholdExpression = thresholdExpression;
+        this.operator = DQRuleLogicalOperator.AND;
+        this.nestedRules = new ArrayList<>();
+    }
 
     @Override
     public String toString() {

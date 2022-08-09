@@ -24,7 +24,6 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenStream;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,13 +112,7 @@ public class DQDLParser {
             condition = dqRuleContext.condition().getText();
         }
 
-        return new DQRule(
-            dqRuleType.getRuleTypeName(),
-            parameterMap,
-            condition,
-            DQRuleLogicalOperator.AND,
-            Collections.emptyList()
-        );
+        return new DQRule(dqRuleType.getRuleTypeName(), parameterMap, condition);
     }
 
     private String generateExceptionMessage(DQDLErrorListener errorListener) {

@@ -89,10 +89,7 @@ class DQRuleTest {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("TargetColumn", "colA");
         String whitespaceThreshold = "     ";
-        DQRule dqRule = new DQRule(
-            "IsPrimaryKey", parameters, whitespaceThreshold,
-            DQRuleLogicalOperator.AND, Collections.emptyList()
-        );
+        DQRule dqRule = new DQRule("IsPrimaryKey", parameters, whitespaceThreshold);
         String dqRuleAsString = dqRule.toString();
         assertEquals("IsPrimaryKey \"colA\"", dqRuleAsString);
     }
@@ -102,10 +99,7 @@ class DQRuleTest {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("TargetColumn", "colA");
         String whitespaceThreshold = "\t\t";
-        DQRule dqRule = new DQRule(
-            "IsPrimaryKey", parameters, whitespaceThreshold,
-            DQRuleLogicalOperator.AND, Collections.emptyList()
-        );
+        DQRule dqRule = new DQRule("IsPrimaryKey", parameters, whitespaceThreshold);
         String dqRuleAsString = dqRule.toString();
         assertEquals("IsPrimaryKey \"colA\"", dqRuleAsString);
     }
@@ -115,10 +109,7 @@ class DQRuleTest {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("TargetColumn", "colA");
         String whitespaceThreshold = "\t\t  \t \t \n   \t";
-        DQRule dqRule = new DQRule(
-            "IsPrimaryKey", parameters, whitespaceThreshold,
-            DQRuleLogicalOperator.AND, Collections.emptyList()
-        );
+        DQRule dqRule = new DQRule("IsPrimaryKey", parameters, whitespaceThreshold);
         String dqRuleAsString = dqRule.toString();
         assertEquals("IsPrimaryKey \"colA\"", dqRuleAsString);
     }
@@ -127,10 +118,7 @@ class DQRuleTest {
     void test_nullParametersAreCorrectlyHandled() {
         Map<String, String> parameters = null;
         String threshold = "=100";
-        DQRule dqRule = new DQRule(
-            "JobDuration", parameters, threshold,
-            DQRuleLogicalOperator.AND, Collections.emptyList()
-        );
+        DQRule dqRule = new DQRule("JobDuration", parameters, threshold);
         String dqRuleAsString = dqRule.toString();
         assertEquals("JobDuration = 100", dqRuleAsString);
     }
@@ -140,10 +128,7 @@ class DQRuleTest {
         Map<String, String> parameters = null;
         String threshold = "=100";
         List<DQRule> nestedRules = null;
-        DQRule dqRule = new DQRule(
-            "JobDuration", parameters, threshold,
-            DQRuleLogicalOperator.AND, nestedRules
-        );
+        DQRule dqRule = new DQRule("JobDuration", parameters, threshold);
         String dqRuleAsString = dqRule.toString();
         assertEquals("JobDuration = 100", dqRuleAsString);
     }
@@ -152,11 +137,7 @@ class DQRuleTest {
     void test_uppercaseBetweenAndLowercaseAndProducesCorrectString() {
         Map<String, String> parameters = null;
         String threshold = "BETWEEN10and20";
-        List<DQRule> nestedRules = null;
-        DQRule dqRule = new DQRule(
-            "JobDuration", parameters, threshold,
-            DQRuleLogicalOperator.AND, nestedRules
-        );
+        DQRule dqRule = new DQRule("JobDuration", parameters, threshold);
         String dqRuleAsString = dqRule.toString();
         assertEquals("JobDuration between 10 and 20", dqRuleAsString);
     }
@@ -165,11 +146,7 @@ class DQRuleTest {
     void test_lowercaseBetweenAndUppercaseAndProducesCorrectString() {
         Map<String, String> parameters = null;
         String threshold = "between10AND20";
-        List<DQRule> nestedRules = null;
-        DQRule dqRule = new DQRule(
-            "JobDuration", parameters, threshold,
-            DQRuleLogicalOperator.AND, nestedRules
-        );
+        DQRule dqRule = new DQRule("JobDuration", parameters, threshold);
         String dqRuleAsString = dqRule.toString();
         assertEquals("JobDuration between 10 and 20", dqRuleAsString);
     }
