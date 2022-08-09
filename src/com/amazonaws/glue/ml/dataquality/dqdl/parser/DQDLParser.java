@@ -22,7 +22,6 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -90,8 +89,9 @@ public class DQDLParser {
         }
 
         DQRuleType dqRuleType = DQRuleType.getRuleTypeMap().get(ruleType);
-        List<String> parameters =
-            dqRuleContext.parameter().stream().map(ParseTree::getText).collect(Collectors.toList());
+        List<String> parameters = dqRuleContext.parameter().stream()
+            .map(p -> p.getText().replaceAll("\"", ""))
+            .collect(Collectors.toList());
 
         if (dqRuleType.getParameters().size() != parameters.size()) {
             throw new InvalidDataQualityRulesetException(

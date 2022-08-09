@@ -87,7 +87,7 @@ class DQRuleTest {
     @Test
     void test_toStringIgnoresSpacesOnlyThreshold() {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put("TargetColumn", "\"colA\"");
+        parameters.put("TargetColumn", "colA");
         String whitespaceThreshold = "     ";
         DQRule dqRule = new DQRule(
             "IsPrimaryKey", parameters, whitespaceThreshold,
@@ -100,7 +100,7 @@ class DQRuleTest {
     @Test
     void test_toStringIgnoresTabsOnlyThreshold() {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put("TargetColumn", "\"colA\"");
+        parameters.put("TargetColumn", "colA");
         String whitespaceThreshold = "\t\t";
         DQRule dqRule = new DQRule(
             "IsPrimaryKey", parameters, whitespaceThreshold,
@@ -113,7 +113,7 @@ class DQRuleTest {
     @Test
     void test_toStringIgnoresMixedWhitespaceThreshold() {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put("TargetColumn", "\"colA\"");
+        parameters.put("TargetColumn", "colA");
         String whitespaceThreshold = "\t\t  \t \t \n   \t";
         DQRule dqRule = new DQRule(
             "IsPrimaryKey", parameters, whitespaceThreshold,
