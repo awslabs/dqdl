@@ -38,7 +38,9 @@ public class DQRule {
         if (nestedRules == null || nestedRules.isEmpty()) {
             sb.append(ruleType);
 
-            if (parameters != null) parameters.values().forEach(p -> sb.append(" ").append(p));
+            if (parameters != null) {
+                parameters.values().forEach(p -> sb.append(" ").append("\"").append(p).append("\""));
+            }
 
             if (StringUtils.isNotBlank(thresholdExpression)) {
                 sb.append(" ");
