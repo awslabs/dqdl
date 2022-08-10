@@ -25,13 +25,14 @@ DATE:
 	QUOTE DIGIT DIGIT DIGIT DIGIT '-' DIGIT DIGIT '-' DIGIT DIGIT QUOTE;
 INT: DIGIT+;
 DECIMAL: INT '.' INT;
-IDENTIFIER: [a-zA-Z0-9]+;
 QUOTED_STRING: QUOTE (ESC | .)*? QUOTE;
 NEGATIVE: '-';
 
 LINE_COMMENT:
 	'//' .*? '\r'? '\n' -> skip; // Match "//" stuff '\n'
 COMMENT: '/*' .*? '*/' -> skip; // Match "/*" stuff "*/"
+
+IDENTIFIER: [a-zA-Z0-9]+;
 
 WS: [ \t\n]+ -> skip;
 
