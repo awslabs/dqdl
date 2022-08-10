@@ -70,4 +70,6 @@ topLevelRule:
 dqRules: topLevelRule (COMMA topLevelRule)*;
 
 // Top Level Document
-rules: rulesSectionStart EQUAL_TO LBRAC dqRules RBRAC;
+rules:
+	rulesSectionStart EQUAL_TO LBRAC dqRules RBRAC
+	| rulesSectionStart EQUAL_TO LBRAC RBRAC; // empty array
