@@ -210,6 +210,58 @@ public class DQRuleType {
         "NUMBER"
     );
 
+    private static final DQRuleType COLUMN_ENTROPY_RULE_TYPE = new DQRuleType(
+        "Entropy",
+        "Check the entropy of all values in a given column",
+        Collections.singletonList(
+            new DQRuleParameter(
+                "String",
+                "TargetColumn",
+                "Name of column to check entropy of."
+            )
+        ),
+        "NUMBER"
+    );
+
+    private static final DQRuleType DISTINCT_VALUES_COUNT_RULE_TYPE = new DQRuleType(
+        "DistinctValuesCount",
+        "Check the number of distinct values in a given column",
+        Collections.singletonList(
+            new DQRuleParameter(
+                "String",
+                "TargetColumn",
+                "Name of column to check distinct values count of."
+            )
+        ),
+        "NUMBER"
+    );
+
+    private static final DQRuleType UNIQUE_VALUE_RATIO_RULE_TYPE = new DQRuleType(
+        "UniqueValueRatio",
+        "Check the ratio of unique values in a given column",
+        Collections.singletonList(
+            new DQRuleParameter(
+                "String",
+                "TargetColumn",
+                "Name of column to check unique value ratio of."
+            )
+        ),
+        "NUMBER"
+    );
+
+    private static final DQRuleType COLUMN_LENGTH_RULE_TYPE = new DQRuleType(
+        "ColumnLength",
+        "Check the length of values of a given column",
+        Collections.singletonList(
+            new DQRuleParameter(
+                "String",
+                "TargetColumn",
+                "Name of column to check the length of the values of."
+            )
+        ),
+        "NUMBER"
+    );
+
     private static final DQRuleType IS_PRIMARY_KEY_RULE_TYPE = new DQRuleType(
         "IsPrimaryKey",
         "Check if a given column contains a primary key, by checking for uniqueness and completeness",
@@ -230,7 +282,7 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn",
-                "Name of column return the values of."
+                "Name of column to return the values of."
             )
         ),
         "STRING_ARRAY|NUMBER_ARRAY|DATE_ARRAY"
@@ -268,6 +320,10 @@ public class DQRuleType {
         RULE_TYPE_MAP.put(COLUMN_MEAN_RULE_TYPE.getRuleTypeName(), COLUMN_MEAN_RULE_TYPE);
         RULE_TYPE_MAP.put(COLUMN_SUM_RULE_TYPE.getRuleTypeName(), COLUMN_SUM_RULE_TYPE);
         RULE_TYPE_MAP.put(COLUMN_STD_DEV_RULE_TYPE.getRuleTypeName(), COLUMN_STD_DEV_RULE_TYPE);
+        RULE_TYPE_MAP.put(COLUMN_ENTROPY_RULE_TYPE.getRuleTypeName(), COLUMN_ENTROPY_RULE_TYPE);
+        RULE_TYPE_MAP.put(DISTINCT_VALUES_COUNT_RULE_TYPE.getRuleTypeName(), DISTINCT_VALUES_COUNT_RULE_TYPE);
+        RULE_TYPE_MAP.put(UNIQUE_VALUE_RATIO_RULE_TYPE.getRuleTypeName(), UNIQUE_VALUE_RATIO_RULE_TYPE);
+        RULE_TYPE_MAP.put(COLUMN_LENGTH_RULE_TYPE.getRuleTypeName(), COLUMN_LENGTH_RULE_TYPE);
         RULE_TYPE_MAP.put(IS_PRIMARY_KEY_RULE_TYPE.getRuleTypeName(), IS_PRIMARY_KEY_RULE_TYPE);
         RULE_TYPE_MAP.put(COLUMN_VALUES_RULE_TYPE.getRuleTypeName(), COLUMN_VALUES_RULE_TYPE);
         RULE_TYPE_MAP.put(CUSTOM_SQL_RULE_TYPE.getRuleTypeName(), CUSTOM_SQL_RULE_TYPE);

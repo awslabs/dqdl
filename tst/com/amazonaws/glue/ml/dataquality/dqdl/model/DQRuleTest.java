@@ -80,7 +80,15 @@ class DQRuleTest {
             Arguments.of("Mean \"col_A-B.CD\" between 10 and 20"),
             Arguments.of("Mean \"col_A-B.CD\" between -20 and -10"),
             Arguments.of("StandardDeviation \"col_A-B.CD\" <= 10.0"),
-            Arguments.of("StandardDeviation \"col_A-B.CD\" <= -10000.0")
+            Arguments.of("StandardDeviation \"col_A-B.CD\" <= -10000.0"),
+            Arguments.of("Entropy \"col_A-B.CD\" <= 10.0"),
+            Arguments.of("Entropy \"col_A-B.CD\" between 10 and 30"),
+            Arguments.of("DistinctValuesCount \"col_A-B.CD\" > 1000"),
+            Arguments.of("DistinctValuesCount \"col_A-B.CD\" between 10 and 30"),
+            Arguments.of("UniqueValueRatio \"col_A-B.CD\" < 0.5"),
+            Arguments.of("UniqueValueRatio \"col_A-B.CD\" between 0.1 and 0.5"),
+            Arguments.of("ColumnLength \"col_A-B.CD\" < 10"),
+            Arguments.of("ColumnLength \"col_A-B.CD\" >= 100")
         );
     }
 
