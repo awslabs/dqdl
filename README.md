@@ -1,11 +1,6 @@
-## My Project
+## AWS Glue Data Quality Definition Language
 
-TODO: Fill this README out!
-
-Be sure to:
-
-* Change the title in this README
-* Edit your repository description on GitHub
+This package contains the grammar in Antlr g4 format for the Data Quality Definition Language (DQDL).
 
 ## Security
 
@@ -14,4 +9,3 @@ See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more inform
 ## License
 
 This project is licensed under the Apache-2.0 License.
-
