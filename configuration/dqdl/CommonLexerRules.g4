@@ -1,5 +1,6 @@
 lexer grammar CommonLexerRules; // "lexer grammars for DQDL"
 
+COLON: ':';
 COMMA: ',';
 SINGLE_QUOTE: '\'';
 QUOTE: '"';
