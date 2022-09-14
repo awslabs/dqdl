@@ -42,7 +42,7 @@ public class DQDLParser {
         parser.addErrorListener(errorListener);
 
         DQDLParserListener listener = new DQDLParserListener(errorListener);
-        ParseTreeWalker.DEFAULT.walk(listener, parser.rules());
+        ParseTreeWalker.DEFAULT.walk(listener, parser.document());
 
         Either<List<String>, DQRuleset> dqRulesetEither = listener.getParsedRuleset();
 
