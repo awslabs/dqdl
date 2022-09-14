@@ -7,6 +7,8 @@ quotedStringArray:
 	LBRAC QUOTED_STRING (COMMA QUOTED_STRING)* RBRAC;
 
 // Sections
+metadataSectionStart: 'Metadata';
+sourcesSectionStart: 'Sources';
 rulesSectionStart: 'Rules';
 
 // Expressions
@@ -73,3 +75,14 @@ dqRules: topLevelRule (COMMA topLevelRule)*;
 rules:
 	rulesSectionStart EQUAL_TO LBRAC dqRules RBRAC
 	| rulesSectionStart EQUAL_TO LBRAC RBRAC; // empty array
+
+// This dictionary does not support nested dictionaries. Just strings and arrays.
+dictionary: LCURL pair (COMMA pair)* RCURL;
+pair: QUOTED_STRING COLON pairValue;
+pairValue: QUOTED_STRING | array;
+array: LBRAC QUOTED_STRING (COMMA QUOTED_STRING)* RBRAC;
+
+metadata: metadataSectionStart EQUAL_TO dictionary;
+sources: sourcesSectionStart EQUAL_TO dictionary;
+
+document: metadata? sources? rules;
