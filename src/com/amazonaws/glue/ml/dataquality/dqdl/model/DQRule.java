@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils.isBlank;
+
 @AllArgsConstructor
 @Getter
 public class DQRule {
@@ -81,19 +83,5 @@ public class DQRule {
         }
 
         return sb.toString();
-    }
-
-    // copied from StringUtils
-    private boolean isBlank(final CharSequence cs) {
-        if (cs == null || cs.length() == 0) {
-            return true;
-        }
-        int strLen = cs.length();
-        for (int i = 0; i < strLen; i++) {
-            if (!Character.isWhitespace(cs.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
     }
 }

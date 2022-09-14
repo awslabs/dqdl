@@ -1,3 +1,13 @@
+/*
+ * DQDLParserListener.java
+ *
+ * Copyright (c) 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * PROPRIETARY/CONFIDENTIAL
+ *
+ * Use is subject to license terms.
+ */
+
 package com.amazonaws.glue.ml.dataquality.dqdl.parser;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageBaseListener;
@@ -9,18 +19,87 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleset;
 import com.amazonaws.glue.ml.dataquality.dqdl.util.Either;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListener {
     private final DQDLErrorListener errorListener;
     private final List<String> errorMessages = new ArrayList<>();
+    private final Map<String, String> metadata = new HashMap<>();
+
+    private String primarySource;
+    private List<String> additionalSources;
     private final List<DQRule> dqRules = new ArrayList<>();
+
+    private static final String METADATA_VERSION_KEY = "Version";
+    private static final Set<String> ALLOWED_METADATA_KEYS;
+
+    private static final String PRIMARY_SOURCE_KEY = "Primary";
+    private static final String ADDITIONAL_SOURCES_KEY = "AdditionalSources";
+    private static final Set<String> ALLOWED_SOURCES_KEYS;
+
+    static {
+        ALLOWED_METADATA_KEYS = new HashSet<>();
+        ALLOWED_METADATA_KEYS.add(METADATA_VERSION_KEY);
+
+        ALLOWED_SOURCES_KEYS = new HashSet<>();
+        ALLOWED_SOURCES_KEYS.add(PRIMARY_SOURCE_KEY);
+        ALLOWED_SOURCES_KEYS.add(ADDITIONAL_SOURCES_KEY);
+    }
 
     public DQDLParserListener(DQDLErrorListener errorListener) {
         this.errorListener = errorListener;
+    }
+
+    @Override
+    public void enterMetadata(DataQualityDefinitionLanguageParser.MetadataContext ctx) {
+        for (DataQualityDefinitionLanguageParser.PairContext pairContext : ctx.dictionary().pair()) {
+            String key = pairContext.QUOTED_STRING().getText().replaceAll("\"", "");
+            if (!ALLOWED_METADATA_KEYS.contains(key)) {
+                errorMessages.add("Unsupported key provided in Metadata section");
+                return;
+            }
+
+            String value = pairContext.pairValue().getText().replaceAll("\"", "");
+            metadata.put(key, value);
+        }
+    }
+
+    @Override
+    public void enterSources(DataQualityDefinitionLanguageParser.SourcesContext ctx) {
+        for (DataQualityDefinitionLanguageParser.PairContext pairContext : ctx.dictionary().pair()) {
+            String key = pairContext.QUOTED_STRING().getText().replaceAll("\"", "");
+
+            if (!ALLOWED_SOURCES_KEYS.contains(key)) {
+                errorMessages.add("Unsupported key provided in Sources section");
+                return;
+            }
+
+            if (PRIMARY_SOURCE_KEY.equals(key)) {
+                primarySource = pairContext.pairValue().getText().replaceAll("\"", "");
+            }
+
+            if (ADDITIONAL_SOURCES_KEY.equals(key)) {
+                if (pairContext.pairValue().array() == null) {
+                    errorMessages.add("Additional sources must be an array of values.");
+                } else {
+                    additionalSources = new ArrayList<>();
+                    String cleanedSources =
+                        pairContext.pairValue().getText()
+                            .replace("[", "")
+                            .replace("]", "")
+                            .replaceAll(" ", "")
+                            .replaceAll("\"", "");
+
+                    Collections.addAll(additionalSources, cleanedSources.split(","));
+                }
+            }
+        }
     }
 
     @Override
@@ -102,7 +181,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
     public Either<List<String>, DQRuleset> getParsedRuleset() {
         if (errorMessages.isEmpty() && errorListener.getErrorMessages().isEmpty()) {
-            return Either.fromRight(new DQRuleset(dqRules));
+            return Either.fromRight(new DQRuleset(metadata, primarySource, additionalSources, dqRules));
         } else {
             List<String> allErrorMessages = new ArrayList<>();
             allErrorMessages.addAll(errorMessages);
