@@ -12,7 +12,6 @@ package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +52,7 @@ public class DQRule {
                 parameters.values().forEach(p -> sb.append(" ").append("\"").append(p).append("\""));
             }
 
-            if (StringUtils.isNotBlank(thresholdExpression)) {
+            if (!isBlank(thresholdExpression)) {
                 sb.append(" ");
 
                 String thresholdExpressionLower = thresholdExpression.toLowerCase();
@@ -82,5 +81,19 @@ public class DQRule {
         }
 
         return sb.toString();
+    }
+
+    // copied from StringUtils
+    private boolean isBlank(final CharSequence cs) {
+        if (cs == null || cs.length() == 0) {
+            return true;
+        }
+        int strLen = cs.length();
+        for (int i = 0; i < strLen; i++) {
+            if (!Character.isWhitespace(cs.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 }
