@@ -167,7 +167,12 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
 
         String condition = "";
-        if (!dqRuleType.getReturnType().equals("BOOLEAN")) {
+        if (dqRuleType.getReturnType().equals("BOOLEAN")) {
+          if (dqRuleContext.condition() != null) {
+              return Either.fromLeft(
+                  String.format("Unexpected condition for rule with boolean rule type: %s", ruleType));
+          }
+        } else {
             if (dqRuleContext.condition() == null) {
                 return Either.fromLeft(
                     String.format("No condition provided for rule with non boolean rule type: %s", ruleType));
