@@ -36,7 +36,10 @@ public class InvalidDQRulesetTest {
             Arguments.of("Rules = [ ColumnValues \"load_dt\" \"load_dt_2\" > (now() - 1) ]"),
             Arguments.of("Rules = [ Completeness \"col-A\" ]"),
             Arguments.of("Rules = { Completeness \"col-A\" }"),
-            Arguments.of("Rules = [ ColumnNamesMatchPattern aws_* ]")
+            Arguments.of("Rules = [ ColumnNamesMatchPattern aws_* ]"),
+            Arguments.of("Rules = [ IsComplete \"col-A\" > 0.05 ]"),
+            Arguments.of("Rules = [ IsUnique \"col-A\" <= 1.5 ]"),
+            Arguments.of("Rules = [ IsPrimaryKey \"col-A\" between 1 and 2 ]")
         );
     }
 
