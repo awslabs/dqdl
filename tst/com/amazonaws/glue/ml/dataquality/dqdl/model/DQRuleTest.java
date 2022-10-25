@@ -88,7 +88,8 @@ class DQRuleTest {
             Arguments.of("UniqueValueRatio \"col_A-B.CD\" < 0.5"),
             Arguments.of("UniqueValueRatio \"col_A-B.CD\" between 0.1 and 0.5"),
             Arguments.of("ColumnLength \"col_A-B.CD\" < 10"),
-            Arguments.of("ColumnLength \"col_A-B.CD\" >= 100")
+            Arguments.of("ColumnLength \"col_A-B.CD\" >= 100"),
+            Arguments.of("ColumnValues \"col-A\" matches \"[a-zA-Z0-9]*\"")
         );
     }
 

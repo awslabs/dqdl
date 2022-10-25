@@ -62,7 +62,7 @@ public class DQRule {
                     String[] parts = thresholdExpressionLower.split(KEYWORD_BETWEEN)[1].split(KEYWORD_AND);
                     sb.append(KEYWORD_BETWEEN + " ").append(parts[0]).append(" " + KEYWORD_AND + " ").append(parts[1]);
                 } else {
-                    Pattern comparatorPattern = Pattern.compile("(in|>=|<=|>|<|=)(.*)");
+                    Pattern comparatorPattern = Pattern.compile("(matches|in|>=|<=|>|<|=)(.*)");
                     Matcher m = comparatorPattern.matcher(thresholdExpression);
                     if (m.find()) {
                         sb.append(m.group(1)).append(" ").append(m.group(2));
