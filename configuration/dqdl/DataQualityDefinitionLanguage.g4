@@ -53,10 +53,13 @@ setExpression:
 	| IN intArray
 	| IN quotedStringArray;
 
+matchesRegexExpression: 'matches' QUOTED_STRING;
+
 ruleType: IDENTIFIER;
 parameter: (QUOTED_STRING | INT | DIGIT);
 condition:
-	jobStatusExpression
+    matchesRegexExpression
+	| jobStatusExpression
 	| numericThresholdExpression
 	| dateThresholdExpression
 	| setExpression;
