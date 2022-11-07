@@ -29,9 +29,7 @@ DECIMAL: INT '.' INT;
 QUOTED_STRING: QUOTE (ESC | .)*? QUOTE;
 NEGATIVE: '-';
 
-LINE_COMMENT:
-	'//' .*? '\r'? '\n' -> skip; // Match "//" stuff '\n'
-COMMENT: '/*' .*? '*/' -> skip; // Match "/*" stuff "*/"
+LINE_COMMENT: '#' .*? '\r'? '\n' -> skip; // Match "#" stuff '\n'
 
 IDENTIFIER: [a-zA-Z0-9]+;
 
