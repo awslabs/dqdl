@@ -43,7 +43,14 @@ public class DQRuleType {
 
     private static final DQRuleType ROW_COUNT_RULE_TYPE = new DQRuleType(
         "RowCount",
-        "Check the row count of the dataset",
+        "Check the number of rows in the dataset",
+        Collections.emptyList(),
+        "NUMBER"
+    );
+
+    private static final DQRuleType COLUMN_COUNT_RULE_TYPE = new DQRuleType(
+        "ColumnCount",
+        "Checks the number of columns in the dataset",
         Collections.emptyList(),
         "NUMBER"
     );
@@ -118,13 +125,6 @@ public class DQRuleType {
             )
         ),
         "BOOLEAN"
-    );
-
-    private static final DQRuleType DATASET_COLUMN_COUNT_RULE_TYPE = new DQRuleType(
-        "DatasetColumnsCount",
-        "Checks the number of columns in the dataset",
-        Collections.emptyList(),
-        "NUMBER"
     );
 
     private static final DQRuleType COLUMN_CORRELATION_RULE_TYPE = new DQRuleType(
@@ -304,16 +304,18 @@ public class DQRuleType {
     private static final Map<String, DQRuleType> RULE_TYPE_MAP = new HashMap<>();
 
     static {
-        RULE_TYPE_MAP.put(JOB_STATUS_RULE_TYPE.getRuleTypeName(), JOB_STATUS_RULE_TYPE);
-        RULE_TYPE_MAP.put(JOB_DURATION_RULE_TYPE.getRuleTypeName(), JOB_DURATION_RULE_TYPE);
+        // Not supported for re:Invent
+        // RULE_TYPE_MAP.put(JOB_STATUS_RULE_TYPE.getRuleTypeName(), JOB_STATUS_RULE_TYPE);
+        // RULE_TYPE_MAP.put(JOB_DURATION_RULE_TYPE.getRuleTypeName(), JOB_DURATION_RULE_TYPE);
+        // RULE_TYPE_MAP.put(FILE_COUNT_RULE_TYPE.getRuleTypeName(), FILE_COUNT_RULE_TYPE);
+
         RULE_TYPE_MAP.put(ROW_COUNT_RULE_TYPE.getRuleTypeName(), ROW_COUNT_RULE_TYPE);
-        RULE_TYPE_MAP.put(FILE_COUNT_RULE_TYPE.getRuleTypeName(), FILE_COUNT_RULE_TYPE);
+        RULE_TYPE_MAP.put(COLUMN_COUNT_RULE_TYPE.getRuleTypeName(), COLUMN_COUNT_RULE_TYPE);
         RULE_TYPE_MAP.put(COMPLETENESS_RULE_TYPE.getRuleTypeName(), COMPLETENESS_RULE_TYPE);
         RULE_TYPE_MAP.put(IS_COMPLETE_RULE_TYPE.getRuleTypeName(), IS_COMPLETE_RULE_TYPE);
         RULE_TYPE_MAP.put(COLUMN_DATA_TYPE_RULE_TYPE.getRuleTypeName(), COLUMN_DATA_TYPE_RULE_TYPE);
         RULE_TYPE_MAP.put(COLUMN_NAMES_MATCH_PATTERN_RULE_TYPE.getRuleTypeName(), COLUMN_NAMES_MATCH_PATTERN_RULE_TYPE);
         RULE_TYPE_MAP.put(COLUMN_EXISTS_RULE_TYPE.getRuleTypeName(), COLUMN_EXISTS_RULE_TYPE);
-        RULE_TYPE_MAP.put(DATASET_COLUMN_COUNT_RULE_TYPE.getRuleTypeName(), DATASET_COLUMN_COUNT_RULE_TYPE);
         RULE_TYPE_MAP.put(COLUMN_CORRELATION_RULE_TYPE.getRuleTypeName(), COLUMN_CORRELATION_RULE_TYPE);
         RULE_TYPE_MAP.put(UNIQUENESS_RULE_TYPE.getRuleTypeName(), UNIQUENESS_RULE_TYPE);
         RULE_TYPE_MAP.put(IS_UNIQUE_RULE_TYPE.getRuleTypeName(), IS_UNIQUE_RULE_TYPE);

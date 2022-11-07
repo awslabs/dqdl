@@ -12,12 +12,12 @@ package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.exception.InvalidDataQualityRulesetException;
 import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLParser;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,23 +49,23 @@ class DQRuleTest {
 
     private static Stream<Arguments> provideRawRules() {
         return Stream.of(
+            // Arguments.of("JobStatus = \"SUCCEEDED\""),
+            // Arguments.of("JobStatus in [\"SUCCEEDED\",\"READY\"]"),
+            // Arguments.of("JobDuration between 10 and 1000"),
+            // Arguments.of("JobDuration between -10 and 1000"),
+            // Arguments.of("FileCount between 10 and 100"),
+            // Arguments.of("FileCount between -10000 and -1000"),
             Arguments.of("IsPrimaryKey \"colA\""),
-            Arguments.of("JobStatus = \"SUCCEEDED\""),
-            Arguments.of("JobStatus in [\"SUCCEEDED\",\"READY\"]"),
-            Arguments.of("JobDuration between 10 and 1000"),
-            Arguments.of("JobDuration between -10 and 1000"),
             Arguments.of("RowCount = 100"),
             Arguments.of("RowCount = -100"),
-            Arguments.of("FileCount between 10 and 100"),
-            Arguments.of("FileCount between -10000 and -1000"),
             Arguments.of("Completeness \"col_1\" between 0.5 and 0.8"),
             Arguments.of("IsComplete \"col_1\""),
             Arguments.of("Completeness \"col_1\" between -0.5 and -0.4"),
             Arguments.of("ColumnDataType \"col_1\" = \"String\""),
             Arguments.of("ColumnNamesMatchPattern \"aws_.*_[a-zA-Z0-9]+\""),
             Arguments.of("ColumnExists \"load_dt\""),
-            Arguments.of("DatasetColumnsCount >= 100"),
-            Arguments.of("DatasetColumnsCount > -100.123456"),
+            Arguments.of("ColumnCount >= 100"),
+            Arguments.of("ColumnCount > -100.123456"),
             Arguments.of("ColumnCorrelation \"col_1\" \"col_2\" between 0.4 and 0.8"),
             Arguments.of("ColumnCorrelation \"col_1\" \"col_2\" between -0.44444 and 0.888888"),
             Arguments.of("Uniqueness \"col_1\" between 0.1 and 0.2"),
@@ -130,7 +130,7 @@ class DQRuleTest {
         assertEquals("IsPrimaryKey \"colA\"", dqRuleAsString);
     }
 
-    @Test
+    @Disabled
     void test_nullParametersAreCorrectlyHandled() {
         Map<String, String> parameters = null;
         String threshold = "=100";
@@ -139,7 +139,7 @@ class DQRuleTest {
         assertEquals("JobDuration = 100", dqRuleAsString);
     }
 
-    @Test
+    @Disabled
     void test_nullNestedRulesAreCorrectlyHandled() {
         Map<String, String> parameters = null;
         String threshold = "=100";
