@@ -309,7 +309,7 @@ class DQRulesetTest {
 
     @Test
     void test_dataFreshnessRuleBasedOnColumnValues() {
-        String dqdl = "Rules = [ ColumnValues \"load_dt\" > (now() - 1) ]";
+        String dqdl = "Rules = [ ColumnValues \"load_dt\" > (now() - 2 days) ]";
         DQRuleset dqRuleset = parseDQDL(dqdl);
         assertEquals(1, dqRuleset.getRules().size());
         assertEquals("ColumnValues", dqRuleset.getRules().get(0).getRuleType());
@@ -331,7 +331,7 @@ class DQRulesetTest {
         String dqdl =
             "Rules = [" +
             "    Completeness \"col_1\" < 0.5, " +
-            "    (Uniqueness \"col_2\" between 0.2 and 0.4) AND (Completeness \"col_2\" > 0.7)," +
+            "    (Uniqueness \"col_2\" between 0.2 and 0.4) and (Completeness \"col_2\" > 0.7)," +
             "    RowCount = 100" +
             "]";
         DQRuleset dqRuleset = parseDQDL(dqdl);

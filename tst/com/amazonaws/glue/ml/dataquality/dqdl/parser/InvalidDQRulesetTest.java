@@ -40,7 +40,10 @@ public class InvalidDQRulesetTest {
             Arguments.of("Rules = [ IsComplete \"col-A\" > 0.05 ]"),
             Arguments.of("Rules = [ IsUnique \"col-A\" <= 1.5 ]"),
             Arguments.of("Rules = [ IsPrimaryKey \"col-A\" between 1 and 2 ]"),
-            Arguments.of("ColumnValues \"col-A\" matches")
+            Arguments.of("ColumnValues \"col-A\" matches"),
+            Arguments.of("ColumnValues \"col-A\" now()"),
+            Arguments.of("ColumnValues \"col-A\" > now() + 1 hours"),
+            Arguments.of("ColumnValues \"col-A\" = (now() - 3 weeks)")
         );
     }
 
