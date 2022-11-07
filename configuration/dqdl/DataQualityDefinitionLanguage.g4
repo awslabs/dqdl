@@ -14,10 +14,12 @@ rulesSectionStart: 'Rules';
 // Expressions
 dateNow: 'now()';
 
+timeUnit: 'days' | 'hours';
+
 dateExpression:
 	DATE
 	| dateNow
-	| LPAREN dateNow ('-' | '+') (DIGIT | INT) RPAREN;
+	| LPAREN dateNow ('-' | '+') (DIGIT | INT) timeUnit RPAREN;
 dateArray: LBRAC dateExpression (COMMA dateExpression)* RBRAC;
 
 jobStatusExpression:

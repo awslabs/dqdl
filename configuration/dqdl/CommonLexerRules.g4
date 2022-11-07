@@ -10,10 +10,10 @@ LBRAC: '[';
 RBRAC: ']';
 LPAREN: '(';
 RPAREN: ')';
-AND: 'and' | 'AND';
-OR: 'or' | 'OR';
+AND: 'and';
+OR: 'or';
 
-BETWEEN: 'between' | 'BETWEEN';
+BETWEEN: 'between';
 EQUAL_TO: '=';
 GREATER_THAN: '>';
 GREATER_THAN_EQUAL_TO: '>=';
