@@ -72,7 +72,7 @@ class DQRuleTest {
             Arguments.of("IsUnique \"col_1\""),
             Arguments.of("Uniqueness \"col_1\" between -0.00000001 and 0.00000000000002"),
             Arguments.of("ColumnValues \"col_1\" between \"2022-06-01\" and \"2022-06-30\""),
-            Arguments.of("ColumnValues \"load_dt\" > (now()-1)"),
+            Arguments.of("ColumnValues \"load_dt\" > (now() - 1 days)"),
             Arguments.of("ColumnValues \"order-id\" in [1,2,3,4]"),
             Arguments.of("ColumnValues \"order-id\" in [\"1\",\"2\",\"3\",\"4\"]"),
             Arguments.of("Sum \"col_A-B.C\" > 100.0"),
@@ -89,7 +89,14 @@ class DQRuleTest {
             Arguments.of("UniqueValueRatio \"col_A-B.CD\" between 0.1 and 0.5"),
             Arguments.of("ColumnLength \"col_A-B.CD\" < 10"),
             Arguments.of("ColumnLength \"col_A-B.CD\" >= 100"),
-            Arguments.of("ColumnValues \"col-A\" matches \"[a-zA-Z0-9]*\"")
+            Arguments.of("ColumnValues \"col-A\" matches \"[a-zA-Z0-9]*\""),
+            Arguments.of("ColumnValues \"col-A\" >= now()"),
+            Arguments.of("ColumnValues \"col-A\" between (now() - 3 hours) and now()"),
+            Arguments.of("ColumnValues \"col-A\" between now() and (now() + 3 hours)"),
+            Arguments.of("ColumnValues \"col-A\" < (now() + 4 days)"),
+            Arguments.of("ColumnValues \"col-A\" = (now() - 3 hours)"),
+            Arguments.of("ColumnValues \"col-A\" in [now(),(now() - 3 hours),now(),(now() + 4 days)]"),
+            Arguments.of("ColumnValues \"col-A\" between (now() - 3 hours) and (now() + 14 days)")
         );
     }
 
@@ -140,23 +147,5 @@ class DQRuleTest {
         DQRule dqRule = new DQRule("JobDuration", parameters, threshold);
         String dqRuleAsString = dqRule.toString();
         assertEquals("JobDuration = 100", dqRuleAsString);
-    }
-
-    @Test
-    void test_uppercaseBetweenAndLowercaseAndProducesCorrectString() {
-        Map<String, String> parameters = null;
-        String threshold = "BETWEEN10and20";
-        DQRule dqRule = new DQRule("JobDuration", parameters, threshold);
-        String dqRuleAsString = dqRule.toString();
-        assertEquals("JobDuration between 10 and 20", dqRuleAsString);
-    }
-
-    @Test
-    void test_lowercaseBetweenAndUppercaseAndProducesCorrectString() {
-        Map<String, String> parameters = null;
-        String threshold = "between10AND20";
-        DQRule dqRule = new DQRule("JobDuration", parameters, threshold);
-        String dqRuleAsString = dqRule.toString();
-        assertEquals("JobDuration between 10 and 20", dqRuleAsString);
     }
 }
