@@ -66,7 +66,9 @@ condition:
 	| dateThresholdExpression
 	| setExpression;
 
-dqRule: ruleType parameter* condition?;
+withThresholdCondition: 'with' 'threshold' numericThresholdExpression;
+
+dqRule: ruleType parameter* condition? withThresholdCondition?;
 
 topLevelRule:
 	dqRule
