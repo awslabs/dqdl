@@ -29,6 +29,7 @@ public class DQRule {
     private final String ruleType;
     private final Map<String, String> parameters;
     private final String thresholdExpression;
+    private final String hasThresholdExpression;
     private final DQRuleLogicalOperator operator;
     private final List<DQRule> nestedRules;
 
@@ -46,6 +47,7 @@ public class DQRule {
         this.ruleType = ruleType;
         this.parameters = parameters;
         this.thresholdExpression = thresholdExpression;
+        this.hasThresholdExpression = "";
         this.operator = DQRuleLogicalOperator.AND;
         this.nestedRules = new ArrayList<>();
     }
@@ -62,39 +64,11 @@ public class DQRule {
             }
 
             if (!isBlank(thresholdExpression)) {
-                sb.append(" ");
+                sb.append(formatThreshold(thresholdExpression));
+            }
 
-                if (thresholdExpression.startsWith(KEYWORD_BETWEEN)) {
-                    String[] parts = thresholdExpression.replaceFirst(KEYWORD_BETWEEN, EMPTY_STRING).split(KEYWORD_AND);
-                    sb.append(KEYWORD_BETWEEN + " ")
-                      .append(formatDateExpression(parts[0]))
-                      .append(" " + KEYWORD_AND + " ")
-                      .append(formatDateExpression(parts[1]));
-                } else if (thresholdExpression.startsWith(KEYWORD_IN)) {
-                    String[] parts = thresholdExpression
-                        .replaceFirst(KEYWORD_IN, EMPTY_STRING)
-                        .replaceFirst(Pattern.quote(Character.toString(LBRAC_CHAR)), EMPTY_STRING)
-                        .replaceFirst(Pattern.quote(Character.toString(RBRAC_CHAR)), EMPTY_STRING)
-                        .split(COMMA_DELIM);
-
-                    sb.append(KEYWORD_IN).append(" ").append(LBRAC_CHAR);
-                    sb.append(
-                        Arrays.stream(parts)
-                            .map(this::formatDateExpression)
-                            .collect(Collectors.joining(COMMA_DELIM))
-                    );
-                    sb.append(RBRAC_CHAR);
-                } else {
-                    Pattern comparatorPattern = Pattern.compile("(matches|>=|<=|>|<|=)(.*)");
-                    Matcher m = comparatorPattern.matcher(thresholdExpression);
-                    if (m.find()) {
-                        sb.append(m.group(1))
-                          .append(" ")
-                          .append(formatDateExpression(m.group(2)));
-                    } else {
-                        sb.append(thresholdExpression);
-                    }
-                }
+            if (!isBlank(hasThresholdExpression)) {
+                sb.append(" with threshold").append(formatThreshold(hasThresholdExpression));
             }
 
             return sb.toString();
@@ -107,6 +81,44 @@ public class DQRule {
             }
         }
 
+        return sb.toString();
+    }
+
+    private String formatThreshold(String threshold) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(" ");
+
+        if (threshold.startsWith(KEYWORD_BETWEEN)) {
+            String[] parts = threshold.replaceFirst(KEYWORD_BETWEEN, EMPTY_STRING).split(KEYWORD_AND);
+            sb.append(KEYWORD_BETWEEN + " ")
+                .append(formatDateExpression(parts[0]))
+                .append(" " + KEYWORD_AND + " ")
+                .append(formatDateExpression(parts[1]));
+        } else if (threshold.startsWith(KEYWORD_IN)) {
+            String[] parts = threshold
+                .replaceFirst(KEYWORD_IN, EMPTY_STRING)
+                .replaceFirst(Pattern.quote(Character.toString(LBRAC_CHAR)), EMPTY_STRING)
+                .replaceFirst(Pattern.quote(Character.toString(RBRAC_CHAR)), EMPTY_STRING)
+                .split(COMMA_DELIM);
+
+            sb.append(KEYWORD_IN).append(" ").append(LBRAC_CHAR);
+            sb.append(
+                Arrays.stream(parts)
+                    .map(this::formatDateExpression)
+                    .collect(Collectors.joining(COMMA_DELIM))
+            );
+            sb.append(RBRAC_CHAR);
+        } else {
+            Pattern comparatorPattern = Pattern.compile("(matches|>=|<=|>|<|=)(.*)");
+            Matcher m = comparatorPattern.matcher(threshold);
+            if (m.find()) {
+                sb.append(m.group(1))
+                    .append(" ")
+                    .append(formatDateExpression(m.group(2)));
+            } else {
+                sb.append(threshold);
+            }
+        }
         return sb.toString();
     }
 

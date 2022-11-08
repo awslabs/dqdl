@@ -130,7 +130,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                     }
                 }
 
-                dqRules.add(new DQRule("Composite", null, "", op, nestedRules));
+                dqRules.add(new DQRule("Composite", null, "", "", op, nestedRules));
             } else if (tlc.dqRule(0) != null) {
                 Either<String, DQRule> dqRuleEither = getDQRule(tlc.dqRule(0));
                 if (dqRuleEither.isLeft()) {
@@ -181,7 +181,25 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             condition = dqRuleContext.condition().getText();
         }
 
-        return Either.fromRight(new DQRule(dqRuleType.getRuleTypeName(), parameterMap, condition));
+        String hasThreshold = "";
+        if (dqRuleContext.withThresholdCondition() != null &&
+            dqRuleContext.withThresholdCondition().numericThresholdExpression() != null) {
+            if (dqRuleType.getRuleTypeName().equals("ColumnValues")) {
+                if (dqRuleContext.condition().matchesRegexExpression() != null ||
+                    dqRuleContext.condition().jobStatusExpression() != null) {
+                    hasThreshold = dqRuleContext.withThresholdCondition().numericThresholdExpression().getText();
+                } else {
+                    return Either.fromLeft("Threshold unsupported for the provided condition");
+                }
+            } else {
+                return Either.fromLeft("Threshold is only applicable for ColumnValues rule");
+            }
+        }
+
+        return Either.fromRight(
+            new DQRule(dqRuleType.getRuleTypeName(), parameterMap, condition,
+                hasThreshold, DQRuleLogicalOperator.AND, new ArrayList<>())
+        );
     }
 
     public Either<List<String>, DQRuleset> getParsedRuleset() {
