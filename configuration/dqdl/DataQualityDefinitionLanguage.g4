@@ -16,15 +16,25 @@ dateNow: 'now()';
 
 timeUnit: 'days' | 'hours';
 
+timeExpression: (DIGIT | INT) timeUnit;
+
 dateExpression:
 	DATE
 	| dateNow
-	| LPAREN dateNow ('-' | '+') (DIGIT | INT) timeUnit RPAREN;
+	| LPAREN dateNow ('-' | '+') timeExpression RPAREN;
 dateArray: LBRAC dateExpression (COMMA dateExpression)* RBRAC;
 
 jobStatusExpression:
 	EQUAL_TO QUOTED_STRING
 	| IN quotedStringArray;
+
+timeThresholdExpression:
+    BETWEEN timeExpression AND timeExpression
+    | GREATER_THAN timeExpression
+    | GREATER_THAN_EQUAL_TO timeExpression
+    | LESS_THAN timeExpression
+    | LESS_THAN_EQUAL_TO timeExpression
+    | EQUAL_TO timeExpression;
 
 number:
 	DIGIT
@@ -63,6 +73,7 @@ condition:
     matchesRegexExpression
 	| jobStatusExpression
 	| numericThresholdExpression
+	| timeThresholdExpression
 	| dateThresholdExpression
 	| setExpression;
 
