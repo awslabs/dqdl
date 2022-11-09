@@ -186,7 +186,11 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             dqRuleContext.withThresholdCondition().numericThresholdExpression() != null) {
             if (dqRuleType.getRuleTypeName().equals("ColumnValues")) {
                 if (dqRuleContext.condition().matchesRegexExpression() != null ||
-                    dqRuleContext.condition().jobStatusExpression() != null) {
+                    dqRuleContext.condition().jobStatusExpression() != null ||
+                    (
+                        dqRuleContext.condition().setExpression() != null &&
+                        dqRuleContext.condition().setExpression().dateArray() == null
+                    )) {
                     hasThreshold = dqRuleContext.withThresholdCondition().numericThresholdExpression().getText();
                 } else {
                     return Either.fromLeft("Threshold unsupported for the provided condition");

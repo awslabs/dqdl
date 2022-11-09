@@ -98,7 +98,9 @@ class DQRuleTest {
             Arguments.of("ColumnValues \"col-A\" in [now(),(now() - 3 hours),now(),(now() + 4 days)]"),
             Arguments.of("ColumnValues \"col-A\" between (now() - 3 hours) and (now() + 14 days)"),
             Arguments.of("ColumnValues \"col-A\" matches \"[a-z]*\" with threshold <= 0.4"),
-            Arguments.of("ColumnValues \"col-A\" in [\"A\",\"B\"] with threshold <= 0.4")
+            Arguments.of("ColumnValues \"col-A\" in [\"A\",\"B\"] with threshold <= 0.4"),
+            Arguments.of("ColumnValues \"col-A\" in [1,2,3] with threshold > 0.98"),
+            Arguments.of("ColumnValues \"col-A\" = \"A\" with threshold > 0.98")
         );
     }
 

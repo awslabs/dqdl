@@ -49,7 +49,11 @@ public class InvalidDQRulesetTest {
             Arguments.of("Rules = [ ColumnValues \"col-A\" > 0.4 threshold]"),
             Arguments.of("Rules = [ ColumnValues \"col-A\" > 0.4 with threshold]"),
             Arguments.of("Rules = [ ColumnValues \"col-A\" <= 0.4 with threshold between 0.4 and 0.8 ]"),
-            Arguments.of("Rules = [ ColumnValues \"col-A\" > 0.4 with threshold > 0.4 ]")
+            Arguments.of("Rules = [ ColumnValues \"col-A\" > 0.4 with threshold > 0.4 ]"),
+            Arguments.of("Rules = [ ColumnValues \"col-A\" in [\"2022-01-01\"] with threshold > 0.98 ]"),
+            Arguments.of("Rules = [ ColumnValues \"col-A\" = 1 with threshold > 0.98 ]"),
+            Arguments.of("Rules = [ ColumnValues \"col-A\" in [1,\"2\"] ]"),
+            Arguments.of("ColumnValues \"col-A\" = \"2022-01-01\" with threshold > 0.98")
         );
     }
 
