@@ -173,6 +173,11 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                   String.format("Unexpected condition for rule with boolean rule type: %s", ruleType));
           }
         } else {
+            if (dqRuleType.getRuleTypeName().equals("DataFreshness") &&
+                dqRuleContext.condition().timeThresholdExpression() == null) {
+                return Either.fromLeft("Data Freshness rule expects time based threshold expression");
+            }
+
             if (dqRuleContext.condition() == null) {
                 return Either.fromLeft(
                     String.format("No condition provided for rule with non boolean rule type: %s", ruleType));

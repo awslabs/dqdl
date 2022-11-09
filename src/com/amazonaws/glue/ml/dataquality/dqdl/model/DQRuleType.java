@@ -288,6 +288,19 @@ public class DQRuleType {
         "STRING_ARRAY|NUMBER_ARRAY|DATE_ARRAY"
     );
 
+    private static final DQRuleType DATA_FRESHNESS_RULE_TYPE = new DQRuleType(
+        "DataFreshness",
+        "Check the freshness of a date column",
+        Collections.singletonList(
+            new DQRuleParameter(
+                "String",
+                "TargetColumn",
+                "Name of column to check the freshness of."
+            )
+        ),
+        "DATE_ARRAY"
+    );
+
     private static final DQRuleType CUSTOM_SQL_RULE_TYPE = new DQRuleType(
         "CustomSql",
         "Runs a custom SQL against the dataset and returns a single value",
@@ -328,6 +341,7 @@ public class DQRuleType {
         RULE_TYPE_MAP.put(COLUMN_LENGTH_RULE_TYPE.getRuleTypeName(), COLUMN_LENGTH_RULE_TYPE);
         RULE_TYPE_MAP.put(IS_PRIMARY_KEY_RULE_TYPE.getRuleTypeName(), IS_PRIMARY_KEY_RULE_TYPE);
         RULE_TYPE_MAP.put(COLUMN_VALUES_RULE_TYPE.getRuleTypeName(), COLUMN_VALUES_RULE_TYPE);
+        RULE_TYPE_MAP.put(DATA_FRESHNESS_RULE_TYPE.getRuleTypeName(), DATA_FRESHNESS_RULE_TYPE);
         RULE_TYPE_MAP.put(CUSTOM_SQL_RULE_TYPE.getRuleTypeName(), CUSTOM_SQL_RULE_TYPE);
     }
 

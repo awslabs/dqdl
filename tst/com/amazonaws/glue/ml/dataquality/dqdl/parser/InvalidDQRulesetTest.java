@@ -53,7 +53,10 @@ public class InvalidDQRulesetTest {
             Arguments.of("Rules = [ ColumnValues \"col-A\" in [\"2022-01-01\"] with threshold > 0.98 ]"),
             Arguments.of("Rules = [ ColumnValues \"col-A\" = 1 with threshold > 0.98 ]"),
             Arguments.of("Rules = [ ColumnValues \"col-A\" in [1,\"2\"] ]"),
-            Arguments.of("ColumnValues \"col-A\" = \"2022-01-01\" with threshold > 0.98")
+            Arguments.of("ColumnValues \"col-A\" = \"2022-01-01\" with threshold > 0.98"),
+            Arguments.of("Rules = [ DataFreshness \"col-A\" <= 3 ]"),
+            Arguments.of("Rules = [ DataFreshness \"col-A\" > 30 ]"),
+            Arguments.of("Rules = [ DataFreshness \"col-A\" between 2 and 4 days ]")
         );
     }
 
