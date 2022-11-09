@@ -100,7 +100,10 @@ class DQRuleTest {
             Arguments.of("ColumnValues \"col-A\" matches \"[a-z]*\" with threshold <= 0.4"),
             Arguments.of("ColumnValues \"col-A\" in [\"A\",\"B\"] with threshold <= 0.4"),
             Arguments.of("ColumnValues \"col-A\" in [1,2,3] with threshold > 0.98"),
-            Arguments.of("ColumnValues \"col-A\" = \"A\" with threshold > 0.98")
+            Arguments.of("ColumnValues \"col-A\" = \"A\" with threshold > 0.98"),
+            Arguments.of("DataFreshness \"col-A\" <= 3 days"),
+            Arguments.of("DataFreshness \"col-A\" > 30 hours"),
+            Arguments.of("DataFreshness \"col-A\" between 2 days and 4 days")
         );
     }
 

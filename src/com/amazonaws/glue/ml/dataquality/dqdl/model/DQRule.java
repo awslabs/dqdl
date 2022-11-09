@@ -123,10 +123,20 @@ public class DQRule {
     }
 
     private String formatDateExpression(String expression) {
-        Pattern comparatorPattern = Pattern.compile("\\(now\\(\\)([-|+])(\\d*)([^\\s]*)\\)");
-        Matcher m = comparatorPattern.matcher(expression);
-        if (m.find()) {
-            return String.format("(now() %s %s %s)", m.group(1), m.group(2), m.group(3));
+        String timeComparatorRegex = "(\\d*)(days|hours)";
+        String dateExpressionComparatorRegex = "\\(now\\(\\)([-|+])" + timeComparatorRegex;
+
+        Pattern timePattern = Pattern.compile(timeComparatorRegex);
+        Pattern dateExpressionPattern = Pattern.compile(dateExpressionComparatorRegex);
+
+        Matcher mTime = timePattern.matcher(expression);
+        Matcher mDateExpression = dateExpressionPattern.matcher(expression);
+
+        if (mDateExpression.find()) {
+            return String.format("(now() %s %s %s)",
+                mDateExpression.group(1), mDateExpression.group(2), mDateExpression.group(3));
+        } else if (mTime.find()) {
+            return String.format("%s %s", mTime.group(1), mTime.group(2));
         } else {
             return expression;
         }
