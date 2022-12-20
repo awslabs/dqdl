@@ -10,15 +10,26 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
 public class DQRuleParameter {
-
     private final String type;
     private final String name;
     private final String description;
-    private final Boolean isVarParam;
+    private final boolean isVarArg;
+
+    public DQRuleParameter(String type, String name, String description) {
+        this.type = type;
+        this.name = name;
+        this.description = description;
+        this.isVarArg = false;
+    }
+
+    public DQRuleParameter(String type, String name, String description, boolean isVarArg) {
+        this.type = type;
+        this.name = name;
+        this.description = description;
+        this.isVarArg = isVarArg;
+    }
 }

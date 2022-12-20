@@ -268,13 +268,13 @@ class DQRulesetTest {
         assertEquals("ColumnNamesMatchPattern", dqRuleset.getRules().get(0).getRuleType());
     }
 
-//    @Test
-//    void test_columnExistsRule() {
-//        String dqdl = "Rules = [ (ColumnExists \"load_dt\") ]";
-//        DQRuleset dqRuleset = parseDQDL(dqdl);
-//        assertEquals(1, dqRuleset.getRules().size());
-//        assertEquals("ColumnExists", dqRuleset.getRules().get(0).getRuleType());
-//    }
+    @Test
+    void test_columnExistsRule() {
+        String dqdl = "Rules = [ (ColumnExists \"load_dt\") ]";
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("ColumnExists", dqRuleset.getRules().get(0).getRuleType());
+    }
 
     @Test
     void test_datasetColumnCountRule() {
