@@ -37,7 +37,7 @@ class DQRuleTest {
     @MethodSource("provideRawRules")
     void test_ruleParsingAndGenerating(String rule) {
         try {
-            DQRuleset dqRuleset = parser.parse(String.format("Rules = [ %s ]", rule));
+             DQRuleset dqRuleset = parser.parse(String.format("Rules = [ %s ]", rule));
             assertEquals(1, dqRuleset.getRules().size());
             DQRule dqRule = dqRuleset.getRules().get(0);
             String dqRuleAsString = dqRule.toString();
@@ -56,6 +56,8 @@ class DQRuleTest {
             // Arguments.of("FileCount between 10 and 100"),
             // Arguments.of("FileCount between -10000 and -1000"),
             Arguments.of("IsPrimaryKey \"colA\""),
+            Arguments.of("IsPrimaryKey \"colA\" \"colB\""),
+            Arguments.of("IsPrimaryKey \"colA\" \"colB\" \"colC\""),
             Arguments.of("RowCount = 100"),
             Arguments.of("RowCount = -100"),
             Arguments.of("Completeness \"col_1\" between 0.5 and 0.8"),

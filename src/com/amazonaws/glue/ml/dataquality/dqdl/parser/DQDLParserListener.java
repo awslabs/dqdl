@@ -157,14 +157,12 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             .map(p -> p.getText().replaceAll("\"", ""))
             .collect(Collectors.toList());
 
-        if (dqRuleType.getParameters().size() != parameters.size()) {
-            return Either.fromLeft(String.format("Unexpected number of parameters for Rule Type: %s", ruleType));
+        if (!DQRuleType.parameterVerification(dqRuleType.getParameters(), parameters)) {
+            //TODO: Maybe try to be more specific
+            return Either.fromLeft(String.format("Parameters are not valid for Rule Type: %s", ruleType));
         }
 
-        Map<String, String> parameterMap = new HashMap<>();
-        for (int i = 0; i < parameters.size(); i++) {
-            parameterMap.put(dqRuleType.getParameters().get(i).getName(), parameters.get(i));
-        }
+        Map<String, String> parameterMap = DQRuleType.createParameterMap(dqRuleType.getParameters(), parameters);
 
         String condition = "";
         if (dqRuleType.getReturnType().equals("BOOLEAN")) {
