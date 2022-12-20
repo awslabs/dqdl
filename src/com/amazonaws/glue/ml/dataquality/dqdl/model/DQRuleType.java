@@ -10,7 +10,6 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -19,77 +18,81 @@ import java.util.LinkedHashMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Getter
-@AllArgsConstructor
 public class DQRuleType {
     private final String ruleTypeName;
     private final String description;
     private final List<DQRuleParameter> parameters;
     private final String returnType;
 
-    public static boolean checkDuplicateIsVarParams(List<DQRuleParameter> expectedParameters) {
-        for (int i = 0; i < expectedParameters.size() - 1; i++) {
-            if (expectedParameters.get(i).getIsVarParam()) {
-                return false;
-            }
+    public DQRuleType(String ruleTypeName, String description, List<DQRuleParameter> parameters, String returnType) {
+        this.ruleTypeName = ruleTypeName;
+        this.description = description;
+        this.parameters = parameters;
+        this.returnType = returnType;
+
+        if (parameters.isEmpty()) {
+            return;
         }
-        return true;
+
+        // There should only be one parameter that contains isVarArgs set to true and at the end of the list
+        // Check all except for last param
+        List<DQRuleParameter> expectedParametersToCheck = parameters.subList(0, parameters.size() - 1);
+
+        if (expectedParametersToCheck.stream().anyMatch(
+                DQRuleParameter::isVarArg)) {
+            throw new IllegalArgumentException(
+                    "Property isVarArg can only be set to true on last element in parameters list");
+        }
     }
 
+    public Optional<String> verifyParameters(List<DQRuleParameter> expectedParameters,
+                                             List<String> actualParameters) {
+        if (!expectedParameters.isEmpty()) {
 
+            boolean isVarArg = expectedParameters.get(
+                    expectedParameters.size() - 1).isVarArg();
 
-    public static boolean parameterVerification(List<DQRuleParameter> expectedParameters,
-                                                List<String> testParameters) {
-
-        if (expectedParameters.size() > 0) {
-
-            boolean isVarParam = expectedParameters.get(
-                    expectedParameters.size() - 1).getIsVarParam();
-
-            if (isVarParam) {
-
-                // VarArgs should not be empty
-                if (expectedParameters.size() > testParameters.size()) {
-                        return false;
+            if (isVarArg) {
+                if (expectedParameters.size() > actualParameters.size()) {
+                    return Optional.of("VarArgs needs at least one parameter");
                 }
 
-                return checkDuplicateIsVarParams(expectedParameters);
+                return Optional.empty();
             }
         }
 
-        if (expectedParameters.size() != testParameters.size()) {
-            return false;
+        if (expectedParameters.size() != actualParameters.size()) {
+            return Optional.of("Unexpected number of parameters");
         }
 
-        return checkDuplicateIsVarParams(expectedParameters);
+        return Optional.empty();
     }
 
-    public static Map<String, String> createParameterMap(List<DQRuleParameter> dqRuleTypeParameters,
-                                                         List<String> testParameters) {
-
+    public Map<String, String> createParameterMap(List<DQRuleParameter> dqRuleTypeParameters,
+                                                  List<String> actualParameters) {
         Map<String, String> parameterMap = new LinkedHashMap<>();
 
         for (int i = 0; i < dqRuleTypeParameters.size(); i++) {
-
-            // If rule type needs variable arguments, add as many TargetColumns as needed.
-            if (dqRuleTypeParameters.get(i).getIsVarParam()) {
-
+            String dqRuleTypeParameterName = dqRuleTypeParameters.get(i).getName();
+            // If rule type needs variable arguments, add as many columns as needed.
+            if (dqRuleTypeParameters.get(i).isVarArg()) {
                 int counter = 0;
-                // If rule type needs any fixed arguments
+                // Keeps the position of VarArgs parameters.
                 if (dqRuleTypeParameters.size() > 1) {
                     counter = dqRuleTypeParameters.size() - 1;
                 }
 
-                for (int j = counter; j < testParameters.size(); j++) {
+                for (int j = counter; j < actualParameters.size(); j++) {
+                    String newDqRuleTypeParameterName = dqRuleTypeParameterName + (j + 1);
+                    String actualParameterName = actualParameters.get(j);
 
-                    String testColumnNames = dqRuleTypeParameters.get(i).getName() + (j + 1);
-                    String parameterNames = testParameters.get(j);
-
-                    parameterMap.put(testColumnNames, parameterNames);
+                    parameterMap.put(newDqRuleTypeParameterName, actualParameterName);
                 }
             } else {
-                parameterMap.put(dqRuleTypeParameters.get(i).getName(), testParameters.get(i));
+                parameterMap.put(dqRuleTypeParameterName, actualParameters.get(i));
             }
         }
 
@@ -97,290 +100,292 @@ public class DQRuleType {
     }
 
     private static final DQRuleType JOB_STATUS_RULE_TYPE = new DQRuleType(
-        "JobStatus",
-        "Check the status of the job which populated the table",
-        Collections.emptyList(),
-        "STRING"
+            "JobStatus",
+            "Check the status of the job which populated the table",
+            Collections.emptyList(),
+            "STRING"
     );
 
     private static final DQRuleType JOB_DURATION_RULE_TYPE = new DQRuleType(
-        "JobDuration",
-        "Check the duration of the job which populated the table",
-        Collections.emptyList(),
-        "NUMBER"
+            "JobDuration",
+            "Check the duration of the job which populated the table",
+            Collections.emptyList(),
+            "NUMBER"
     );
 
     private static final DQRuleType ROW_COUNT_RULE_TYPE = new DQRuleType(
-        "RowCount",
-        "Check the number of rows in the dataset",
-        Collections.emptyList(),
-        "NUMBER"
+            "RowCount",
+            "Check the number of rows in the dataset",
+            Collections.emptyList(),
+            "NUMBER"
     );
 
     private static final DQRuleType COLUMN_COUNT_RULE_TYPE = new DQRuleType(
-        "ColumnCount",
-        "Checks the number of columns in the dataset",
-        Collections.emptyList(),
-        "NUMBER"
+            "ColumnCount",
+            "Checks the number of columns in the dataset",
+            Collections.emptyList(),
+            "NUMBER"
     );
 
     private static final DQRuleType FILE_COUNT_RULE_TYPE = new DQRuleType(
-        "FileCount",
-        "Check the number of files in s3 the dataset comprises of",
-        Collections.emptyList(),
-        "NUMBER"
+            "FileCount",
+            "Check the number of files in s3 the dataset comprises of",
+            Collections.emptyList(),
+            "NUMBER"
     );
 
     private static final DQRuleType COMPLETENESS_RULE_TYPE = new DQRuleType(
-        "Completeness",
-        "Check the percentage of complete (non-null) values in a given column",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn",
-                "Name of column to check completeness of.",
-                    false)
-        ),
-        "PERCENTAGE"
-    );
-
-    private static final DQRuleType IS_COMPLETE_RULE_TYPE = new DQRuleType(
-        "IsComplete",
-        "Check if all values in a given column are complete (non-null)",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn",
-                "Name of column to check completeness of.",
-                    false)
-        ),
-        "BOOLEAN"
-    );
-
-    private static final DQRuleType COLUMN_DATA_TYPE_RULE_TYPE = new DQRuleType(
-        "ColumnDataType",
-        "Check the data type of the given column",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn",
-                "Name of column to check data type of.",
-                    false)
-        ),
-        "STRING"
-    );
-
-    private static final DQRuleType COLUMN_NAMES_MATCH_PATTERN_RULE_TYPE = new DQRuleType(
-        "ColumnNamesMatchPattern",
-        "Checks if the names of the columns in the dataset match a given pattern",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "PatternToMatch",
-                "Pattern to match against the names of the columns.",
-                    false)
-        ),
-        "BOOLEAN"
-    );
-
-    private static final DQRuleType COLUMN_EXISTS_RULE_TYPE = new DQRuleType(
-        "ColumnExists",
-        "Check the existence of a given column",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn",
-                "Name of column to check existence of.",
-                    false)
-        ),
-        "BOOLEAN"
-    );
-
-    private static final DQRuleType COLUMN_CORRELATION_RULE_TYPE = new DQRuleType(
-        "ColumnCorrelation",
-        "Check the correlation between two given columns",
-        Arrays.asList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn1",
-                "Name of first column.",
-                    false),
-            new DQRuleParameter(
-                "String",
-                "TargetColumn2",
-                "Name of second column.",
-                    false)
-        ),
-        "NUMBER"
-    );
-
-    private static final DQRuleType UNIQUENESS_RULE_TYPE = new DQRuleType(
-        "Uniqueness",
-        "Check the percentage of unique values in a given column",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn",
-                "Name of column to check uniqueness of.",
-                    false)
-        ),
-        "NUMBER"
-    );
-
-    private static final DQRuleType IS_UNIQUE_RULE_TYPE = new DQRuleType(
-        "IsUnique",
-        "Check if all values in a given column are unique",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn",
-                "Name of column to check uniqueness of.",
-                    false)
-        ),
-        "BOOLEAN"
-    );
-
-    private static final DQRuleType COLUMN_MEAN_RULE_TYPE = new DQRuleType(
-        "Mean",
-        "Check the mean (average) of all values in a given column",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn",
-                "Name of column to check mean of.",
-                    false)
-        ),
-        "NUMBER"
-    );
-
-    private static final DQRuleType COLUMN_SUM_RULE_TYPE = new DQRuleType(
-        "Sum",
-        "Check the sum of all values in a given column",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn",
-                "Name of column to check sum of.",
-                    false)
-        ),
-        "NUMBER"
-    );
-
-    private static final DQRuleType COLUMN_STD_DEV_RULE_TYPE = new DQRuleType(
-        "StandardDeviation",
-        "Check the standard deviation of all values in a given column",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn",
-                "Name of column to check standard deviation of.",
-                    false)
-        ),
-        "NUMBER"
-    );
-
-    private static final DQRuleType COLUMN_ENTROPY_RULE_TYPE = new DQRuleType(
-        "Entropy",
-        "Check the entropy of all values in a given column",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn",
-                "Name of column to check entropy of.",
-                    false)
-        ),
-        "NUMBER"
-    );
-
-    private static final DQRuleType DISTINCT_VALUES_COUNT_RULE_TYPE = new DQRuleType(
-        "DistinctValuesCount",
-        "Check the number of distinct values in a given column",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn",
-                "Name of column to check distinct values count of.",
-                    false)
-        ),
-        "NUMBER"
-    );
-
-    private static final DQRuleType UNIQUE_VALUE_RATIO_RULE_TYPE = new DQRuleType(
-        "UniqueValueRatio",
-        "Check the ratio of unique values in a given column",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn",
-                "Name of column to check unique value ratio of.",
-                    false)
-        ),
-        "NUMBER"
-    );
-
-    private static final DQRuleType COLUMN_LENGTH_RULE_TYPE = new DQRuleType(
-        "ColumnLength",
-        "Check the length of values of a given column",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn",
-                "Name of column to check the length of the values of.",
-                    false)
-        ),
-        "NUMBER"
-    );
-
-    private static final DQRuleType IS_PRIMARY_KEY_RULE_TYPE = new DQRuleType(
-        "IsPrimaryKey",
-        "Check if a given column contains a primary key, by checking for uniqueness and completeness",
+            "Completeness",
+            "Check the percentage of complete (non-null) values in a given column",
             Collections.singletonList(
                     new DQRuleParameter(
                             "String",
                             "TargetColumn",
-                            "Name of column to return the values of.",
-                            true)
+                            "Name of column to check completeness of."
+                    )
             ),
-        "BOOLEAN"
+            "PERCENTAGE"
+    );
+
+    private static final DQRuleType IS_COMPLETE_RULE_TYPE = new DQRuleType(
+            "IsComplete",
+            "Check if all values in a given column are complete (non-null)",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn",
+                            "Name of column to check completeness of."
+                    )
+            ),
+            "BOOLEAN"
+    );
+
+    private static final DQRuleType COLUMN_DATA_TYPE_RULE_TYPE = new DQRuleType(
+            "ColumnDataType",
+            "Check the data type of the given column",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn",
+                            "Name of column to check data type of."
+                    )
+            ),
+            "STRING"
+    );
+
+    private static final DQRuleType COLUMN_NAMES_MATCH_PATTERN_RULE_TYPE = new DQRuleType(
+            "ColumnNamesMatchPattern",
+            "Checks if the names of the columns in the dataset match a given pattern",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "PatternToMatch",
+                            "Pattern to match against the names of the columns."
+                    )
+            ),
+            "BOOLEAN"
+    );
+
+    private static final DQRuleType COLUMN_EXISTS_RULE_TYPE = new DQRuleType(
+            "ColumnExists",
+            "Check the existence of a given column",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn",
+                            "Name of column to check existence of."
+                    )
+            ),
+            "BOOLEAN"
+    );
+
+    private static final DQRuleType COLUMN_CORRELATION_RULE_TYPE = new DQRuleType(
+            "ColumnCorrelation",
+            "Check the correlation between two given columns",
+            Arrays.asList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn1",
+                            "Name of first column."
+
+                    ),
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn2",
+                            "Name of second column."
+                    )
+            ),
+            "NUMBER"
+    );
+
+    private static final DQRuleType UNIQUENESS_RULE_TYPE = new DQRuleType(
+            "Uniqueness",
+            "Check the percentage of unique values in a given column",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn",
+                            "Name of column to check uniqueness of."
+                    )
+            ),
+            "NUMBER"
+    );
+
+    private static final DQRuleType IS_UNIQUE_RULE_TYPE = new DQRuleType(
+            "IsUnique",
+            "Check if all values in a given column are unique",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn",
+                            "Name of column to check uniqueness of."
+                    )
+            ),
+            "BOOLEAN"
+    );
+
+    private static final DQRuleType COLUMN_MEAN_RULE_TYPE = new DQRuleType(
+            "Mean",
+            "Check the mean (average) of all values in a given column",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn",
+                            "Name of column to check mean of."
+                    )
+            ),
+            "NUMBER"
+    );
+
+    private static final DQRuleType COLUMN_SUM_RULE_TYPE = new DQRuleType(
+            "Sum",
+            "Check the sum of all values in a given column",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn",
+                            "Name of column to check sum of."
+                    )
+            ),
+            "NUMBER"
+    );
+
+    private static final DQRuleType COLUMN_STD_DEV_RULE_TYPE = new DQRuleType(
+            "StandardDeviation",
+            "Check the standard deviation of all values in a given column",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn",
+                            "Name of column to check standard deviation of."
+                    )
+            ),
+            "NUMBER"
+    );
+
+    private static final DQRuleType COLUMN_ENTROPY_RULE_TYPE = new DQRuleType(
+            "Entropy",
+            "Check the entropy of all values in a given column",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn",
+                            "Name of column to check entropy of."
+                    )
+            ),
+            "NUMBER"
+    );
+
+    private static final DQRuleType DISTINCT_VALUES_COUNT_RULE_TYPE = new DQRuleType(
+            "DistinctValuesCount",
+            "Check the number of distinct values in a given column",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn",
+                            "Name of column to check distinct values count of."
+                    )
+            ),
+            "NUMBER"
+    );
+
+    private static final DQRuleType UNIQUE_VALUE_RATIO_RULE_TYPE = new DQRuleType(
+            "UniqueValueRatio",
+            "Check the ratio of unique values in a given column",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn",
+                            "Name of column to check unique value ratio of."
+                    )
+            ),
+            "NUMBER"
+    );
+
+    private static final DQRuleType COLUMN_LENGTH_RULE_TYPE = new DQRuleType(
+            "ColumnLength",
+            "Check the length of values of a given column",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn",
+                            "Name of column to check the length of the values of."
+                    )
+            ),
+            "NUMBER"
+    );
+
+    private static final DQRuleType IS_PRIMARY_KEY_RULE_TYPE = new DQRuleType(
+            "IsPrimaryKey",
+            "Check if a given column contains a primary key, by checking for uniqueness and completeness",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn",
+                            "Name of first column.",
+                            true
+                    )
+            ),
+            "BOOLEAN"
     );
 
     private static final DQRuleType COLUMN_VALUES_RULE_TYPE = new DQRuleType(
-        "ColumnValues",
-        "Returns the column values of a given column",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn",
-                "Name of column to return the values of.",
-                    false)
-        ),
-        "STRING_ARRAY|NUMBER_ARRAY|DATE_ARRAY"
+            "ColumnValues",
+            "Returns the column values of a given column",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn",
+                            "Name of column to return the values of."
+                    )
+            ),
+            "STRING_ARRAY|NUMBER_ARRAY|DATE_ARRAY"
     );
 
     private static final DQRuleType DATA_FRESHNESS_RULE_TYPE = new DQRuleType(
-        "DataFreshness",
-        "Check the freshness of a date column",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn",
-                "Name of column to check the freshness of.",
-                    false)
-        ),
-        "DATE_ARRAY"
+            "DataFreshness",
+            "Check the freshness of a date column",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn",
+                            "Name of column to check the freshness of."
+                    )
+            ),
+            "DATE_ARRAY"
     );
 
     private static final DQRuleType CUSTOM_SQL_RULE_TYPE = new DQRuleType(
-        "CustomSql",
-        "Runs a custom SQL against the dataset and returns a single value",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "CustomSqlStatement",
-                "Custom SQL statement to run against the dataset.",
-                    false)
-        ),
-        "NUMBER"
+            "CustomSql",
+            "Runs a custom SQL against the dataset and returns a single value",
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "CustomSqlStatement",
+                            "Custom SQL statement to run against the dataset."
+                    )
+            ),
+            "NUMBER"
     );
 
     private static final Map<String, DQRuleType> RULE_TYPE_MAP = new HashMap<>();

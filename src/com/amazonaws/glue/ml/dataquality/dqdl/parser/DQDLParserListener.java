@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListener {
@@ -154,15 +155,16 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
         DQRuleType dqRuleType = DQRuleType.getRuleTypeMap().get(ruleType);
         List<String> parameters = dqRuleContext.parameter().stream()
-            .map(p -> p.getText().replaceAll("\"", ""))
-            .collect(Collectors.toList());
+                .map(p -> p.getText().replaceAll("\"", ""))
+                .collect(Collectors.toList());
 
-        if (!DQRuleType.parameterVerification(dqRuleType.getParameters(), parameters)) {
-            //TODO: Maybe try to be more specific
-            return Either.fromLeft(String.format("Parameters are not valid for Rule Type: %s", ruleType));
+        Optional<String> errorMessage = dqRuleType.verifyParameters(dqRuleType.getParameters(), parameters);
+
+        if (errorMessage.isPresent()) {
+            return Either.fromLeft(String.format(errorMessage.get() + ": %s", ruleType));
         }
 
-        Map<String, String> parameterMap = DQRuleType.createParameterMap(dqRuleType.getParameters(), parameters);
+        Map<String, String> parameterMap = dqRuleType.createParameterMap(dqRuleType.getParameters(), parameters);
 
         String condition = "";
         if (dqRuleType.getReturnType().equals("BOOLEAN")) {
