@@ -16,7 +16,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class DQRuleParameter {
+
     private final String type;
     private final String name;
     private final String description;
+    private final Boolean isVarParam;
 }

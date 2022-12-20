@@ -15,6 +15,7 @@ import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,74 @@ public class DQRuleType {
     private final String description;
     private final List<DQRuleParameter> parameters;
     private final String returnType;
+
+    public static boolean checkDuplicateIsVarParams(List<DQRuleParameter> expectedParameters) {
+        for (int i = 0; i < expectedParameters.size() - 1; i++) {
+            if (expectedParameters.get(i).getIsVarParam()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+
+    public static boolean parameterVerification(List<DQRuleParameter> expectedParameters,
+                                                List<String> testParameters) {
+
+        if (expectedParameters.size() > 0) {
+
+            boolean isVarParam = expectedParameters.get(
+                    expectedParameters.size() - 1).getIsVarParam();
+
+            if (isVarParam) {
+
+                // VarArgs should not be empty
+                if (expectedParameters.size() > testParameters.size()) {
+                        return false;
+                }
+
+                return checkDuplicateIsVarParams(expectedParameters);
+            }
+        }
+
+        if (expectedParameters.size() != testParameters.size()) {
+            return false;
+        }
+
+        return checkDuplicateIsVarParams(expectedParameters);
+    }
+
+    public static Map<String, String> createParameterMap(List<DQRuleParameter> dqRuleTypeParameters,
+                                                         List<String> testParameters) {
+
+        Map<String, String> parameterMap = new LinkedHashMap<>();
+
+        for (int i = 0; i < dqRuleTypeParameters.size(); i++) {
+
+            // If rule type needs variable arguments, add as many TargetColumns as needed.
+            if (dqRuleTypeParameters.get(i).getIsVarParam()) {
+
+                int counter = 0;
+                // If rule type needs any fixed arguments
+                if (dqRuleTypeParameters.size() > 1) {
+                    counter = dqRuleTypeParameters.size() - 1;
+                }
+
+                for (int j = counter; j < testParameters.size(); j++) {
+
+                    String testColumnNames = dqRuleTypeParameters.get(i).getName() + (j + 1);
+                    String parameterNames = testParameters.get(j);
+
+                    parameterMap.put(testColumnNames, parameterNames);
+                }
+            } else {
+                parameterMap.put(dqRuleTypeParameters.get(i).getName(), testParameters.get(i));
+            }
+        }
+
+        return parameterMap;
+    }
 
     private static final DQRuleType JOB_STATUS_RULE_TYPE = new DQRuleType(
         "JobStatus",
@@ -69,8 +138,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn",
-                "Name of column to check completeness of."
-            )
+                "Name of column to check completeness of.",
+                    false)
         ),
         "PERCENTAGE"
     );
@@ -82,8 +151,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn",
-                "Name of column to check completeness of."
-            )
+                "Name of column to check completeness of.",
+                    false)
         ),
         "BOOLEAN"
     );
@@ -95,8 +164,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn",
-                "Name of column to check data type of."
-            )
+                "Name of column to check data type of.",
+                    false)
         ),
         "STRING"
     );
@@ -108,8 +177,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "PatternToMatch",
-                "Pattern to match against the names of the columns."
-            )
+                "Pattern to match against the names of the columns.",
+                    false)
         ),
         "BOOLEAN"
     );
@@ -121,8 +190,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn",
-                "Name of column to check existence of."
-            )
+                "Name of column to check existence of.",
+                    false)
         ),
         "BOOLEAN"
     );
@@ -134,13 +203,13 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn1",
-                "Name of first column."
-            ),
+                "Name of first column.",
+                    false),
             new DQRuleParameter(
                 "String",
                 "TargetColumn2",
-                "Name of second column."
-            )
+                "Name of second column.",
+                    false)
         ),
         "NUMBER"
     );
@@ -152,8 +221,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn",
-                "Name of column to check uniqueness of."
-            )
+                "Name of column to check uniqueness of.",
+                    false)
         ),
         "NUMBER"
     );
@@ -165,8 +234,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn",
-                "Name of column to check uniqueness of."
-            )
+                "Name of column to check uniqueness of.",
+                    false)
         ),
         "BOOLEAN"
     );
@@ -178,8 +247,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn",
-                "Name of column to check mean of."
-            )
+                "Name of column to check mean of.",
+                    false)
         ),
         "NUMBER"
     );
@@ -191,8 +260,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn",
-                "Name of column to check sum of."
-            )
+                "Name of column to check sum of.",
+                    false)
         ),
         "NUMBER"
     );
@@ -204,8 +273,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn",
-                "Name of column to check standard deviation of."
-            )
+                "Name of column to check standard deviation of.",
+                    false)
         ),
         "NUMBER"
     );
@@ -217,8 +286,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn",
-                "Name of column to check entropy of."
-            )
+                "Name of column to check entropy of.",
+                    false)
         ),
         "NUMBER"
     );
@@ -230,8 +299,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn",
-                "Name of column to check distinct values count of."
-            )
+                "Name of column to check distinct values count of.",
+                    false)
         ),
         "NUMBER"
     );
@@ -243,8 +312,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn",
-                "Name of column to check unique value ratio of."
-            )
+                "Name of column to check unique value ratio of.",
+                    false)
         ),
         "NUMBER"
     );
@@ -256,8 +325,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn",
-                "Name of column to check the length of the values of."
-            )
+                "Name of column to check the length of the values of.",
+                    false)
         ),
         "NUMBER"
     );
@@ -265,13 +334,13 @@ public class DQRuleType {
     private static final DQRuleType IS_PRIMARY_KEY_RULE_TYPE = new DQRuleType(
         "IsPrimaryKey",
         "Check if a given column contains a primary key, by checking for uniqueness and completeness",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "TargetColumn",
-                "Name of column to check for primary key attributes."
-            )
-        ),
+            Collections.singletonList(
+                    new DQRuleParameter(
+                            "String",
+                            "TargetColumn",
+                            "Name of column to return the values of.",
+                            true)
+            ),
         "BOOLEAN"
     );
 
@@ -282,8 +351,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn",
-                "Name of column to return the values of."
-            )
+                "Name of column to return the values of.",
+                    false)
         ),
         "STRING_ARRAY|NUMBER_ARRAY|DATE_ARRAY"
     );
@@ -295,8 +364,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "TargetColumn",
-                "Name of column to check the freshness of."
-            )
+                "Name of column to check the freshness of.",
+                    false)
         ),
         "DATE_ARRAY"
     );
@@ -308,8 +377,8 @@ public class DQRuleType {
             new DQRuleParameter(
                 "String",
                 "CustomSqlStatement",
-                "Custom SQL statement to run against the dataset."
-            )
+                "Custom SQL statement to run against the dataset.",
+                    false)
         ),
         "NUMBER"
     );
