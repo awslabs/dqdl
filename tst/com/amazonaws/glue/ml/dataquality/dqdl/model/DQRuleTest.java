@@ -105,7 +105,10 @@ class DQRuleTest {
             Arguments.of("ColumnValues \"col-A\" = \"A\" with threshold > 0.98"),
             Arguments.of("DataFreshness \"col-A\" <= 3 days"),
             Arguments.of("DataFreshness \"col-A\" > 30 hours"),
-            Arguments.of("DataFreshness \"col-A\" between 2 days and 4 days")
+            Arguments.of("DataFreshness \"col-A\" between 2 days and 4 days"),
+            Arguments.of("ReferentialIntegrity \"col-A\" \"reference\" \"col-A1\" between 0.4 and 0.6"),
+            Arguments.of("ReferentialIntegrity \"col-A\" \"reference\" \"col-A1\" > 0.98"),
+            Arguments.of("ReferentialIntegrity \"col-A\" \"reference\" \"col-A1\" = 0.99")
         );
     }
 

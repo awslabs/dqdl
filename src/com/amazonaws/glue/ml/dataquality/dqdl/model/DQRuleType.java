@@ -388,6 +388,29 @@ public class DQRuleType {
             "NUMBER"
     );
 
+    private static final DQRuleType REFERENTIAL_INTEGRITY_RULE_TYPE = new DQRuleType(
+        "ReferentialIntegrity",
+        "Runs a referential integrity against a reference dataset using the given columns",
+        Arrays.asList(
+            new DQRuleParameter(
+                "String",
+                "PrimaryDatasetColumn",
+                "PrimaryDatasetColumn."
+            ),
+            new DQRuleParameter(
+                "String",
+                "ReferenceDatasetAlias",
+                "ReferenceDatasetAlias."
+            ),
+            new DQRuleParameter(
+                "String",
+                "ReferenceDatasetColumn",
+                "ReferenceDatasetColumn."
+            )
+        ),
+        "NUMBER"
+    );
+
     private static final Map<String, DQRuleType> RULE_TYPE_MAP = new HashMap<>();
 
     static {
@@ -417,6 +440,7 @@ public class DQRuleType {
         RULE_TYPE_MAP.put(COLUMN_VALUES_RULE_TYPE.getRuleTypeName(), COLUMN_VALUES_RULE_TYPE);
         RULE_TYPE_MAP.put(DATA_FRESHNESS_RULE_TYPE.getRuleTypeName(), DATA_FRESHNESS_RULE_TYPE);
         RULE_TYPE_MAP.put(CUSTOM_SQL_RULE_TYPE.getRuleTypeName(), CUSTOM_SQL_RULE_TYPE);
+        RULE_TYPE_MAP.put(REFERENTIAL_INTEGRITY_RULE_TYPE.getRuleTypeName(), REFERENTIAL_INTEGRITY_RULE_TYPE);
     }
 
     public static Map<String, DQRuleType> getRuleTypeMap() {
