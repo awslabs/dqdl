@@ -13,6 +13,7 @@ package com.amazonaws.glue.ml.dataquality.dqdl.model;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,7 +26,7 @@ import static com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils.isBlank;
 
 @AllArgsConstructor
 @Getter
-public class DQRule {
+public class DQRule implements Serializable {
     private final String ruleType;
     private final Map<String, String> parameters;
     private final String thresholdExpression;
