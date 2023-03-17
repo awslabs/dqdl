@@ -59,7 +59,11 @@ public class InvalidDQRulesetTest {
             Arguments.of("Rules = [ DataFreshness \"col-A\" between 2 and 4 days ]"),
             Arguments.of("ReferentialIntegrity \"col-A\" \"reference\" \"col-A1\""),
             Arguments.of("ReferentialIntegrity \"col-A\" \"reference\"> 0.98"),
-            Arguments.of("ReferentialIntegrity \"col-A\"= 0.99")
+            Arguments.of("ReferentialIntegrity \"col-A\" = 0.99"),
+            Arguments.of("DataSynchronization \"reference\" = 0.99"),
+            Arguments.of("DataSynchronization \"reference\" \"ID\""),
+            Arguments.of("DataSynchronization \"reference\" \"ID\" < 0.4"),
+            Arguments.of("DataSynchronization \"reference\" \"ID\" \"colA\"")
         );
     }
 
