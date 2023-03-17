@@ -390,22 +390,45 @@ public class DQRuleType {
 
     private static final DQRuleType REFERENTIAL_INTEGRITY_RULE_TYPE = new DQRuleType(
         "ReferentialIntegrity",
-        "Runs a referential integrity against a reference dataset using the given columns",
+        "Runs a referential integrity check against a reference dataset using the given column",
         Arrays.asList(
             new DQRuleParameter(
                 "String",
                 "PrimaryDatasetColumn",
-                "PrimaryDatasetColumn."
+                "Name of column from primary dataset."
             ),
             new DQRuleParameter(
                 "String",
                 "ReferenceDatasetAlias",
-                "ReferenceDatasetAlias."
+                "Alias of reference dataset."
             ),
             new DQRuleParameter(
                 "String",
                 "ReferenceDatasetColumn",
-                "ReferenceDatasetColumn."
+                "Name of column from reference dataset."
+            )
+        ),
+        "NUMBER"
+    );
+
+    private static final DQRuleType DATA_SYNCHRONIZATION_RULE_TYPE = new DQRuleType(
+        "DataSynchronization",
+        "Runs a data synchronization check against a reference dataset using the given columns",
+        Arrays.asList(
+            new DQRuleParameter(
+                "String",
+                "ReferenceDatasetAlias",
+                "Alias of reference dataset."
+            ),
+            new DQRuleParameter(
+                "String",
+                "KeyColumnMappings",
+                "Mappings of key columns used for joining the two datasets."
+            ),
+            new DQRuleParameter(
+                "String",
+                "MatchColumnMappings",
+                "Mappings of columns used for matching."
             )
         ),
         "NUMBER"
@@ -441,6 +464,7 @@ public class DQRuleType {
         RULE_TYPE_MAP.put(DATA_FRESHNESS_RULE_TYPE.getRuleTypeName(), DATA_FRESHNESS_RULE_TYPE);
         RULE_TYPE_MAP.put(CUSTOM_SQL_RULE_TYPE.getRuleTypeName(), CUSTOM_SQL_RULE_TYPE);
         RULE_TYPE_MAP.put(REFERENTIAL_INTEGRITY_RULE_TYPE.getRuleTypeName(), REFERENTIAL_INTEGRITY_RULE_TYPE);
+        RULE_TYPE_MAP.put(DATA_SYNCHRONIZATION_RULE_TYPE.getRuleTypeName(), DATA_SYNCHRONIZATION_RULE_TYPE);
     }
 
     public static Map<String, DQRuleType> getRuleTypeMap() {
