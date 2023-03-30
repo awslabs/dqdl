@@ -71,11 +71,11 @@ ruleType: IDENTIFIER;
 parameter: (QUOTED_STRING | INT | DIGIT);
 condition:
     matchesRegexExpression
-	| jobStatusExpression
+	| setExpression
 	| numericThresholdExpression
 	| timeThresholdExpression
 	| dateThresholdExpression
-	| setExpression;
+	| jobStatusExpression;
 
 withThresholdCondition: 'with' 'threshold' numericThresholdExpression;
 

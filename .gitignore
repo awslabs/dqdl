@@ -2,3 +2,4 @@ build
 gen
 .antlr/
 *.iml
+*.tokens
