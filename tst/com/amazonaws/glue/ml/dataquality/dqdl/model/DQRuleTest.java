@@ -11,6 +11,7 @@
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.exception.InvalidDataQualityRulesetException;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.expression.StringSetExpression;
 import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLParser;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +46,7 @@ class DQRuleTest {
     @MethodSource("provideRawRules")
     void test_ruleParsingAndGenerating(String rule) {
         try {
-             DQRuleset dqRuleset = parser.parse(String.format("Rules = [ %s ]", rule));
+            DQRuleset dqRuleset = parser.parse(String.format("Rules = [ %s ]", rule));
             assertEquals(1, dqRuleset.getRules().size());
             DQRule dqRule = dqRuleset.getRules().get(0);
             String dqRuleAsString = dqRule.toString();
@@ -144,6 +153,66 @@ class DQRuleTest {
         assertEquals("IsPrimaryKey \"colA\"", dqRuleAsString);
     }
 
+    @Test
+    void test_setExpressionContainsRuleContainingRule() throws InvalidDataQualityRulesetException {
+        DQRuleset dqRuleset = parser.parse(
+            "Rules = [ ColumnValues \"col-A\" in [ \"ColumnValues in [ \\\"col-A\\\" ]\" ]]"
+        );
+        assertEquals(1, dqRuleset.getRules().size());
+        DQRule dqRule = dqRuleset.getRules().get(0);
+        assertEquals(StringSetExpression.class, dqRule.getExpression().getClass());
+        assertEquals(
+            Collections.singletonList("ColumnValues in [ \"col-A\" ]"),
+            ((StringSetExpression) dqRule.getExpression()).getItems()
+        );
+    }
+
+    @Test
+    void test_setExpressionContainsDates() throws InvalidDataQualityRulesetException {
+        DQRuleset dqRuleset = parser.parse(
+            "Rules = [ ColumnValues \"col-A\" in [ now(), (now() - 4 days), \"2023-01-01\", \"2023-02-01\"]]"
+        );
+        assertEquals(1, dqRuleset.getRules().size());
+        DQRule dqRule = dqRuleset.getRules().get(0);
+        assertEquals(StringSetExpression.class, dqRule.getExpression().getClass());
+        assertEquals(
+            Arrays.asList("now()", "(now()-4days)", "2023-01-01", "2023-02-01"),
+            ((StringSetExpression) dqRule.getExpression()).getItems()
+        );
+    }
+
+    @Test
+    void test_setExpressionContainsItemContainingEscapedQuotes() throws InvalidDataQualityRulesetException {
+        DQRuleset dqRuleset = parser.parse("Rules = [ ColumnValues \"col-A\" in [\"a\\\"b\", \"c\", \"d\\\"e\"]]");
+        assertEquals(1, dqRuleset.getRules().size());
+        DQRule dqRule = dqRuleset.getRules().get(0);
+        assertEquals(StringSetExpression.class, dqRule.getExpression().getClass());
+        assertEquals(Arrays.asList("a\"b", "c", "d\"e"), ((StringSetExpression) dqRule.getExpression()).getItems());
+    }
+
+    @Test
+    void test_setExpressionContainsItemContainingCommas() throws InvalidDataQualityRulesetException {
+        DQRuleset dqRuleset = parser.parse("Rules = [ ColumnValues \"col-A\" in [\"a,,b\", \"c\", \"d,,,e\"]]");
+        assertEquals(1, dqRuleset.getRules().size());
+        DQRule dqRule = dqRuleset.getRules().get(0);
+        assertEquals(StringSetExpression.class, dqRule.getExpression().getClass());
+        assertEquals(Arrays.asList("a,,b", "c", "d,,,e"), ((StringSetExpression) dqRule.getExpression()).getItems());
+    }
+
+    @Test
+    void test_serializationDeserializationWithExpressionFieldSet()
+        throws InvalidDataQualityRulesetException, IOException, ClassNotFoundException {
+        DQRuleset dqRuleset = parser.parse("Rules = [ ColumnValues \"col-A\" in [\"A\", \"B\"]]");
+        assertEquals(1, dqRuleset.getRules().size());
+        DQRule dqRule = dqRuleset.getRules().get(0);
+        assertEquals(StringSetExpression.class, dqRule.getExpression().getClass());
+        assertEquals(Arrays.asList("A", "B"), ((StringSetExpression) dqRule.getExpression()).getItems());
+        byte[] serialized = serialize(dqRule);
+        DQRule deserialized = deserialize(serialized, DQRule.class);
+        assertEquals(dqRule.toString(), deserialized.toString());
+        assertEquals(StringSetExpression.class, deserialized.getExpression().getClass());
+    }
+
     @Disabled
     void test_nullParametersAreCorrectlyHandled() {
         Map<String, String> parameters = null;
@@ -161,5 +230,22 @@ class DQRuleTest {
         DQRule dqRule = new DQRule("JobDuration", parameters, threshold);
         String dqRuleAsString = dqRule.toString();
         assertEquals("JobDuration = 100", dqRuleAsString);
+    }
+
+    private <T extends Serializable> byte[] serialize(T obj) throws IOException
+    {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        ObjectOutputStream objectStream = new ObjectOutputStream(stream);
+        objectStream.writeObject(obj);
+        objectStream.close();
+        return stream.toByteArray();
+    }
+
+    private <T extends Serializable> T deserialize(byte[] b, Class<T> cls) throws IOException, ClassNotFoundException
+    {
+        ByteArrayInputStream stream = new ByteArrayInputStream(b);
+        ObjectInputStream objectStream = new ObjectInputStream(stream);
+        Object o = objectStream.readObject();
+        return cls.cast(o);
     }
 }

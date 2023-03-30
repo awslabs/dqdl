@@ -16,6 +16,8 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleLogicalOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleType;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleset;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.expression.Expression;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.expression.StringSetExpression;
 import com.amazonaws.glue.ml.dataquality.dqdl.util.Either;
 
 import java.util.ArrayList;
@@ -60,7 +62,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     @Override
     public void enterMetadata(DataQualityDefinitionLanguageParser.MetadataContext ctx) {
         for (DataQualityDefinitionLanguageParser.PairContext pairContext : ctx.dictionary().pair()) {
-            String key = pairContext.QUOTED_STRING().getText().replaceAll("\"", "");
+            String key = removeEscapes(removeQuotes(pairContext.QUOTED_STRING().getText()));
             if (!ALLOWED_METADATA_KEYS.contains(key)) {
                 errorMessages.add("Unsupported key provided in Metadata section");
                 return;
@@ -74,7 +76,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     @Override
     public void enterSources(DataQualityDefinitionLanguageParser.SourcesContext ctx) {
         for (DataQualityDefinitionLanguageParser.PairContext pairContext : ctx.dictionary().pair()) {
-            String key = pairContext.QUOTED_STRING().getText().replaceAll("\"", "");
+            String key = removeEscapes(removeQuotes(pairContext.QUOTED_STRING().getText()));
 
             if (!ALLOWED_SOURCES_KEYS.contains(key)) {
                 errorMessages.add("Unsupported key provided in Sources section");
@@ -167,6 +169,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         Map<String, String> parameterMap = dqRuleType.createParameterMap(dqRuleType.getParameters(), parameters);
 
         String condition = "";
+        Expression expression = null;
         if (dqRuleType.getReturnType().equals("BOOLEAN")) {
           if (dqRuleContext.condition() != null) {
               return Either.fromLeft(
@@ -183,7 +186,31 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                     String.format("No condition provided for rule with non boolean rule type: %s", ruleType));
             }
 
-            condition = dqRuleContext.condition().getText();
+            DataQualityDefinitionLanguageParser.ConditionContext conditionContext = dqRuleContext.condition();
+            if (conditionContext.setExpression() != null) {
+                condition = dqRuleContext.condition().getText();
+                if (conditionContext.setExpression().dateArray() != null) {
+                    expression = new StringSetExpression(condition,
+                        conditionContext.setExpression().dateArray()
+                            .dateExpression()
+                            .stream()
+                            .map(item -> removeQuotes(item.getText()))// TODO: Investigate if this needs sanitization
+                            .collect(Collectors.toList())
+                    );
+                } else if (conditionContext.setExpression().quotedStringArray() != null) {
+                    expression = new StringSetExpression(condition,
+                        conditionContext.setExpression().quotedStringArray()
+                            .QUOTED_STRING()
+                            .stream()
+                            .map(item -> removeEscapes(removeQuotes(item.getText())))
+                            .collect(Collectors.toList()
+                        )
+                    );
+                }
+            } else {
+                condition = dqRuleContext.condition().getText();
+                expression = new Expression(condition);
+            }
         }
 
         String hasThreshold = "";
@@ -207,7 +234,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
         return Either.fromRight(
             new DQRule(dqRuleType.getRuleTypeName(), parameterMap, condition,
-                hasThreshold, DQRuleLogicalOperator.AND, new ArrayList<>())
+                hasThreshold, DQRuleLogicalOperator.AND, new ArrayList<>(), expression)
         );
     }
 
@@ -221,5 +248,16 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
             return Either.fromLeft(allErrorMessages);
         }
+    }
+
+    private String removeQuotes(String quotedString) {
+        if (quotedString.startsWith("\"")) quotedString = quotedString.substring(1);
+        if (quotedString.endsWith("\"")) quotedString = quotedString.substring(0, quotedString.length() - 1);
+        return quotedString;
+    }
+
+    private String removeEscapes(String stringWithEscapes) {
+        stringWithEscapes = stringWithEscapes.replaceAll("\\\\(.)", "$1");
+        return stringWithEscapes;
     }
 }
