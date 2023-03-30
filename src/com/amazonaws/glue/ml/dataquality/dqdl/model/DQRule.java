@@ -10,6 +10,7 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
+import com.amazonaws.glue.ml.dataquality.dqdl.model.expression.Expression;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -33,6 +34,7 @@ public class DQRule implements Serializable {
     private final String hasThresholdExpression;
     private final DQRuleLogicalOperator operator;
     private final List<DQRule> nestedRules;
+    private final Expression expression;
 
     private static final String EMPTY_STRING = "";
     private static final String KEYWORD_BETWEEN = "between";
@@ -44,6 +46,18 @@ public class DQRule implements Serializable {
 
     public DQRule(final String ruleType,
                   final Map<String, String> parameters,
+                  final Expression expression) {
+        this.ruleType = ruleType;
+        this.parameters = parameters;
+        this.expression = expression;
+        this.hasThresholdExpression = "";
+        this.operator = DQRuleLogicalOperator.AND;
+        this.nestedRules = new ArrayList<>();
+        this.thresholdExpression = expression.getExpressionAsString();
+    }
+
+    public DQRule(final String ruleType,
+                  final Map<String, String> parameters,
                   final String thresholdExpression) {
         this.ruleType = ruleType;
         this.parameters = parameters;
@@ -51,6 +65,22 @@ public class DQRule implements Serializable {
         this.hasThresholdExpression = "";
         this.operator = DQRuleLogicalOperator.AND;
         this.nestedRules = new ArrayList<>();
+        this.expression = new Expression(this.thresholdExpression);
+    }
+
+    public DQRule(final String ruleType,
+                  final Map<String, String> parameters,
+                  final String thresholdExpression,
+                  final String hasThresholdExpression,
+                  final DQRuleLogicalOperator operator,
+                  final List<DQRule> nestedRules) {
+        this.ruleType = ruleType;
+        this.parameters = parameters;
+        this.thresholdExpression = thresholdExpression;
+        this.hasThresholdExpression = hasThresholdExpression;
+        this.operator = operator;
+        this.nestedRules = nestedRules;
+        this.expression = new Expression(this.thresholdExpression);
     }
 
     @Override
