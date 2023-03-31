@@ -30,11 +30,12 @@ import static com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils.isBlank;
 public class DQRule implements Serializable {
     private final String ruleType;
     private final Map<String, String> parameters;
-    private final String thresholdExpression;
-    private final String hasThresholdExpression;
+    private final String thresholdExpression; // TODO: Remove once the typed Expression is fully integrated
+    private final String hasThresholdExpression; // TODO: Remove once the typed Expression is fully integrated
     private final DQRuleLogicalOperator operator;
     private final List<DQRule> nestedRules;
     private final Expression expression;
+    private final Expression threshold;
 
     private static final String EMPTY_STRING = "";
     private static final String KEYWORD_BETWEEN = "between";
@@ -50,10 +51,25 @@ public class DQRule implements Serializable {
         this.ruleType = ruleType;
         this.parameters = parameters;
         this.expression = expression;
-        this.hasThresholdExpression = "";
+        this.threshold = new Expression("");
         this.operator = DQRuleLogicalOperator.AND;
         this.nestedRules = new ArrayList<>();
         this.thresholdExpression = expression.getExpressionAsString();
+        this.hasThresholdExpression = threshold.getExpressionAsString();
+    }
+
+    public DQRule(final String ruleType,
+                  final Map<String, String> parameters,
+                  final Expression expression,
+                  final Expression hasThresholdExpression) {
+        this.ruleType = ruleType;
+        this.parameters = parameters;
+        this.expression = expression;
+        this.threshold = hasThresholdExpression;
+        this.operator = DQRuleLogicalOperator.AND;
+        this.nestedRules = new ArrayList<>();
+        this.thresholdExpression = expression.getExpressionAsString();
+        this.hasThresholdExpression = hasThresholdExpression.getExpressionAsString();
     }
 
     public DQRule(final String ruleType,
@@ -66,6 +82,7 @@ public class DQRule implements Serializable {
         this.operator = DQRuleLogicalOperator.AND;
         this.nestedRules = new ArrayList<>();
         this.expression = new Expression(this.thresholdExpression);
+        this.threshold = new Expression(this.hasThresholdExpression);
     }
 
     public DQRule(final String ruleType,
@@ -81,6 +98,7 @@ public class DQRule implements Serializable {
         this.operator = operator;
         this.nestedRules = nestedRules;
         this.expression = new Expression(this.thresholdExpression);
+        this.threshold = new Expression(this.hasThresholdExpression);
     }
 
     @Override
