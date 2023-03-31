@@ -11,6 +11,7 @@
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.exception.InvalidDataQualityRulesetException;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.expression.DoubleNumericExpression;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.expression.StringSetExpression;
 import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLParser;
 import org.junit.jupiter.api.Disabled;
@@ -33,6 +34,8 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /*
@@ -211,6 +214,21 @@ class DQRuleTest {
         DQRule deserialized = deserialize(serialized, DQRule.class);
         assertEquals(dqRule.toString(), deserialized.toString());
         assertEquals(StringSetExpression.class, deserialized.getExpression().getClass());
+    }
+
+    @Test
+    void test_serializationDeserializationWithNumericExpression()
+        throws InvalidDataQualityRulesetException, IOException, ClassNotFoundException {
+        DQRuleset dqRuleset = parser.parse("Rules = [ Completeness \"colA\" between 0.2 and 0.8]]");
+        assertEquals(1, dqRuleset.getRules().size());
+        DQRule dqRule = dqRuleset.getRules().get(0);
+        assertEquals(DoubleNumericExpression.class, dqRule.getExpression().getClass());
+        assertTrue(((DoubleNumericExpression) dqRule.getExpression()).evaluate(0.4));
+        byte[] serialized = serialize(dqRule);
+        DQRule deserialized = deserialize(serialized, DQRule.class);
+        assertEquals(dqRule.toString(), deserialized.toString());
+        assertEquals(DoubleNumericExpression.class, deserialized.getExpression().getClass());
+        assertFalse(((DoubleNumericExpression) deserialized.getExpression()).evaluate(0.9));
     }
 
     @Disabled

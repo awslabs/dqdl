@@ -16,18 +16,21 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleLogicalOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleType;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleset;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.expression.DoubleNumericExpression;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.expression.Expression;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.expression.ExpressionOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.expression.StringSetExpression;
 import com.amazonaws.glue.ml.dataquality.dqdl.util.Either;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListener {
@@ -206,6 +209,18 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                             .collect(Collectors.toList()
                         )
                     );
+                } else {
+                    condition = dqRuleContext.condition().getText();
+                    expression = new Expression(condition);
+                }
+            } else if (conditionContext.numericThresholdExpression() != null) {
+                Optional<Expression> optionalExpression =
+                    parseNumericExpression(conditionContext.numericThresholdExpression());
+                if (optionalExpression.isPresent()) {
+                    condition = dqRuleContext.condition().getText();
+                    expression = optionalExpression.get();
+                } else {
+                    return Either.fromLeft("Invalid condition provided");
                 }
             } else {
                 condition = dqRuleContext.condition().getText();
@@ -214,6 +229,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
 
         String hasThreshold = "";
+        Expression hasThresholdExpression = null;
         if (dqRuleContext.withThresholdCondition() != null &&
             dqRuleContext.withThresholdCondition().numericThresholdExpression() != null) {
             if (dqRuleType.getRuleTypeName().equals("ColumnValues")) {
@@ -223,7 +239,14 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                         dqRuleContext.condition().setExpression() != null &&
                         dqRuleContext.condition().setExpression().dateArray() == null
                     )) {
-                    hasThreshold = dqRuleContext.withThresholdCondition().numericThresholdExpression().getText();
+                    Optional<Expression> optionalThresholdExpression = parseNumericExpression(
+                        dqRuleContext.withThresholdCondition().numericThresholdExpression());
+                    if (optionalThresholdExpression.isPresent()) {
+                        hasThreshold = dqRuleContext.withThresholdCondition().numericThresholdExpression().getText();
+                        hasThresholdExpression = optionalThresholdExpression.get();
+                    } else {
+                        return Either.fromLeft("Invalid threshold condition provided");
+                    }
                 } else {
                     return Either.fromLeft("Threshold unsupported for the provided condition");
                 }
@@ -234,7 +257,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
         return Either.fromRight(
             new DQRule(dqRuleType.getRuleTypeName(), parameterMap, condition,
-                hasThreshold, DQRuleLogicalOperator.AND, new ArrayList<>(), expression)
+                hasThreshold, DQRuleLogicalOperator.AND, new ArrayList<>(), expression, hasThresholdExpression)
         );
     }
 
@@ -259,5 +282,63 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     private String removeEscapes(String stringWithEscapes) {
         stringWithEscapes = stringWithEscapes.replaceAll("\\\\(.)", "$1");
         return stringWithEscapes;
+    }
+
+    private Optional<Expression> parseNumericExpression(
+        DataQualityDefinitionLanguageParser.NumericThresholdExpressionContext ctx) {
+        String exprStr = ctx.getText();
+        Expression expression = null;
+
+        if (ctx.BETWEEN() != null && ctx.number().size() == 2) {
+            Optional<Double> lower = parseDouble(ctx.number(0).getText());
+            Optional<Double> upper = parseDouble(ctx.number(1).getText());
+            if (lower.isPresent() && upper.isPresent()) {
+                expression = new DoubleNumericExpression(
+                    exprStr, ExpressionOperator.BETWEEN, Arrays.asList(lower.get(), upper.get()));
+            }
+        } else if (ctx.GREATER_THAN_EQUAL_TO() != null && ctx.number().size() == 1) {
+            Optional<Double> number = parseDouble(ctx.number(0).getText());
+            if (number.isPresent()) {
+                expression = new DoubleNumericExpression(
+                    exprStr, ExpressionOperator.GREATER_THAN_EQUAL_TO, Collections.singletonList(number.get()));
+            }
+        } else if (ctx.GREATER_THAN() != null && ctx.number().size() == 1) {
+            Optional<Double> number = parseDouble(ctx.number(0).getText());
+            if (number.isPresent()) {
+                expression = new DoubleNumericExpression(
+                    exprStr, ExpressionOperator.GREATER_THAN, Collections.singletonList(number.get()));
+            }
+        } else if (ctx.LESS_THAN() != null && ctx.number().size() == 1) {
+            Optional<Double> number = parseDouble(ctx.number(0).getText());
+            if (number.isPresent()) {
+                expression = new DoubleNumericExpression(
+                    exprStr, ExpressionOperator.LESS_THAN, Collections.singletonList(number.get()));
+            }
+        } else if (ctx.LESS_THAN_EQUAL_TO() != null && ctx.number().size() == 1) {
+            Optional<Double> number = parseDouble(ctx.number(0).getText());
+            if (number.isPresent()) {
+                expression = new DoubleNumericExpression(
+                    exprStr, ExpressionOperator.LESS_THAN_EQUAL_TO, Collections.singletonList(number.get()));
+            }
+        } else if (ctx.EQUAL_TO() != null && ctx.number().size() == 1) {
+            Optional<Double> number = parseDouble(ctx.number(0).getText());
+            if (number.isPresent()) {
+                expression = new DoubleNumericExpression(
+                    exprStr, ExpressionOperator.EQUALS, Collections.singletonList(number.get()));
+            }
+        }
+
+        return Optional.ofNullable(expression);
+    }
+
+    private Optional<Double> parseDouble(String doubleStr) {
+        double dbl;
+        try {
+            dbl = Double.parseDouble(doubleStr);
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
+
+        return Optional.of(dbl);
     }
 }

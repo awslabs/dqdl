@@ -15,7 +15,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class SetExpression<T> extends Expression {
+public abstract class SetExpression<T> extends Expression {
     private final List<T> items;
 
     public SetExpression(final String expressionAsString,
