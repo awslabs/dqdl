@@ -26,7 +26,7 @@ import static com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils.isNotBlank
 public class DQRuleset {
     private final Map<String, String> metadata;
     private final String primarySourceName;
-    private final List<String> additionalSourcesNames;
+    private final List<String> additionalDataSourcesNames;
     private final List<DQRule> rules;
 
     private static final String LINE_SEP = System.lineSeparator();
@@ -34,7 +34,7 @@ public class DQRuleset {
     public DQRuleset(final List<DQRule> rules) {
         this.metadata = new HashMap<>();
         this.primarySourceName = null;
-        this.additionalSourcesNames = new ArrayList<>();
+        this.additionalDataSourcesNames = new ArrayList<>();
         this.rules = rules;
     }
 
@@ -50,25 +50,26 @@ public class DQRuleset {
         }
 
         String sourcesStr = "";
-        if (isNotBlank(primarySourceName) || (additionalSourcesNames != null && additionalSourcesNames.size() > 0)) {
-            String additionalSourcesStr = "";
-            if (additionalSourcesNames != null && additionalSourcesNames.size() > 0) {
-                additionalSourcesStr = "    \"AdditionalSources\": [ " +
-                    additionalSourcesNames.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(", ")) +
+        if (isNotBlank(primarySourceName) ||
+            (additionalDataSourcesNames != null && additionalDataSourcesNames.size() > 0)) {
+            String additionalDataSourcesStr = "";
+            if (additionalDataSourcesNames != null && additionalDataSourcesNames.size() > 0) {
+                additionalDataSourcesStr = "    \"AdditionalDataSources\": [ " +
+                    additionalDataSourcesNames.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(", ")) +
                     " ]" + LINE_SEP;
             }
 
             String primarySourceStr = "";
             if (isNotBlank(primarySourceName)) {
                 primarySourceStr = "    \"Primary\": " + "\"" + primarySourceName + "\"";
-                if (isNotBlank(additionalSourcesStr)) {
+                if (isNotBlank(additionalDataSourcesStr)) {
                      primarySourceStr += ",";
                 }
                 primarySourceStr += LINE_SEP;
             }
 
-            sourcesStr = "Sources = {" + LINE_SEP +
-                primarySourceStr + additionalSourcesStr +
+            sourcesStr = "DataSources = {" + LINE_SEP +
+                primarySourceStr + additionalDataSourcesStr +
                 "}";
         }
 

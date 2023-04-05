@@ -69,7 +69,7 @@ class DQRulesetTest {
     @Test
     void test_isPrimaryCheckWithMetadataAndSourcesAndNoAdditionalSourcesToString() {
         String dqdl = "Metadata = { \"Version\": \"1.0\" }" + System.lineSeparator() +
-            "Sources = { \"Primary\": \"orders-table\" } " + System.lineSeparator() +
+            "DataSources = { \"Primary\": \"orders-table\" } " + System.lineSeparator() +
             "Rules = [ IsPrimaryKey \"colA\" ]";
         DQRuleset dqRuleset = parseDQDL(dqdl);
 
@@ -77,7 +77,7 @@ class DQRulesetTest {
             "Metadata = {" + LINE_SEP +
                 "    \"Version\": \"1.0\"" + LINE_SEP +
                 "}" + LINE_SEP + LINE_SEP +
-                "Sources = {" + LINE_SEP +
+                "DataSources = {" + LINE_SEP +
                 "    \"Primary\": \"orders-table\"" + LINE_SEP +
                 "}" + LINE_SEP + LINE_SEP +
                 "Rules = [" + LINE_SEP +
@@ -89,12 +89,12 @@ class DQRulesetTest {
     @Test
     void test_isPrimaryCheckWithMetadataAndSources() {
         String dqdl = "Metadata = { \"Version\": \"1.0\" }" + System.lineSeparator() +
-            "Sources = { \"Primary\": \"orders-table\", \"AdditionalSources\": [ \"ref-table\" ] } " + System.lineSeparator() +
+            "DataSources = { \"Primary\": \"orders-table\", \"AdditionalDataSources\": [ \"ref-table\" ] } " + System.lineSeparator() +
             "Rules = [ IsPrimaryKey \"colA\" ]";
         DQRuleset dqRuleset = parseDQDL(dqdl);
         assertEquals("orders-table", dqRuleset.getPrimarySourceName());
-        assertEquals(1, dqRuleset.getAdditionalSourcesNames().size());
-        assertEquals("ref-table", dqRuleset.getAdditionalSourcesNames().get(0));
+        assertEquals(1, dqRuleset.getAdditionalDataSourcesNames().size());
+        assertEquals("ref-table", dqRuleset.getAdditionalDataSourcesNames().get(0));
         assertEquals(1, dqRuleset.getRules().size());
         assertEquals("IsPrimaryKey", dqRuleset.getRules().get(0).getRuleType());
     }
@@ -102,7 +102,7 @@ class DQRulesetTest {
     @Test
     void test_isPrimaryCheckWithMetadataAndSourcesToString() {
         String dqdl = "Metadata = { \"Version\": \"1.0\" }" + System.lineSeparator() +
-            "Sources = { \"Primary\": \"orders-table\", \"AdditionalSources\": [ \"ref-table\" ] } " + System.lineSeparator() +
+            "DataSources = { \"Primary\": \"orders-table\", \"AdditionalDataSources\": [ \"ref-table\" ] } " + System.lineSeparator() +
             "Rules = [ IsPrimaryKey \"colA\" ]";
         DQRuleset dqRuleset = parseDQDL(dqdl);
 
@@ -110,9 +110,9 @@ class DQRulesetTest {
             "Metadata = {" + LINE_SEP +
                 "    \"Version\": \"1.0\"" + LINE_SEP +
                 "}" + LINE_SEP + LINE_SEP +
-                "Sources = {" + LINE_SEP +
+                "DataSources = {" + LINE_SEP +
                 "    \"Primary\": \"orders-table\"," + LINE_SEP +
-                "    \"AdditionalSources\": [ \"ref-table\" ]" + LINE_SEP +
+                "    \"AdditionalDataSources\": [ \"ref-table\" ]" + LINE_SEP +
                 "}" + LINE_SEP + LINE_SEP +
                 "Rules = [" + LINE_SEP +
                 "    IsPrimaryKey \"colA\"" + LINE_SEP +
@@ -123,7 +123,7 @@ class DQRulesetTest {
     @Test
     void test_isPrimaryCheckWithMetadataAndSourcesAndIncorrectPrimarySourceKey() {
         String dqdl = "Metadata = { \"Version\": \"1.0\" }" + System.lineSeparator() +
-            "Sources = { \"PrimaryFoo\": \"orders-table\", \"AdditionalSources\": [ \"ref-table\" ] } " + System.lineSeparator() +
+            "DataSources = { \"PrimaryFoo\": \"orders-table\", \"AdditionalDataSources\": [ \"ref-table\" ] } " + System.lineSeparator() +
             "Rules = [ IsPrimaryKey \"colA\" ]";
         try {
             dqdlParser.parse(dqdl);
@@ -136,7 +136,7 @@ class DQRulesetTest {
     @Test
     void test_isPrimaryCheckWithMetadataAndSourcesAndIncorrectAdditionalSourcesKey() {
         String dqdl = "Metadata = { \"Version\": \"1.0\" }" + System.lineSeparator() +
-            "Sources = { \"Primary\": \"orders-table\", \"AdditionalSourcesFoo\": [ \"ref-table\" ] } " + System.lineSeparator() +
+            "DataSources = { \"Primary\": \"orders-table\", \"AdditionalDataSourcesFoo\": [ \"ref-table\" ] } " + System.lineSeparator() +
             "Rules = [ IsPrimaryKey \"colA\" ]";
         try {
             dqdlParser.parse(dqdl);
@@ -149,12 +149,12 @@ class DQRulesetTest {
     @Test
     void test_isPrimaryCheckWithMetadataAndSourcesAndNoPrimarySource() {
         String dqdl = "Metadata = { \"Version\": \"1.0\" }" + System.lineSeparator() +
-            "Sources = { \"AdditionalSources\": [ \"ref-table\" ] } " + System.lineSeparator() +
+            "DataSources = { \"AdditionalDataSources\": [ \"ref-table\" ] } " + System.lineSeparator() +
             "Rules = [ IsPrimaryKey \"colA\" ]";
         DQRuleset dqRuleset = parseDQDL(dqdl);
         assertNull(dqRuleset.getPrimarySourceName());
-        assertEquals(1, dqRuleset.getAdditionalSourcesNames().size());
-        assertEquals("ref-table", dqRuleset.getAdditionalSourcesNames().get(0));
+        assertEquals(1, dqRuleset.getAdditionalDataSourcesNames().size());
+        assertEquals("ref-table", dqRuleset.getAdditionalDataSourcesNames().get(0));
         assertEquals(1, dqRuleset.getRules().size());
         assertEquals("IsPrimaryKey", dqRuleset.getRules().get(0).getRuleType());
     }
@@ -162,7 +162,7 @@ class DQRulesetTest {
     @Test
     void test_isPrimaryCheckWithMetadataAndSourcesAndNoPrimarySourceToString() {
         String dqdl = "Metadata = { \"Version\": \"1.0\" }" + System.lineSeparator() +
-            "Sources = { \"AdditionalSources\": [ \"ref-table\" ] } " + System.lineSeparator() +
+            "DataSources = { \"AdditionalDataSources\": [ \"ref-table\" ] } " + System.lineSeparator() +
             "Rules = [ IsPrimaryKey \"colA\" ]";
         DQRuleset dqRuleset = parseDQDL(dqdl);
 
@@ -170,8 +170,8 @@ class DQRulesetTest {
             "Metadata = {" + LINE_SEP +
                 "    \"Version\": \"1.0\"" + LINE_SEP +
                 "}" + LINE_SEP + LINE_SEP +
-                "Sources = {" + LINE_SEP +
-                "    \"AdditionalSources\": [ \"ref-table\" ]" + LINE_SEP +
+                "DataSources = {" + LINE_SEP +
+                "    \"AdditionalDataSources\": [ \"ref-table\" ]" + LINE_SEP +
                 "}" + LINE_SEP + LINE_SEP +
                 "Rules = [" + LINE_SEP +
                 "    IsPrimaryKey \"colA\"" + LINE_SEP +
