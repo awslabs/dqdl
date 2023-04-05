@@ -46,7 +46,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     private static final Set<String> ALLOWED_METADATA_KEYS;
 
     private static final String PRIMARY_SOURCE_KEY = "Primary";
-    private static final String ADDITIONAL_SOURCES_KEY = "AdditionalSources";
+    private static final String ADDITIONAL_SOURCES_KEY = "AdditionalDataSources";
     private static final Set<String> ALLOWED_SOURCES_KEYS;
 
     static {
@@ -77,7 +77,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     }
 
     @Override
-    public void enterSources(DataQualityDefinitionLanguageParser.SourcesContext ctx) {
+    public void enterDataSources(DataQualityDefinitionLanguageParser.DataSourcesContext ctx) {
         for (DataQualityDefinitionLanguageParser.PairContext pairContext : ctx.dictionary().pair()) {
             String key = removeEscapes(removeQuotes(pairContext.QUOTED_STRING().getText()));
 
