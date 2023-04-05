@@ -8,7 +8,7 @@ quotedStringArray:
 
 // Sections
 metadataSectionStart: 'Metadata';
-sourcesSectionStart: 'Sources';
+dataSourcesSectionStart: 'DataSources';
 rulesSectionStart: 'Rules';
 
 // Expressions
@@ -101,6 +101,6 @@ pairValue: QUOTED_STRING | array;
 array: LBRAC QUOTED_STRING (COMMA QUOTED_STRING)* RBRAC;
 
 metadata: metadataSectionStart EQUAL_TO dictionary;
-sources: sourcesSectionStart EQUAL_TO dictionary;
+dataSources: dataSourcesSectionStart EQUAL_TO dictionary;
 
-document: metadata? sources? rules;
+document: metadata? dataSources? rules;
