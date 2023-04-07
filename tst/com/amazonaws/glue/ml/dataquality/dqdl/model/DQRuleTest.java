@@ -118,9 +118,10 @@ class DQRuleTest {
             Arguments.of("DataFreshness \"col-A\" <= 3 days"),
             Arguments.of("DataFreshness \"col-A\" > 30 hours"),
             Arguments.of("DataFreshness \"col-A\" between 2 days and 4 days"),
-            Arguments.of("ReferentialIntegrity \"col-A\" \"reference\" \"col-A1\" between 0.4 and 0.6"),
-            Arguments.of("ReferentialIntegrity \"col-A\" \"reference\" \"col-A1\" > 0.98"),
-            Arguments.of("ReferentialIntegrity \"col-A\" \"reference\" \"col-A1\" = 0.99"),
+            Arguments.of("ReferentialIntegrity \"col-A\" \"reference.col-A1\" between 0.4 and 0.6"),
+            Arguments.of("ReferentialIntegrity \"col-A\" \"reference.col-A1\" > 0.98"),
+            Arguments.of("ReferentialIntegrity \"col-A\" \"reference.col-A1\" = 0.99"),
+            Arguments.of("ReferentialIntegrity \"col-A,col-B\" \"reference.{col-A1,col-A2}\" = 0.99"),
             Arguments.of("DataSynchronization \"reference\" \"ID1,ID2\" \"colA,colB,colC\" = 0.99"),
             Arguments.of("DataSynchronization \"reference\" \"ID1->ID11,ID2->ID22\" \"colA->colAA\" between 0.4 and 0.8")
         );
