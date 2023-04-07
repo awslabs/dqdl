@@ -394,18 +394,15 @@ public class DQRuleType {
         Arrays.asList(
             new DQRuleParameter(
                 "String",
-                "PrimaryDatasetColumn",
-                "Name of column from primary dataset."
+                "PrimaryDatasetColumns",
+                "Names of columns from primary dataset separated by commas."
             ),
             new DQRuleParameter(
                 "String",
-                "ReferenceDatasetAlias",
-                "Alias of reference dataset."
-            ),
-            new DQRuleParameter(
-                "String",
-                "ReferenceDatasetColumn",
-                "Name of column from reference dataset."
+                "ReferenceDatasetColumns",
+                "Alias of reference dataset and comma separated names of columns from reference dataset. " +
+                "The alias and the names should be separated by a period. " +
+                "The names should be enclosed in curly brackets."
             )
         ),
         "NUMBER"
