@@ -21,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public class InvalidDQRulesetTest {
     DQDLParser parser = new DQDLParser();
+    com.amazonaws.glue.ml.dataquality.dqdl.parser.updated.DQDLParser updatedParser =
+        new com.amazonaws.glue.ml.dataquality.dqdl.parser.updated.DQDLParser();
 
     private static Stream<Arguments> provideInvalidRulesets() {
         return Stream.of(
@@ -53,17 +55,16 @@ public class InvalidDQRulesetTest {
             Arguments.of("Rules = [ ColumnValues \"col-A\" in [\"2022-01-01\"] with threshold > 0.98 ]"),
             Arguments.of("Rules = [ ColumnValues \"col-A\" = 1 with threshold > 0.98 ]"),
             Arguments.of("Rules = [ ColumnValues \"col-A\" in [1,\"2\"] ]"),
-            Arguments.of("ColumnValues \"col-A\" = \"2022-01-01\" with threshold > 0.98"),
+            Arguments.of("Rules = [ ColumnValues \"col-A\" = \"2022-01-01\" with threshold > 0.98 ]"),
             Arguments.of("Rules = [ DataFreshness \"col-A\" <= 3 ]"),
             Arguments.of("Rules = [ DataFreshness \"col-A\" > 30 ]"),
             Arguments.of("Rules = [ DataFreshness \"col-A\" between 2 and 4 days ]"),
-            Arguments.of("ReferentialIntegrity \"col-A\" \"reference\" \"col-A1\""),
-            Arguments.of("ReferentialIntegrity \"col-A\" \"reference\"> 0.98"),
-            Arguments.of("ReferentialIntegrity \"col-A\" = 0.99"),
-            Arguments.of("DataSynchronization \"reference\" = 0.99"),
-            Arguments.of("DataSynchronization \"reference\" \"ID\""),
-            Arguments.of("DataSynchronization \"reference\" \"ID\" < 0.4"),
-            Arguments.of("DataSynchronization \"reference\" \"ID\" \"colA\"")
+            Arguments.of("Rules = [ ReferentialIntegrity \"col-A\" \"reference\" \"col-A1\" ]"),
+            Arguments.of("Rules = [ ReferentialIntegrity \"col-A\" = 0.99 ]"),
+            Arguments.of("Rules = [ DataSynchronization \"reference\" = 0.99 ]"),
+            Arguments.of("Rules = [ DataSynchronization \"reference\" \"ID\" ]"),
+            Arguments.of("Rules = [ DataSynchronization \"reference\" \"ID\" < 0.4 ]"),
+            Arguments.of("Rules = [ DataSynchronization \"reference\" \"ID\" \"colA\" ]")
         );
     }
 
@@ -72,6 +73,22 @@ public class InvalidDQRulesetTest {
     void test_invalidRulesetParsing(String ruleset) {
         try {
             parser.parse(ruleset);
+            fail("Ruleset validation exception was expected");
+        } catch (InvalidDataQualityRulesetException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideInvalidRulesets")
+    void test_invalidRulesetParsingWithUpdatedParser(String ruleset) {
+        // With the updated parser, we are allowing the threshold condition for any variant of ColumnValues rule.
+        // This is because we do not want the parser to make the decision if threshold condition for the particular
+        // variant is supported or not. We will leave that with the consumer.
+        if (ruleset.contains("with threshold")) return;
+
+        try {
+            updatedParser.parse(ruleset);
             fail("Ruleset validation exception was expected");
         } catch (InvalidDataQualityRulesetException e) {
             System.out.println(e.getMessage());
