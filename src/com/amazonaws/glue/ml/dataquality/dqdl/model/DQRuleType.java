@@ -26,12 +26,18 @@ public class DQRuleType {
     private final String description;
     private final List<DQRuleParameter> parameters;
     private final String returnType;
+    private final Boolean supportsThreshold;
 
-    public DQRuleType(String ruleTypeName, String description, List<DQRuleParameter> parameters, String returnType) {
+    public DQRuleType(String ruleTypeName,
+                      String description,
+                      List<DQRuleParameter> parameters,
+                      String returnType,
+                      Boolean supportsThreshold) {
         this.ruleTypeName = ruleTypeName;
         this.description = description;
         this.parameters = parameters;
         this.returnType = returnType;
+        this.supportsThreshold = supportsThreshold;
 
         if (parameters.isEmpty()) {
             return;
@@ -41,11 +47,14 @@ public class DQRuleType {
         // Check all except for last param
         List<DQRuleParameter> expectedParametersToCheck = parameters.subList(0, parameters.size() - 1);
 
-        if (expectedParametersToCheck.stream().anyMatch(
-                DQRuleParameter::isVarArg)) {
+        if (expectedParametersToCheck.stream().anyMatch(DQRuleParameter::isVarArg)) {
             throw new IllegalArgumentException(
-                    "Property isVarArg can only be set to true on last element in parameters list");
+                "Property isVarArg can only be set to true on last element in parameters list");
         }
+    }
+
+    public DQRuleType(String ruleTypeName, String description, List<DQRuleParameter> parameters, String returnType) {
+        this(ruleTypeName, description, parameters, returnType, false);
     }
 
     public Optional<String> verifyParameters(List<DQRuleParameter> expectedParameters,
@@ -144,7 +153,7 @@ public class DQRuleType {
                             "Name of column to check completeness of."
                     )
             ),
-            "PERCENTAGE"
+            "NUMBER"
     );
 
     private static final DQRuleType IS_COMPLETE_RULE_TYPE = new DQRuleType(
@@ -359,7 +368,8 @@ public class DQRuleType {
                             "Name of column to return the values of."
                     )
             ),
-            "STRING_ARRAY|NUMBER_ARRAY|DATE_ARRAY"
+            "STRING_ARRAY|NUMBER_ARRAY|DATE_ARRAY",
+            true
     );
 
     private static final DQRuleType DATA_FRESHNESS_RULE_TYPE = new DQRuleType(
@@ -372,7 +382,7 @@ public class DQRuleType {
                             "Name of column to check the freshness of."
                     )
             ),
-            "DATE_ARRAY"
+            "DURATION_ARRAY"
     );
 
     private static final DQRuleType CUSTOM_SQL_RULE_TYPE = new DQRuleType(
