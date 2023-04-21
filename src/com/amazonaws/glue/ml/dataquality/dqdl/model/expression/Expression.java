@@ -10,11 +10,13 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model.expression;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.io.Serializable;
 
 @Getter
+@EqualsAndHashCode
 public class Expression implements Serializable {
     private final String expressionAsString;
 

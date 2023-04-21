@@ -11,6 +11,7 @@
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import static com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils.isNotBlank
 
 @AllArgsConstructor
 @Getter
+@EqualsAndHashCode
 public class DQRuleset {
     private final Map<String, String> metadata;
     private final String primarySourceName;
