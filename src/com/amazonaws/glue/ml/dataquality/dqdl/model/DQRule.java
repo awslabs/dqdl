@@ -12,6 +12,7 @@ package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.model.expression.Expression;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.io.Serializable;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 import static com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils.isBlank;
 
 @AllArgsConstructor
+@EqualsAndHashCode
 @Getter
 public class DQRule implements Serializable {
     private final String ruleType;

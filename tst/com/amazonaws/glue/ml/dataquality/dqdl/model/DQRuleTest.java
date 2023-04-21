@@ -232,6 +232,16 @@ class DQRuleTest {
         assertFalse(((DoubleNumericExpression) deserialized.getExpression()).evaluate(0.9));
     }
 
+    @Test
+    void test_compositeRulesAreReparseable() throws InvalidDataQualityRulesetException {
+        DQRuleset dqRuleset = parser.parse("Rules = [ (IsComplete \"colA\") and (IsUnique \"colA\")]");
+        String rulesetString = dqRuleset.toString();
+        DQRuleset reparsed = parser.parse(rulesetString);
+        String reStringed = reparsed.toString();
+        assertTrue(dqRuleset.equals(reparsed));
+        assertEquals(reStringed, rulesetString);
+    }
+
     @Disabled
     void test_nullParametersAreCorrectlyHandled() {
         Map<String, String> parameters = null;
