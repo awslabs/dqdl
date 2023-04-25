@@ -16,19 +16,17 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class DateBasedCondition extends Condition {
     private final DateBasedConditionOperator operator;
-    private final List<String> operands;
+    private final List<DateExpression> operands;
 
     public DateBasedCondition(final String conditionAsString,
                               final DateBasedConditionOperator operator,
-                              final List<String> operands) {
+                              final List<DateExpression> operands) {
         super(conditionAsString);
         this.operator = operator;
         this.operands = operands;
@@ -41,20 +39,22 @@ public class DateBasedCondition extends Condition {
         switch (operator) {
             case BETWEEN:
                 return String.format("between %s and %s",
-                    formatOperand(operands.get(0)), formatOperand(operands.get(1)));
+                    operands.get(0).getFormattedExpression(),
+                    operands.get(1).getFormattedExpression()
+                );
             case GREATER_THAN:
-                return String.format("> %s", formatOperand(operands.get(0)));
+                return String.format("> %s", operands.get(0).getFormattedExpression());
             case GREATER_THAN_EQUAL_TO:
-                return String.format(">= %s", formatOperand(operands.get(0)));
+                return String.format(">= %s", operands.get(0).getFormattedExpression());
             case LESS_THAN:
-                return String.format("< %s", formatOperand(operands.get(0)));
+                return String.format("< %s", operands.get(0).getFormattedExpression());
             case LESS_THAN_EQUAL_TO:
-                return String.format("<= %s", formatOperand(operands.get(0)));
+                return String.format("<= %s", operands.get(0).getFormattedExpression());
             case EQUALS:
-                return String.format("= %s", formatOperand(operands.get(0)));
+                return String.format("= %s", operands.get(0).getFormattedExpression());
             case IN: {
                 List<String> formattedOperands = operands.stream()
-                    .map(this::formatOperand)
+                    .map(DateExpression::getFormattedExpression)
                     .collect(Collectors.toList());
                 return String.format("in [%s]", String.join(",", formattedOperands));
             }
@@ -63,30 +63,5 @@ public class DateBasedCondition extends Condition {
         }
 
         return "";
-    }
-
-    private String formatOperand(String operand) {
-        String timeComparatorRegex = "(\\d*)(days|hours)";
-        String dateExpressionComparatorRegex = "\\(now\\(\\)([-|+])" + timeComparatorRegex;
-        String dateRegex = "\\d{4}-\\d{2}-\\d{2}";
-
-        Pattern timePattern = Pattern.compile(timeComparatorRegex);
-        Pattern dateExpressionPattern = Pattern.compile(dateExpressionComparatorRegex);
-        Pattern datePattern = Pattern.compile(dateRegex);
-
-        Matcher mTime = timePattern.matcher(operand);
-        Matcher mDateExpression = dateExpressionPattern.matcher(operand);
-        Matcher mDate = datePattern.matcher(operand);
-
-        if (mDateExpression.find()) {
-            return String.format("(now() %s %s %s)",
-                mDateExpression.group(1), mDateExpression.group(2), mDateExpression.group(3));
-        } else if (mTime.find()) {
-            return String.format("%s %s", mTime.group(1), mTime.group(2));
-        } else if (mDate.find()) {
-            return "\"" + operand + "\"";
-        } else {
-            return operand;
-        }
     }
 }
