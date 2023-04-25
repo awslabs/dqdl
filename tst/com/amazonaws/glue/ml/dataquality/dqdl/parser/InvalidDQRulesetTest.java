@@ -64,7 +64,10 @@ public class InvalidDQRulesetTest {
             Arguments.of("Rules = [ DataSynchronization \"reference\" = 0.99 ]"),
             Arguments.of("Rules = [ DataSynchronization \"reference\" \"ID\" ]"),
             Arguments.of("Rules = [ DataSynchronization \"reference\" \"ID\" < 0.4 ]"),
-            Arguments.of("Rules = [ DataSynchronization \"reference\" \"ID\" \"colA\" ]")
+            Arguments.of("Rules = [ DataSynchronization \"reference\" \"ID\" \"colA\" ]"),
+            Arguments.of("Rules = [ SchemaMatches with threshold between 0.2 and 0.4 ]"),
+            Arguments.of("Rules = [ SchemaMatches \"ref-1\" between 0.2 and 0.4 ]"),
+            Arguments.of("Rules = [ SchemaMatches \"ref-1\" \"ref-2\" ]")
         );
     }
 
