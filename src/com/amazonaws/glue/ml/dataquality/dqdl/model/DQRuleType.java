@@ -441,6 +441,20 @@ public class DQRuleType {
         "NUMBER"
     );
 
+    private static final DQRuleType SCHEMA_MATCHES_RULE_TYPE = new DQRuleType(
+        "SchemaMatches",
+        "Checks the schema of the primary dataset against the reference dataset",
+        Collections.singletonList(
+            new DQRuleParameter(
+                "String",
+                "ReferenceDatasetAlias",
+                "Alias of reference dataset."
+            )
+        ),
+        "BOOLEAN",
+        true
+    );
+
     private static final Map<String, DQRuleType> RULE_TYPE_MAP = new HashMap<>();
 
     static {
@@ -472,6 +486,7 @@ public class DQRuleType {
         RULE_TYPE_MAP.put(CUSTOM_SQL_RULE_TYPE.getRuleTypeName(), CUSTOM_SQL_RULE_TYPE);
         RULE_TYPE_MAP.put(REFERENTIAL_INTEGRITY_RULE_TYPE.getRuleTypeName(), REFERENTIAL_INTEGRITY_RULE_TYPE);
         RULE_TYPE_MAP.put(DATA_SYNCHRONIZATION_RULE_TYPE.getRuleTypeName(), DATA_SYNCHRONIZATION_RULE_TYPE);
+        RULE_TYPE_MAP.put(SCHEMA_MATCHES_RULE_TYPE.getRuleTypeName(), SCHEMA_MATCHES_RULE_TYPE);
     }
 
     public static Map<String, DQRuleType> getRuleTypeMap() {
