@@ -13,10 +13,11 @@ durationUnit: 'days' | 'hours';
 
 durationExpression: (DIGIT | INT) durationUnit;
 
+dateExpressionOp: ('-' | '+');
 dateExpression:
 	DATE
 	| dateNow
-	| LPAREN dateNow ('-' | '+') durationExpression RPAREN;
+	| LPAREN dateNow dateExpressionOp durationExpression RPAREN;
 
 number:
 	DIGIT
