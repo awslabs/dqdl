@@ -1,5 +1,5 @@
 /*
- * DQDLParserListenerUpdatedExpr.java
+ * DQDLParserListener.java
  *
  * Copyright (c) 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -15,8 +15,11 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleType;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedConditionOperator;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateExpression;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.Duration;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationBasedConditionOperator;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationUnit;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedConditionOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedCondition;
@@ -405,46 +408,61 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageUpdatedBase
         Condition condition = null;
 
         if (ctx.BETWEEN() != null && ctx.dateExpression().size() == 2) {
-            condition = new DateBasedCondition(exprStr, DateBasedConditionOperator.BETWEEN,
-                Arrays.asList(
-                    removeQuotes(ctx.dateExpression(0).getText()),
-                    removeQuotes(ctx.dateExpression(1).getText())
-                )
-            );
+            Optional<DateExpression> lower = parseDateExpression(ctx.dateExpression(0));
+            Optional<DateExpression> upper = parseDateExpression(ctx.dateExpression(1));
+            if (lower.isPresent() && upper.isPresent()) {
+                condition = new DateBasedCondition(
+                    exprStr, DateBasedConditionOperator.BETWEEN, Arrays.asList(lower.get(), upper.get())
+                );
+            }
         } else if (ctx.GREATER_THAN_EQUAL_TO() != null && ctx.dateExpression().size() == 1) {
-            condition = new DateBasedCondition(
-                exprStr, DateBasedConditionOperator.GREATER_THAN_EQUAL_TO,
-                Collections.singletonList(removeQuotes(ctx.dateExpression(0).getText()))
-            );
+            Optional<DateExpression> operand = parseDateExpression(ctx.dateExpression(0));
+            if (operand.isPresent()) {
+                condition = new DateBasedCondition(
+                    exprStr, DateBasedConditionOperator.GREATER_THAN_EQUAL_TO, Collections.singletonList(operand.get())
+                );
+            }
         } else if (ctx.GREATER_THAN() != null && ctx.dateExpression().size() == 1) {
-            condition = new DateBasedCondition(
-                exprStr, DateBasedConditionOperator.GREATER_THAN,
-                Collections.singletonList(removeQuotes(ctx.dateExpression(0).getText()))
-            );
+            Optional<DateExpression> operand = parseDateExpression(ctx.dateExpression(0));
+            if (operand.isPresent()) {
+                condition = new DateBasedCondition(
+                    exprStr, DateBasedConditionOperator.GREATER_THAN, Collections.singletonList(operand.get())
+                );
+            }
         } else if (ctx.LESS_THAN() != null && ctx.dateExpression().size() == 1) {
-            condition = new DateBasedCondition(
-                exprStr, DateBasedConditionOperator.LESS_THAN,
-                Collections.singletonList(removeQuotes(ctx.dateExpression(0).getText()))
-            );
+            Optional<DateExpression> operand = parseDateExpression(ctx.dateExpression(0));
+            if (operand.isPresent()) {
+                condition = new DateBasedCondition(
+                    exprStr, DateBasedConditionOperator.LESS_THAN, Collections.singletonList(operand.get())
+                );
+            }
         } else if (ctx.LESS_THAN_EQUAL_TO() != null && ctx.dateExpression().size() == 1) {
-            condition = new DateBasedCondition(
-                exprStr, DateBasedConditionOperator.LESS_THAN_EQUAL_TO,
-                Collections.singletonList(removeQuotes(ctx.dateExpression(0).getText()))
-            );
+            Optional<DateExpression> operand = parseDateExpression(ctx.dateExpression(0));
+            if (operand.isPresent()) {
+                condition = new DateBasedCondition(
+                    exprStr, DateBasedConditionOperator.LESS_THAN_EQUAL_TO, Collections.singletonList(operand.get())
+                );
+            }
         } else if (ctx.EQUAL_TO() != null && ctx.dateExpression().size() == 1) {
-            condition = new DateBasedCondition(
-                exprStr, DateBasedConditionOperator.EQUALS,
-                Collections.singletonList(removeQuotes(ctx.dateExpression(0).getText()))
-            );
+            Optional<DateExpression> operand = parseDateExpression(ctx.dateExpression(0));
+            if (operand.isPresent()) {
+                condition = new DateBasedCondition(
+                    exprStr, DateBasedConditionOperator.EQUALS, Collections.singletonList(operand.get())
+                );
+            }
         } else if (ctx.IN() != null &&
             ctx.dateExpressionArray() != null &&
             ctx.dateExpressionArray().dateExpression().size() > 0) {
-            List<String> expressions = ctx.dateExpressionArray().dateExpression().stream()
-                .map(RuleContext::getText)
-                .map(this::removeQuotes)
+            List<Optional<DateExpression>> expressions = ctx.dateExpressionArray().dateExpression().stream()
+                .map(this::parseDateExpression)
                 .collect(Collectors.toList());
 
-            condition = new DateBasedCondition(exprStr, DateBasedConditionOperator.IN, expressions);
+            if (expressions.stream().allMatch(Optional::isPresent)) {
+                condition = new DateBasedCondition(
+                    exprStr, DateBasedConditionOperator.IN,
+                    expressions.stream().map(Optional::get).collect(Collectors.toList())
+                );
+            }
         }
 
         return Optional.ofNullable(condition);
@@ -458,46 +476,98 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageUpdatedBase
         Condition condition = null;
 
         if (ctx.BETWEEN() != null && ctx.durationExpression().size() == 2) {
-            condition = new DurationBasedCondition(
-                exprStr, DurationBasedConditionOperator.BETWEEN,
-                Arrays.asList(ctx.durationExpression(0).getText(), ctx.durationExpression(1).getText())
-            );
+            Optional<Duration> lower = parseDuration(ctx.durationExpression(0));
+            Optional<Duration> upper = parseDuration(ctx.durationExpression(1));
+            if (lower.isPresent() && upper.isPresent()) {
+                condition = new DurationBasedCondition(
+                    exprStr, DurationBasedConditionOperator.BETWEEN, Arrays.asList(lower.get(), upper.get())
+                );
+            }
         } else if (ctx.GREATER_THAN_EQUAL_TO() != null && ctx.durationExpression().size() == 1) {
-            condition = new DurationBasedCondition(
-                exprStr, DurationBasedConditionOperator.GREATER_THAN_EQUAL_TO,
-                Arrays.asList(ctx.durationExpression(0).getText(), ctx.durationExpression(0).getText())
-            );
+            Optional<Duration> operand = parseDuration(ctx.durationExpression(0));
+            if (operand.isPresent()) {
+                condition = new DurationBasedCondition(
+                    exprStr, DurationBasedConditionOperator.GREATER_THAN_EQUAL_TO,
+                    Collections.singletonList(operand.get())
+                );
+            }
         } else if (ctx.GREATER_THAN() != null && ctx.durationExpression().size() == 1) {
-            condition = new DurationBasedCondition(
-                exprStr, DurationBasedConditionOperator.GREATER_THAN,
-                Arrays.asList(ctx.durationExpression(0).getText(), ctx.durationExpression(0).getText())
-            );
+            Optional<Duration> operand = parseDuration(ctx.durationExpression(0));
+            if (operand.isPresent()) {
+                condition = new DurationBasedCondition(
+                    exprStr, DurationBasedConditionOperator.GREATER_THAN,
+                    Collections.singletonList(operand.get())
+                );
+            }
         } else if (ctx.LESS_THAN() != null && ctx.durationExpression().size() == 1) {
-            condition = new DurationBasedCondition(
-                exprStr, DurationBasedConditionOperator.LESS_THAN,
-                Arrays.asList(ctx.durationExpression(0).getText(), ctx.durationExpression(0).getText())
-            );
+            Optional<Duration> operand = parseDuration(ctx.durationExpression(0));
+            if (operand.isPresent()) {
+                condition = new DurationBasedCondition(
+                    exprStr, DurationBasedConditionOperator.LESS_THAN,
+                    Collections.singletonList(operand.get())
+                );
+            }
         } else if (ctx.LESS_THAN_EQUAL_TO() != null && ctx.durationExpression().size() == 1) {
-            condition = new DurationBasedCondition(
-                exprStr, DurationBasedConditionOperator.LESS_THAN_EQUAL_TO,
-                Arrays.asList(ctx.durationExpression(0).getText(), ctx.durationExpression(0).getText())
-            );
+            Optional<Duration> operand = parseDuration(ctx.durationExpression(0));
+            if (operand.isPresent()) {
+                condition = new DurationBasedCondition(
+                    exprStr, DurationBasedConditionOperator.LESS_THAN_EQUAL_TO,
+                    Collections.singletonList(operand.get())
+                );
+            }
         } else if (ctx.EQUAL_TO() != null && ctx.durationExpression().size() == 1) {
-            condition = new DurationBasedCondition(
-                exprStr, DurationBasedConditionOperator.EQUALS,
-                Arrays.asList(ctx.durationExpression(0).getText(), ctx.durationExpression(0).getText())
-            );
+            Optional<Duration> operand = parseDuration(ctx.durationExpression(0));
+            if (operand.isPresent()) {
+                condition = new DurationBasedCondition(
+                    exprStr, DurationBasedConditionOperator.EQUALS,
+                    Collections.singletonList(operand.get())
+                );
+            }
         } else if (ctx.IN() != null &&
             ctx.durationExpressionArray() != null &&
             ctx.durationExpressionArray().durationExpression().size() > 0) {
-            List<String> expressions = ctx.durationExpressionArray().durationExpression().stream()
-                .map(RuleContext::getText)
+
+            List<Optional<Duration>> durations = ctx.durationExpressionArray().durationExpression().stream()
+                .map(this::parseDuration)
                 .collect(Collectors.toList());
 
-            condition = new DurationBasedCondition(exprStr, DurationBasedConditionOperator.IN, expressions);
+            if (durations.stream().allMatch(Optional::isPresent)) {
+                condition = new DurationBasedCondition(
+                    exprStr, DurationBasedConditionOperator.IN,
+                    durations.stream().map(Optional::get).collect(Collectors.toList())
+                );
+            }
         }
 
         return Optional.ofNullable(condition);
+    }
+
+    private Optional<DateExpression> parseDateExpression(
+        DataQualityDefinitionLanguageUpdatedParser.DateExpressionContext ctx) {
+        if (ctx.durationExpression() != null) {
+            Optional<Duration> duration = parseDuration(ctx.durationExpression());
+            return duration.map(value -> new DateExpression.CurrentDateExpression(
+                ctx.dateExpressionOp().getText().equals("-")
+                    ? DateExpression.DateExpressionOperator.MINUS
+                    : DateExpression.DateExpressionOperator.PLUS,
+                value
+            ));
+        } else if (ctx.dateNow() != null) {
+            return Optional.of(new DateExpression.CurrentDate());
+        } else {
+            return Optional.of(new DateExpression.StaticDate(removeQuotes(ctx.DATE().getText())));
+        }
+    }
+
+    private Optional<Duration> parseDuration(
+        DataQualityDefinitionLanguageUpdatedParser.DurationExpressionContext ctx) {
+        int amount = Integer.parseInt(ctx.INT() != null ? ctx.INT().getText() : ctx.DIGIT().getText());
+        if (ctx.durationUnit().exception != null) {
+            return Optional.empty();
+        } else {
+            DurationUnit unit = DurationUnit.valueOf(ctx.durationUnit().getText().toUpperCase());
+            return Optional.of(new Duration(amount, unit));
+        }
     }
 
     private String removeQuotes(String quotedString) {

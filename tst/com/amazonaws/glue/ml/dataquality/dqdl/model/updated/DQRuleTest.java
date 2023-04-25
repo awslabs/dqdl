@@ -13,6 +13,7 @@ package com.amazonaws.glue.ml.dataquality.dqdl.model.updated;
 import com.amazonaws.glue.ml.dataquality.dqdl.exception.InvalidDataQualityRulesetException;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedCondition;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateExpression;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.expression.DoubleNumericExpression;
@@ -35,6 +36,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -183,8 +185,10 @@ public class DQRuleTest {
         DQRule dqRule = dqRuleset.getRules().get(0);
         assertEquals(DateBasedCondition.class, dqRule.getCondition().getClass());
         assertEquals(
-            Arrays.asList("now()", "(now()-4days)", "2023-01-01", "2023-02-01"),
-            ((DateBasedCondition) dqRule.getCondition()).getOperands()
+            Arrays.asList("now()", "(now() - 4 days)", "\"2023-01-01\"", "\"2023-02-01\""),
+            ((DateBasedCondition) dqRule.getCondition()).getOperands().stream()
+                .map(DateExpression::getFormattedExpression)
+                .collect(Collectors.toList())
         );
     }
 
