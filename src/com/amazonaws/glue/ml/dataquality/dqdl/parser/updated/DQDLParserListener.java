@@ -180,14 +180,17 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageUpdatedBase
     private Either<String, DQRule> getDQRule(
         DataQualityDefinitionLanguageUpdatedParser.DqRuleContext dqRuleContext) {
         String ruleType = dqRuleContext.ruleType().getText();
-        if (!DQRuleType.getRuleTypeMap().containsKey(ruleType)) {
-            return Either.fromLeft(String.format("Rule Type: %s is not valid", ruleType));
-        }
-
-        DQRuleType dqRuleType = DQRuleType.getRuleTypeMap().get(ruleType);
         List<String> parameters = dqRuleContext.parameter().stream()
             .map(p -> p.getText().replaceAll("\"", ""))
             .collect(Collectors.toList());
+
+        Optional<DQRuleType> optionalDQRuleType = DQRuleType.getRuleType(ruleType, parameters.size());
+
+        if (!optionalDQRuleType.isPresent()) {
+            return Either.fromLeft(String.format("Rule Type: %s is not valid", ruleType));
+        }
+
+        DQRuleType dqRuleType = optionalDQRuleType.get();
 
         Optional<String> errorMessage = dqRuleType.verifyParameters(dqRuleType.getParameters(), parameters);
 

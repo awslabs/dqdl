@@ -15,7 +15,6 @@ import lombok.Getter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -418,7 +417,25 @@ public class DQRuleType {
         "NUMBER"
     );
 
-    private static final DQRuleType DATA_SYNCHRONIZATION_RULE_TYPE = new DQRuleType(
+    private static final DQRuleType DATA_SYNCHRONIZATION_RULE_TYPE_MATCH_ALL_COLUMNS = new DQRuleType(
+        "DataSynchronization",
+        "Runs a data synchronization check against a reference dataset using the given columns",
+        Arrays.asList(
+            new DQRuleParameter(
+                "String",
+                "ReferenceDatasetAlias",
+                "Alias of reference dataset."
+            ),
+            new DQRuleParameter(
+                "String",
+                "KeyColumnMappings",
+                "Mappings of key columns used for joining the two datasets."
+            )
+        ),
+        "NUMBER"
+    );
+
+    private static final DQRuleType DATA_SYNCHRONIZATION_RULE_TYPE_MATCH_SPECIFIC_COLUMNS = new DQRuleType(
         "DataSynchronization",
         "Runs a data synchronization check against a reference dataset using the given columns",
         Arrays.asList(
@@ -455,41 +472,49 @@ public class DQRuleType {
         true
     );
 
-    private static final Map<String, DQRuleType> RULE_TYPE_MAP = new HashMap<>();
+    private static final List<DQRuleType> ALL_RULES = Arrays.asList(
+        ROW_COUNT_RULE_TYPE,
+        COLUMN_COUNT_RULE_TYPE,
+        COMPLETENESS_RULE_TYPE,
+        IS_COMPLETE_RULE_TYPE,
+        COLUMN_DATA_TYPE_RULE_TYPE,
+        COLUMN_NAMES_MATCH_PATTERN_RULE_TYPE,
+        COLUMN_EXISTS_RULE_TYPE,
+        COLUMN_CORRELATION_RULE_TYPE,
+        UNIQUENESS_RULE_TYPE,
+        IS_UNIQUE_RULE_TYPE,
+        COLUMN_MEAN_RULE_TYPE,
+        COLUMN_SUM_RULE_TYPE,
+        COLUMN_STD_DEV_RULE_TYPE,
+        COLUMN_ENTROPY_RULE_TYPE,
+        DISTINCT_VALUES_COUNT_RULE_TYPE,
+        UNIQUE_VALUE_RATIO_RULE_TYPE,
+        COLUMN_LENGTH_RULE_TYPE,
+        IS_PRIMARY_KEY_RULE_TYPE,
+        COLUMN_VALUES_RULE_TYPE,
+        DATA_FRESHNESS_RULE_TYPE,
+        CUSTOM_SQL_RULE_TYPE,
+        REFERENTIAL_INTEGRITY_RULE_TYPE,
+        DATA_SYNCHRONIZATION_RULE_TYPE_MATCH_ALL_COLUMNS,
+        DATA_SYNCHRONIZATION_RULE_TYPE_MATCH_SPECIFIC_COLUMNS,
+        SCHEMA_MATCHES_RULE_TYPE
+    );
 
-    static {
-        // Not supported for re:Invent
-        // RULE_TYPE_MAP.put(JOB_STATUS_RULE_TYPE.getRuleTypeName(), JOB_STATUS_RULE_TYPE);
-        // RULE_TYPE_MAP.put(JOB_DURATION_RULE_TYPE.getRuleTypeName(), JOB_DURATION_RULE_TYPE);
-        // RULE_TYPE_MAP.put(FILE_COUNT_RULE_TYPE.getRuleTypeName(), FILE_COUNT_RULE_TYPE);
+    public static Optional<DQRuleType> getRuleType(String ruleTypeName, int parameterCount) {
+        return ALL_RULES.stream()
+            .filter(ruleType -> {
+                int ruleTypeParameterCount = ruleType.getParameters().size();
+                boolean containsVarArg =
+                    ruleTypeParameterCount > 0 &&
+                    ruleType.getParameters().get(ruleTypeParameterCount - 1).isVarArg();
 
-        RULE_TYPE_MAP.put(ROW_COUNT_RULE_TYPE.getRuleTypeName(), ROW_COUNT_RULE_TYPE);
-        RULE_TYPE_MAP.put(COLUMN_COUNT_RULE_TYPE.getRuleTypeName(), COLUMN_COUNT_RULE_TYPE);
-        RULE_TYPE_MAP.put(COMPLETENESS_RULE_TYPE.getRuleTypeName(), COMPLETENESS_RULE_TYPE);
-        RULE_TYPE_MAP.put(IS_COMPLETE_RULE_TYPE.getRuleTypeName(), IS_COMPLETE_RULE_TYPE);
-        RULE_TYPE_MAP.put(COLUMN_DATA_TYPE_RULE_TYPE.getRuleTypeName(), COLUMN_DATA_TYPE_RULE_TYPE);
-        RULE_TYPE_MAP.put(COLUMN_NAMES_MATCH_PATTERN_RULE_TYPE.getRuleTypeName(), COLUMN_NAMES_MATCH_PATTERN_RULE_TYPE);
-        RULE_TYPE_MAP.put(COLUMN_EXISTS_RULE_TYPE.getRuleTypeName(), COLUMN_EXISTS_RULE_TYPE);
-        RULE_TYPE_MAP.put(COLUMN_CORRELATION_RULE_TYPE.getRuleTypeName(), COLUMN_CORRELATION_RULE_TYPE);
-        RULE_TYPE_MAP.put(UNIQUENESS_RULE_TYPE.getRuleTypeName(), UNIQUENESS_RULE_TYPE);
-        RULE_TYPE_MAP.put(IS_UNIQUE_RULE_TYPE.getRuleTypeName(), IS_UNIQUE_RULE_TYPE);
-        RULE_TYPE_MAP.put(COLUMN_MEAN_RULE_TYPE.getRuleTypeName(), COLUMN_MEAN_RULE_TYPE);
-        RULE_TYPE_MAP.put(COLUMN_SUM_RULE_TYPE.getRuleTypeName(), COLUMN_SUM_RULE_TYPE);
-        RULE_TYPE_MAP.put(COLUMN_STD_DEV_RULE_TYPE.getRuleTypeName(), COLUMN_STD_DEV_RULE_TYPE);
-        RULE_TYPE_MAP.put(COLUMN_ENTROPY_RULE_TYPE.getRuleTypeName(), COLUMN_ENTROPY_RULE_TYPE);
-        RULE_TYPE_MAP.put(DISTINCT_VALUES_COUNT_RULE_TYPE.getRuleTypeName(), DISTINCT_VALUES_COUNT_RULE_TYPE);
-        RULE_TYPE_MAP.put(UNIQUE_VALUE_RATIO_RULE_TYPE.getRuleTypeName(), UNIQUE_VALUE_RATIO_RULE_TYPE);
-        RULE_TYPE_MAP.put(COLUMN_LENGTH_RULE_TYPE.getRuleTypeName(), COLUMN_LENGTH_RULE_TYPE);
-        RULE_TYPE_MAP.put(IS_PRIMARY_KEY_RULE_TYPE.getRuleTypeName(), IS_PRIMARY_KEY_RULE_TYPE);
-        RULE_TYPE_MAP.put(COLUMN_VALUES_RULE_TYPE.getRuleTypeName(), COLUMN_VALUES_RULE_TYPE);
-        RULE_TYPE_MAP.put(DATA_FRESHNESS_RULE_TYPE.getRuleTypeName(), DATA_FRESHNESS_RULE_TYPE);
-        RULE_TYPE_MAP.put(CUSTOM_SQL_RULE_TYPE.getRuleTypeName(), CUSTOM_SQL_RULE_TYPE);
-        RULE_TYPE_MAP.put(REFERENTIAL_INTEGRITY_RULE_TYPE.getRuleTypeName(), REFERENTIAL_INTEGRITY_RULE_TYPE);
-        RULE_TYPE_MAP.put(DATA_SYNCHRONIZATION_RULE_TYPE.getRuleTypeName(), DATA_SYNCHRONIZATION_RULE_TYPE);
-        RULE_TYPE_MAP.put(SCHEMA_MATCHES_RULE_TYPE.getRuleTypeName(), SCHEMA_MATCHES_RULE_TYPE);
-    }
+                boolean ruleTypeNameMatches = ruleType.getRuleTypeName().equals(ruleTypeName);
+                boolean parameterCountMatches = containsVarArg
+                    ? parameterCount >= ruleTypeParameterCount
+                    : parameterCount == ruleTypeParameterCount;
 
-    public static Map<String, DQRuleType> getRuleTypeMap() {
-        return RULE_TYPE_MAP;
+                return ruleTypeNameMatches && parameterCountMatches;
+            })
+            .findFirst();
     }
 }
