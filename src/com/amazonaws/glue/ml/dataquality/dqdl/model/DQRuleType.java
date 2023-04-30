@@ -128,6 +128,19 @@ public class DQRuleType {
             "NUMBER"
     );
 
+    private static final DQRuleType ROW_COUNT_MATCH_RULE_TYPE = new DQRuleType(
+        "RowCountMatch",
+        "Checks the percentage match of the row count of the primary dataset against a reference dataset",
+        Collections.singletonList(
+            new DQRuleParameter(
+                "String",
+                "ReferenceDatasetAlias",
+                "Alias of reference dataset."
+            )
+        ),
+        "NUMBER"
+    );
+
     private static final DQRuleType COLUMN_COUNT_RULE_TYPE = new DQRuleType(
             "ColumnCount",
             "Checks the number of columns in the dataset",
@@ -178,7 +191,8 @@ public class DQRuleType {
                             "Name of column to check data type of."
                     )
             ),
-            "STRING"
+            "STRING",
+            true
     );
 
     private static final DQRuleType COLUMN_NAMES_MATCH_PATTERN_RULE_TYPE = new DQRuleType(
@@ -417,9 +431,10 @@ public class DQRuleType {
         "NUMBER"
     );
 
-    private static final DQRuleType DATA_SYNCHRONIZATION_RULE_TYPE_MATCH_ALL_COLUMNS = new DQRuleType(
-        "DataSynchronization",
-        "Runs a data synchronization check against a reference dataset using the given columns",
+    private static final DQRuleType DATASET_MATCH_RULE_TYPE_MATCH_ALL_COLUMNS = new DQRuleType(
+        "DatasetMatch",
+        "Checks the percentage of records in the primary dataset that are equal " +
+            "to records in the reference dataset by joining the datasets using a primary/composite key",
         Arrays.asList(
             new DQRuleParameter(
                 "String",
@@ -435,9 +450,10 @@ public class DQRuleType {
         "NUMBER"
     );
 
-    private static final DQRuleType DATA_SYNCHRONIZATION_RULE_TYPE_MATCH_SPECIFIC_COLUMNS = new DQRuleType(
-        "DataSynchronization",
-        "Runs a data synchronization check against a reference dataset using the given columns",
+    private static final DQRuleType DATASET_MATCH_RULE_TYPE_MATCH_SPECIFIC_COLUMNS = new DQRuleType(
+        "DatasetMatch",
+        "Checks the percentage of records in the primary dataset that are equal " +
+            "to records in the reference dataset by joining the datasets using a primary/composite key",
         Arrays.asList(
             new DQRuleParameter(
                 "String",
@@ -458,9 +474,9 @@ public class DQRuleType {
         "NUMBER"
     );
 
-    private static final DQRuleType SCHEMA_MATCHES_RULE_TYPE = new DQRuleType(
-        "SchemaMatches",
-        "Checks the schema of the primary dataset against the reference dataset",
+    private static final DQRuleType SCHEMA_MATCH_RULE_TYPE = new DQRuleType(
+        "SchemaMatch",
+        "Checks the percentage match of the schema of the primary dataset against a reference dataset",
         Collections.singletonList(
             new DQRuleParameter(
                 "String",
@@ -468,12 +484,30 @@ public class DQRuleType {
                 "Alias of reference dataset."
             )
         ),
-        "BOOLEAN",
-        true
+        "NUMBER"
+    );
+
+    private static final DQRuleType AGGREGATE_MATCH_RULE_TYPE = new DQRuleType(
+        "AggregateMatch",
+        "Checks the percentage match of two aggregate expressions",
+        Arrays.asList(
+            new DQRuleParameter(
+                "String",
+                "AggregateExpression1",
+                "The first aggregate expression."
+            ),
+            new DQRuleParameter(
+                "String",
+                "AggregateExpression2",
+                "The second aggregate expression."
+            )
+        ),
+        "NUMBER"
     );
 
     private static final List<DQRuleType> ALL_RULES = Arrays.asList(
         ROW_COUNT_RULE_TYPE,
+        ROW_COUNT_MATCH_RULE_TYPE,
         COLUMN_COUNT_RULE_TYPE,
         COMPLETENESS_RULE_TYPE,
         IS_COMPLETE_RULE_TYPE,
@@ -495,9 +529,10 @@ public class DQRuleType {
         DATA_FRESHNESS_RULE_TYPE,
         CUSTOM_SQL_RULE_TYPE,
         REFERENTIAL_INTEGRITY_RULE_TYPE,
-        DATA_SYNCHRONIZATION_RULE_TYPE_MATCH_ALL_COLUMNS,
-        DATA_SYNCHRONIZATION_RULE_TYPE_MATCH_SPECIFIC_COLUMNS,
-        SCHEMA_MATCHES_RULE_TYPE
+        DATASET_MATCH_RULE_TYPE_MATCH_ALL_COLUMNS,
+        DATASET_MATCH_RULE_TYPE_MATCH_SPECIFIC_COLUMNS,
+        SCHEMA_MATCH_RULE_TYPE,
+        AGGREGATE_MATCH_RULE_TYPE
     );
 
     public static Optional<DQRuleType> getRuleType(String ruleTypeName, int parameterCount) {

@@ -127,11 +127,11 @@ public class DQRuleTest {
             Arguments.of("ReferentialIntegrity \"col-A\" \"reference.col-A1\" > 0.98"),
             Arguments.of("ReferentialIntegrity \"col-A\" \"reference.col-A1\" = 0.99"),
             Arguments.of("ReferentialIntegrity \"col-A,col-B\" \"reference.{col-A1,col-A2}\" = 0.99"),
-            Arguments.of("DataSynchronization \"reference\" \"ID1,ID2\" \"colA,colB,colC\" = 0.99"),
-            Arguments.of("DataSynchronization \"reference\" \"ID1->ID11,ID2->ID22\" \"colA->colAA\" between 0.4 and 0.8"),
-            Arguments.of("SchemaMatches \"ref-1\""),
-            Arguments.of("SchemaMatches \"ref-1\" with threshold between 0.4 and 0.9"),
-            Arguments.of("SchemaMatches \"ref-1\" with threshold >= 0.6")
+            Arguments.of("DatasetMatch \"reference\" \"ID1,ID2\" \"colA,colB,colC\" = 0.99"),
+            Arguments.of("DatasetMatch \"reference\" \"ID1->ID11,ID2->ID22\" \"colA->colAA\" between 0.4 and 0.8"),
+            Arguments.of("SchemaMatch \"ref-1\" between 0.4 and 0.9"),
+            Arguments.of("SchemaMatch \"ref-1\" >= 0.6"),
+            Arguments.of("SchemaMatch \"ref-1\" >= 1.0")
         );
     }
 
