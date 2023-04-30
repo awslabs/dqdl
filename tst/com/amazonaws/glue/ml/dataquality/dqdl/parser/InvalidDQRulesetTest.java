@@ -42,6 +42,9 @@ public class InvalidDQRulesetTest {
             Arguments.of("Rules = [ IsComplete \"col-A\" > 0.05 ]"),
             Arguments.of("Rules = [ IsUnique \"col-A\" <= 1.5 ]"),
             Arguments.of("Rules = [ IsPrimaryKey \"col-A\" between 1 and 2 ]"),
+            Arguments.of("Rules = [ ColumnDataType \"col-A\" ]"),
+            Arguments.of("Rules = [ ColumnDataType \"col-A\" with threshold > 0.7 ]"),
+            Arguments.of("Rules = [ ColumnDataType \"col-A\" \"col-B\" ]"),
             Arguments.of("Rules = [ ColumnValues \"col-A\" matches ]"),
             Arguments.of("Rules = [ ColumnValues \"col-A\" now() ]"),
             Arguments.of("Rules = [ ColumnValues \"col-A\" > now() + 1 hours ]"),
@@ -61,12 +64,19 @@ public class InvalidDQRulesetTest {
             Arguments.of("Rules = [ DataFreshness \"col-A\" between 2 and 4 days ]"),
             Arguments.of("Rules = [ ReferentialIntegrity \"col-A\" \"reference\" \"col-A1\" ]"),
             Arguments.of("Rules = [ ReferentialIntegrity \"col-A\" = 0.99 ]"),
-            Arguments.of("Rules = [ DataSynchronization \"reference\" = 0.99 ]"),
-            Arguments.of("Rules = [ DataSynchronization \"reference\" \"ID\" ]"),
-            Arguments.of("Rules = [ DataSynchronization \"reference\" \"ID\" \"colA\" ]"),
-            Arguments.of("Rules = [ SchemaMatches with threshold between 0.2 and 0.4 ]"),
-            Arguments.of("Rules = [ SchemaMatches \"ref-1\" between 0.2 and 0.4 ]"),
-            Arguments.of("Rules = [ SchemaMatches \"ref-1\" \"ref-2\" ]")
+            Arguments.of("Rules = [ DatasetMatch \"reference\" = 0.99 ]"),
+            Arguments.of("Rules = [ DatasetMatch \"reference\" \"ID\" ]"),
+            Arguments.of("Rules = [ DatasetMatch \"reference\" \"ID\" \"colA\" ]"),
+            Arguments.of("Rules = [ DatasetMatch \"reference\" \"ID\" \"colA\" > 0.9 with threshold > 0.9]"),
+            Arguments.of("Rules = [ SchemaMatch with threshold between 0.2 and 0.4 ]"),
+            Arguments.of("Rules = [ SchemaMatch \"ref-1\" between 0.2 and 0.4 with threshold > 0.5 ]"),
+            Arguments.of("Rules = [ SchemaMatch \"ref-1\" \"ref-2\" ]"),
+            Arguments.of("Rules = [ RowCountMatch > 0.1 ]"),
+            Arguments.of("Rules = [ RowCountMatch \"reference-1\" \"col-1\" > 0.1 ]"),
+            Arguments.of("Rules = [ RowCountMatch \"reference-1\" > 0.1 with threshold > 0.1 ]"),
+            Arguments.of("Rules = [ AggregateMatch > 0.1 ]"),
+            Arguments.of("Rules = [ AggregateMatch \"sum(col-A)\" > 0.1 ]"),
+            Arguments.of("Rules = [ AggregateMatch \"sum(col-A)\" \"sum(reference.colA)\"]")
         );
     }
 

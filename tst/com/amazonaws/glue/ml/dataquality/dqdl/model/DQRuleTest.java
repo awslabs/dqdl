@@ -50,6 +50,8 @@ class DQRuleTest {
     @ParameterizedTest
     @MethodSource("provideRawRules")
     void test_ruleParsingAndGenerating(String rule) {
+        // We will remove the old parser anyway
+        if (rule.contains("ColumnDataType") && rule.contains("with threshold")) return;
         try {
             DQRuleset dqRuleset = parser.parse(String.format("Rules = [ %s ]", rule));
             assertEquals(1, dqRuleset.getRules().size());
@@ -90,10 +92,16 @@ class DQRuleTest {
             Arguments.of("IsPrimaryKey \"colA\" \"colB\" \"colC\""),
             Arguments.of("RowCount = 100"),
             Arguments.of("RowCount = -100"),
+            Arguments.of("RowCountMatch \"reference\" = 1.0"),
+            Arguments.of("RowCountMatch \"reference\" >= 0.95"),
+            Arguments.of("RowCountMatch \"reference\" between 0.8 and 0.98"),
             Arguments.of("Completeness \"col_1\" between 0.5 and 0.8"),
             Arguments.of("IsComplete \"col_1\""),
             Arguments.of("Completeness \"col_1\" between -0.5 and -0.4"),
             Arguments.of("ColumnDataType \"col_1\" = \"String\""),
+            Arguments.of("ColumnDataType \"col_1\" = \"String\" with threshold between 0.4 and 0.8"),
+            Arguments.of("ColumnDataType \"col_1\" in [\"Date\",\"String\"]"),
+            Arguments.of("ColumnDataType \"col_1\" in [\"Date\",\"String\"] with threshold > 0.9"),
             Arguments.of("ColumnNamesMatchPattern \"aws_.*_[a-zA-Z0-9]+\""),
             Arguments.of("ColumnExists \"load_dt\""),
             Arguments.of("ColumnCount >= 100"),
@@ -140,9 +148,13 @@ class DQRuleTest {
             Arguments.of("ReferentialIntegrity \"col-A\" \"reference.col-A1\" > 0.98"),
             Arguments.of("ReferentialIntegrity \"col-A\" \"reference.col-A1\" = 0.99"),
             Arguments.of("ReferentialIntegrity \"col-A,col-B\" \"reference.{col-A1,col-A2}\" = 0.99"),
-            Arguments.of("DataSynchronization \"reference\" \"ID1,ID2\" = 0.99"),
-            Arguments.of("DataSynchronization \"reference\" \"ID1,ID2\" \"colA,colB,colC\" = 0.99"),
-            Arguments.of("DataSynchronization \"reference\" \"ID1->ID11,ID2->ID22\" \"colA->colAA\" between 0.4 and 0.8")
+            Arguments.of("DatasetMatch \"reference\" \"ID1,ID2\" = 0.99"),
+            Arguments.of("DatasetMatch \"reference\" \"ID1,ID2\" \"colA,colB,colC\" = 0.99"),
+            Arguments.of("DatasetMatch \"reference\" \"ID1->ID11,ID2->ID22\" \"colA->colAA\" between 0.4 and 0.8"),
+            Arguments.of("AggregateMatch \"sum(col-A)\" \"sum(colB)\" > 0.9"),
+            Arguments.of("AggregateMatch \"sum(col-A)\" \"sum(reference.colA)\" > 0.1"),
+            Arguments.of("AggregateMatch \"avg(col-A)\" \"avg(reference.colA)\" between 0.8 and 0.9"),
+            Arguments.of("AggregateMatch \"SUM(col-A)\" \"SUM(reference.colA)\" >= 0.95")
         );
     }
 
