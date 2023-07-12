@@ -11,9 +11,14 @@
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.exception.InvalidDataQualityRulesetException;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.expression.DoubleNumericExpression;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.expression.StringSetExpression;
-import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLParser;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedCondition;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateExpression;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedCondition;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedCondition;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.updated.DQRule;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.updated.DQRuleset;
+import com.amazonaws.glue.ml.dataquality.dqdl.parser.updated.DQDLParser;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,8 +34,8 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,34 +49,14 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 class DQRuleTest {
     DQDLParser parser = new DQDLParser();
-    com.amazonaws.glue.ml.dataquality.dqdl.parser.updated.DQDLParser updatedParser =
-        new com.amazonaws.glue.ml.dataquality.dqdl.parser.updated.DQDLParser();
 
     @ParameterizedTest
     @MethodSource("provideRawRules")
-    void test_ruleParsingAndGenerating(String rule) {
-        // We will remove the old parser anyway
-        if (rule.contains("ColumnDataType") && rule.contains("with threshold")) return;
+    void test_ruleParsingAndGeneratingWithParser(String rule) {
         try {
             DQRuleset dqRuleset = parser.parse(String.format("Rules = [ %s ]", rule));
             assertEquals(1, dqRuleset.getRules().size());
             DQRule dqRule = dqRuleset.getRules().get(0);
-            String dqRuleAsString = dqRule.toString();
-            assertEquals(rule, dqRuleAsString);
-        } catch (InvalidDataQualityRulesetException e) {
-            fail(e.getMessage());
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideRawRules")
-    void test_ruleParsingAndGeneratingWithUpdatedParser(String rule) {
-        try {
-            com.amazonaws.glue.ml.dataquality.dqdl.model.updated.DQRuleset dqRuleset =
-                updatedParser.parse(String.format("Rules = [ %s ]", rule));
-            assertEquals(1, dqRuleset.getRules().size());
-            com.amazonaws.glue.ml.dataquality.dqdl.model.updated.DQRule dqRule =
-                dqRuleset.getRules().get(0);
             String dqRuleAsString = dqRule.toString();
             assertEquals(rule, dqRuleAsString);
         } catch (InvalidDataQualityRulesetException e) {
@@ -141,6 +126,11 @@ class DQRuleTest {
             Arguments.of("ColumnValues \"col-A\" in [\"A\",\"B\"] with threshold <= 0.4"),
             Arguments.of("ColumnValues \"col-A\" in [1,2,3] with threshold > 0.98"),
             Arguments.of("ColumnValues \"col-A\" = \"A\" with threshold > 0.98"),
+            Arguments.of("ColumnValues \"col-A\" <= 0.4 with threshold between 0.4 and 0.8"),
+            Arguments.of("ColumnValues \"col-A\" > 0.4 with threshold > 0.4"),
+            Arguments.of("ColumnValues \"col-A\" in [\"2022-01-01\"] with threshold > 0.98"),
+            Arguments.of("ColumnValues \"col-A\" = 1 with threshold > 0.98"),
+            Arguments.of("ColumnValues \"col-A\" = \"2022-01-01\" with threshold > 0.98"),
             Arguments.of("DataFreshness \"col-A\" <= 3 days"),
             Arguments.of("DataFreshness \"col-A\" > 30 hours"),
             Arguments.of("DataFreshness \"col-A\" between 2 days and 4 days"),
@@ -151,6 +141,9 @@ class DQRuleTest {
             Arguments.of("DatasetMatch \"reference\" \"ID1,ID2\" = 0.99"),
             Arguments.of("DatasetMatch \"reference\" \"ID1,ID2\" \"colA,colB,colC\" = 0.99"),
             Arguments.of("DatasetMatch \"reference\" \"ID1->ID11,ID2->ID22\" \"colA->colAA\" between 0.4 and 0.8"),
+            Arguments.of("SchemaMatch \"ref-1\" between 0.4 and 0.9"),
+            Arguments.of("SchemaMatch \"ref-1\" >= 0.6"),
+            Arguments.of("SchemaMatch \"ref-1\" >= 1.0"),
             Arguments.of("AggregateMatch \"sum(col-A)\" \"sum(colB)\" > 0.9"),
             Arguments.of("AggregateMatch \"sum(col-A)\" \"sum(reference.colA)\" > 0.1"),
             Arguments.of("AggregateMatch \"avg(col-A)\" \"avg(reference.colA)\" between 0.8 and 0.9"),
@@ -162,8 +155,8 @@ class DQRuleTest {
     void test_toStringIgnoresSpacesOnlyThreshold() {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("TargetColumn", "colA");
-        String whitespaceThreshold = "     ";
-        DQRule dqRule = new DQRule("IsPrimaryKey", parameters, whitespaceThreshold);
+        Condition whitespaceCondition = new Condition("     ");
+        DQRule dqRule = new DQRule("IsPrimaryKey", parameters, whitespaceCondition);
         String dqRuleAsString = dqRule.toString();
         assertEquals("IsPrimaryKey \"colA\"", dqRuleAsString);
     }
@@ -172,8 +165,8 @@ class DQRuleTest {
     void test_toStringIgnoresTabsOnlyThreshold() {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("TargetColumn", "colA");
-        String whitespaceThreshold = "\t\t";
-        DQRule dqRule = new DQRule("IsPrimaryKey", parameters, whitespaceThreshold);
+        Condition whitespaceCondition = new Condition("\t\t");
+        DQRule dqRule = new DQRule("IsPrimaryKey", parameters, whitespaceCondition);
         String dqRuleAsString = dqRule.toString();
         assertEquals("IsPrimaryKey \"colA\"", dqRuleAsString);
     }
@@ -182,8 +175,8 @@ class DQRuleTest {
     void test_toStringIgnoresMixedWhitespaceThreshold() {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("TargetColumn", "colA");
-        String whitespaceThreshold = "\t\t  \t \t \n   \t";
-        DQRule dqRule = new DQRule("IsPrimaryKey", parameters, whitespaceThreshold);
+        Condition whitespaceCondition = new Condition("\t\t  \t \t \n   \t");
+        DQRule dqRule = new DQRule("IsPrimaryKey", parameters, whitespaceCondition);
         String dqRuleAsString = dqRule.toString();
         assertEquals("IsPrimaryKey \"colA\"", dqRuleAsString);
     }
@@ -195,10 +188,10 @@ class DQRuleTest {
         );
         assertEquals(1, dqRuleset.getRules().size());
         DQRule dqRule = dqRuleset.getRules().get(0);
-        assertEquals(StringSetExpression.class, dqRule.getExpression().getClass());
+        assertEquals(StringBasedCondition.class, dqRule.getCondition().getClass());
         assertEquals(
             Collections.singletonList("ColumnValues in [ \"col-A\" ]"),
-            ((StringSetExpression) dqRule.getExpression()).getItems()
+            ((StringBasedCondition) dqRule.getCondition()).getOperands()
         );
     }
 
@@ -209,10 +202,12 @@ class DQRuleTest {
         );
         assertEquals(1, dqRuleset.getRules().size());
         DQRule dqRule = dqRuleset.getRules().get(0);
-        assertEquals(StringSetExpression.class, dqRule.getExpression().getClass());
+        assertEquals(DateBasedCondition.class, dqRule.getCondition().getClass());
         assertEquals(
-            Arrays.asList("now()", "(now()-4days)", "2023-01-01", "2023-02-01"),
-            ((StringSetExpression) dqRule.getExpression()).getItems()
+            Arrays.asList("now()", "(now() - 4 days)", "\"2023-01-01\"", "\"2023-02-01\""),
+            ((DateBasedCondition) dqRule.getCondition()).getOperands().stream()
+                .map(DateExpression::getFormattedExpression)
+                .collect(Collectors.toList())
         );
     }
 
@@ -221,8 +216,8 @@ class DQRuleTest {
         DQRuleset dqRuleset = parser.parse("Rules = [ ColumnValues \"col-A\" in [\"a\\\"b\", \"c\", \"d\\\"e\"]]");
         assertEquals(1, dqRuleset.getRules().size());
         DQRule dqRule = dqRuleset.getRules().get(0);
-        assertEquals(StringSetExpression.class, dqRule.getExpression().getClass());
-        assertEquals(Arrays.asList("a\"b", "c", "d\"e"), ((StringSetExpression) dqRule.getExpression()).getItems());
+        assertEquals(StringBasedCondition.class, dqRule.getCondition().getClass());
+        assertEquals(Arrays.asList("a\"b", "c", "d\"e"), ((StringBasedCondition) dqRule.getCondition()).getOperands());
     }
 
     @Test
@@ -230,8 +225,8 @@ class DQRuleTest {
         DQRuleset dqRuleset = parser.parse("Rules = [ ColumnValues \"col-A\" in [\"a,,b\", \"c\", \"d,,,e\"]]");
         assertEquals(1, dqRuleset.getRules().size());
         DQRule dqRule = dqRuleset.getRules().get(0);
-        assertEquals(StringSetExpression.class, dqRule.getExpression().getClass());
-        assertEquals(Arrays.asList("a,,b", "c", "d,,,e"), ((StringSetExpression) dqRule.getExpression()).getItems());
+        assertEquals(StringBasedCondition.class, dqRule.getCondition().getClass());
+        assertEquals(Arrays.asList("a,,b", "c", "d,,,e"), ((StringBasedCondition) dqRule.getCondition()).getOperands());
     }
 
     @Test
@@ -240,12 +235,12 @@ class DQRuleTest {
         DQRuleset dqRuleset = parser.parse("Rules = [ ColumnValues \"col-A\" in [\"A\", \"B\"]]");
         assertEquals(1, dqRuleset.getRules().size());
         DQRule dqRule = dqRuleset.getRules().get(0);
-        assertEquals(StringSetExpression.class, dqRule.getExpression().getClass());
-        assertEquals(Arrays.asList("A", "B"), ((StringSetExpression) dqRule.getExpression()).getItems());
+        assertEquals(StringBasedCondition.class, dqRule.getCondition().getClass());
+        assertEquals(Arrays.asList("A", "B"), ((StringBasedCondition) dqRule.getCondition()).getOperands());
         byte[] serialized = serialize(dqRule);
         DQRule deserialized = deserialize(serialized, DQRule.class);
         assertEquals(dqRule.toString(), deserialized.toString());
-        assertEquals(StringSetExpression.class, deserialized.getExpression().getClass());
+        assertEquals(StringBasedCondition.class, deserialized.getCondition().getClass());
     }
 
     @Test
@@ -254,13 +249,13 @@ class DQRuleTest {
         DQRuleset dqRuleset = parser.parse("Rules = [ Completeness \"colA\" between 0.2 and 0.8]]");
         assertEquals(1, dqRuleset.getRules().size());
         DQRule dqRule = dqRuleset.getRules().get(0);
-        assertEquals(DoubleNumericExpression.class, dqRule.getExpression().getClass());
-        assertTrue(((DoubleNumericExpression) dqRule.getExpression()).evaluate(0.4));
+        assertEquals(NumberBasedCondition.class, dqRule.getCondition().getClass());
+        assertTrue(((NumberBasedCondition) dqRule.getCondition()).evaluate(0.4));
         byte[] serialized = serialize(dqRule);
         DQRule deserialized = deserialize(serialized, DQRule.class);
         assertEquals(dqRule.toString(), deserialized.toString());
-        assertEquals(DoubleNumericExpression.class, deserialized.getExpression().getClass());
-        assertFalse(((DoubleNumericExpression) deserialized.getExpression()).evaluate(0.9));
+        assertEquals(NumberBasedCondition.class, deserialized.getCondition().getClass());
+        assertFalse(((NumberBasedCondition) deserialized.getCondition()).evaluate(0.9));
     }
 
     @Test
@@ -269,14 +264,14 @@ class DQRuleTest {
         String rulesetString = dqRuleset.toString();
         DQRuleset reparsed = parser.parse(rulesetString);
         String reStringed = reparsed.toString();
-        assertTrue(dqRuleset.equals(reparsed));
+        assertEquals(reparsed, dqRuleset);
         assertEquals(reStringed, rulesetString);
     }
 
     @Disabled
     void test_nullParametersAreCorrectlyHandled() {
         Map<String, String> parameters = null;
-        String threshold = "=100";
+        Condition threshold = new Condition("=100");
         DQRule dqRule = new DQRule("JobDuration", parameters, threshold);
         String dqRuleAsString = dqRule.toString();
         assertEquals("JobDuration = 100", dqRuleAsString);
@@ -285,8 +280,7 @@ class DQRuleTest {
     @Disabled
     void test_nullNestedRulesAreCorrectlyHandled() {
         Map<String, String> parameters = null;
-        String threshold = "=100";
-        List<DQRule> nestedRules = null;
+        Condition threshold = new Condition("=100");
         DQRule dqRule = new DQRule("JobDuration", parameters, threshold);
         String dqRuleAsString = dqRule.toString();
         assertEquals("JobDuration = 100", dqRuleAsString);
