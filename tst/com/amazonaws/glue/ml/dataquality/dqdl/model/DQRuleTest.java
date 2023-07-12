@@ -16,9 +16,7 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedCond
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateExpression;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedCondition;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.updated.DQRule;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.updated.DQRuleset;
-import com.amazonaws.glue.ml.dataquality.dqdl.parser.updated.DQDLParser;
+import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLParser;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

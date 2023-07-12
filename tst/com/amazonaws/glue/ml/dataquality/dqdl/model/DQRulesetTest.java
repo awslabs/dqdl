@@ -8,10 +8,10 @@
  * Use is subject to license terms.
  */
 
-package com.amazonaws.glue.ml.dataquality.dqdl.model.updated;
+package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.exception.InvalidDataQualityRulesetException;
-import com.amazonaws.glue.ml.dataquality.dqdl.parser.updated.DQDLParser;
+import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLParser;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -329,13 +329,13 @@ public class DQRulesetTest {
                 "    (Uniqueness \"col_2\" between 0.2 and 0.4) and (Completeness \"col_2\" > 0.7)," +
                 "    RowCount = 100" +
                 "]";
-        com.amazonaws.glue.ml.dataquality.dqdl.model.updated.DQRuleset dqRuleset = parseDQDL(dqdl);
+        DQRuleset dqRuleset = parseDQDL(dqdl);
         System.out.println(dqRuleset);
         assertEquals(3, dqRuleset.getRules().size());
     }
 
-    private com.amazonaws.glue.ml.dataquality.dqdl.model.updated.DQRuleset parseDQDL(String dqdl) {
-        com.amazonaws.glue.ml.dataquality.dqdl.model.updated.DQRuleset dqRuleset = null;
+    private DQRuleset parseDQDL(String dqdl) {
+        DQRuleset dqRuleset = null;
         try {
             dqRuleset = dqdlParser.parse(dqdl);
         } catch (InvalidDataQualityRulesetException e) {

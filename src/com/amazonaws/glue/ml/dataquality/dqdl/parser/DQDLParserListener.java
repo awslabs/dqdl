@@ -8,7 +8,7 @@
  * Use is subject to license terms.
  */
 
-package com.amazonaws.glue.ml.dataquality.dqdl.parser.updated;
+package com.amazonaws.glue.ml.dataquality.dqdl.parser;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleLogicalOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleType;
@@ -24,12 +24,11 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBased
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedConditionOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedConditionOperator;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.updated.DQRule;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.updated.DQRuleset;
-import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLErrorListener;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleset;
 import com.amazonaws.glue.ml.dataquality.dqdl.util.Either;
-import com.amazonaws.glue.ml.dataquality.dqdl.updated.DataQualityDefinitionLanguageUpdatedBaseListener;
-import com.amazonaws.glue.ml.dataquality.dqdl.updated.DataQualityDefinitionLanguageUpdatedParser;
+import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageBaseListener;
+import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageParser;
 import org.antlr.v4.runtime.RuleContext;
 
 import java.util.ArrayList;
@@ -43,7 +42,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class DQDLParserListener extends DataQualityDefinitionLanguageUpdatedBaseListener {
+public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListener {
     private final DQDLErrorListener errorListener;
     private final List<String> errorMessages = new ArrayList<>();
     private final Map<String, String> metadata = new HashMap<>();
@@ -85,8 +84,8 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageUpdatedBase
     }
 
     @Override
-    public void enterMetadata(DataQualityDefinitionLanguageUpdatedParser.MetadataContext ctx) {
-        for (DataQualityDefinitionLanguageUpdatedParser.PairContext pairContext
+    public void enterMetadata(DataQualityDefinitionLanguageParser.MetadataContext ctx) {
+        for (DataQualityDefinitionLanguageParser.PairContext pairContext
             : ctx.dictionary().pair()) {
             String key = removeEscapes(removeQuotes(pairContext.QUOTED_STRING().getText()));
             if (!ALLOWED_METADATA_KEYS.contains(key)) {
@@ -100,15 +99,15 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageUpdatedBase
     }
 
     @Override
-    public void enterRules(DataQualityDefinitionLanguageUpdatedParser.RulesContext ctx) {
+    public void enterRules(DataQualityDefinitionLanguageParser.RulesContext ctx) {
         if (ctx.dqRules() == null) {
             errorMessages.add("No rules provided.");
         }
     }
 
     @Override
-    public void enterDataSources(DataQualityDefinitionLanguageUpdatedParser.DataSourcesContext ctx) {
-        for (DataQualityDefinitionLanguageUpdatedParser.PairContext pairContext
+    public void enterDataSources(DataQualityDefinitionLanguageParser.DataSourcesContext ctx) {
+        for (DataQualityDefinitionLanguageParser.PairContext pairContext
             : ctx.dictionary().pair()) {
             String key = removeEscapes(removeQuotes(pairContext.QUOTED_STRING().getText()));
 
@@ -140,18 +139,18 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageUpdatedBase
     }
 
     @Override
-    public void enterDqRules(DataQualityDefinitionLanguageUpdatedParser.DqRulesContext dqRulesContext) {
+    public void enterDqRules(DataQualityDefinitionLanguageParser.DqRulesContext dqRulesContext) {
         if (!errorMessages.isEmpty()) {
             return;
         }
 
-        for (DataQualityDefinitionLanguageUpdatedParser.TopLevelRuleContext tlc
+        for (DataQualityDefinitionLanguageParser.TopLevelRuleContext tlc
             : dqRulesContext.topLevelRule()) {
             if (tlc.AND().size() > 0 || tlc.OR().size() > 0) {
                 DQRuleLogicalOperator op = tlc.AND().size() > 0 ? DQRuleLogicalOperator.AND : DQRuleLogicalOperator.OR;
                 List<DQRule> nestedRules = new ArrayList<>();
 
-                for (DataQualityDefinitionLanguageUpdatedParser.DqRuleContext rc : tlc.dqRule()) {
+                for (DataQualityDefinitionLanguageParser.DqRuleContext rc : tlc.dqRule()) {
                     Either<String, DQRule> dqRuleEither = getDQRule(rc);
                     if (dqRuleEither.isLeft()) {
                         errorMessages.add(dqRuleEither.getLeft());
@@ -178,7 +177,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageUpdatedBase
     }
 
     private Either<String, DQRule> getDQRule(
-        DataQualityDefinitionLanguageUpdatedParser.DqRuleContext dqRuleContext) {
+        DataQualityDefinitionLanguageParser.DqRuleContext dqRuleContext) {
         String ruleType = dqRuleContext.ruleType().getText();
         List<String> parameters = dqRuleContext.parameter().stream()
             .map(p -> p.getText().replaceAll("\"", ""))
@@ -227,7 +226,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageUpdatedBase
         Condition thresholdCondition = null;
         if (dqRuleContext.withThresholdCondition() != null) {
             if (dqRuleType.getSupportsThreshold()) {
-                DataQualityDefinitionLanguageUpdatedParser.NumberBasedConditionContext ctx =
+                DataQualityDefinitionLanguageParser.NumberBasedConditionContext ctx =
                     dqRuleContext.withThresholdCondition().numberBasedCondition();
 
                 if (ctx == null) {
@@ -258,7 +257,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageUpdatedBase
     private Either<String, Condition> parseCondition(
         DQRuleType ruleType,
         String returnType,
-        DataQualityDefinitionLanguageUpdatedParser.DqRuleContext dqRuleContext) {
+        DataQualityDefinitionLanguageParser.DqRuleContext dqRuleContext) {
 
         Either<String, Condition> response =
             Either.fromLeft(String.format("Error parsing condition for return type: %s", returnType));
@@ -345,7 +344,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageUpdatedBase
     }
 
     private Optional<Condition> parseNumberBasedCondition(
-        DataQualityDefinitionLanguageUpdatedParser.NumberBasedConditionContext ctx) {
+        DataQualityDefinitionLanguageParser.NumberBasedConditionContext ctx) {
 
         String exprStr = ctx.getText();
         Condition condition = null;
@@ -380,7 +379,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageUpdatedBase
     }
 
     private Optional<Condition> parseStringBasedCondition(
-        DataQualityDefinitionLanguageUpdatedParser.StringBasedConditionContext ctx
+        DataQualityDefinitionLanguageParser.StringBasedConditionContext ctx
     ) {
         String exprStr = ctx.getText();
         Condition condition = null;
@@ -405,7 +404,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageUpdatedBase
     }
 
     private Optional<Condition> parseDateBasedCondition(
-        DataQualityDefinitionLanguageUpdatedParser.DateBasedConditionContext ctx) {
+        DataQualityDefinitionLanguageParser.DateBasedConditionContext ctx) {
 
         String exprStr = ctx.getText();
         Condition condition = null;
@@ -472,7 +471,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageUpdatedBase
     }
 
     private Optional<Condition> parseDurationBasedCondition(
-        DataQualityDefinitionLanguageUpdatedParser.DurationBasedConditionContext ctx
+        DataQualityDefinitionLanguageParser.DurationBasedConditionContext ctx
     ) {
 
         String exprStr = ctx.getText();
@@ -546,7 +545,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageUpdatedBase
     }
 
     private Optional<DateExpression> parseDateExpression(
-        DataQualityDefinitionLanguageUpdatedParser.DateExpressionContext ctx) {
+        DataQualityDefinitionLanguageParser.DateExpressionContext ctx) {
         if (ctx.durationExpression() != null) {
             Optional<Duration> duration = parseDuration(ctx.durationExpression());
             return duration.map(value -> new DateExpression.CurrentDateExpression(
@@ -563,7 +562,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageUpdatedBase
     }
 
     private Optional<Duration> parseDuration(
-        DataQualityDefinitionLanguageUpdatedParser.DurationExpressionContext ctx) {
+        DataQualityDefinitionLanguageParser.DurationExpressionContext ctx) {
         int amount = Integer.parseInt(ctx.INT() != null ? ctx.INT().getText() : ctx.DIGIT().getText());
         if (ctx.durationUnit().exception != null) {
             return Optional.empty();

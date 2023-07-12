@@ -11,7 +11,6 @@
 package com.amazonaws.glue.ml.dataquality.dqdl.parser;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.exception.InvalidDataQualityRulesetException;
-import com.amazonaws.glue.ml.dataquality.dqdl.parser.updated.DQDLParser;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -22,8 +21,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public class InvalidDQRulesetTest {
     DQDLParser parser = new DQDLParser();
-    com.amazonaws.glue.ml.dataquality.dqdl.parser.updated.DQDLParser updatedParser =
-        new com.amazonaws.glue.ml.dataquality.dqdl.parser.updated.DQDLParser();
 
     private static Stream<Arguments> provideInvalidRulesets() {
         return Stream.of(
@@ -81,22 +78,6 @@ public class InvalidDQRulesetTest {
     void test_invalidRulesetParsing(String ruleset) {
         try {
             parser.parse(ruleset);
-            fail("Ruleset validation exception was expected");
-        } catch (InvalidDataQualityRulesetException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideInvalidRulesets")
-    void test_invalidRulesetParsingWithUpdatedParser(String ruleset) {
-        // With the updated parser, we are allowing the threshold condition for any variant of ColumnValues rule.
-        // This is because we do not want the parser to make the decision if threshold condition for the particular
-        // variant is supported or not. We will leave that with the consumer.
-        if (ruleset.contains("with threshold")) return;
-
-        try {
-            updatedParser.parse(ruleset);
             fail("Ruleset validation exception was expected");
         } catch (InvalidDataQualityRulesetException e) {
             System.out.println(e.getMessage());
