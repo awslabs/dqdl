@@ -1,4 +1,4 @@
-grammar DataQualityDefinitionLanguageUpdated; // "parser grammars for DQDL"
+grammar DataQualityDefinitionLanguage; // "parser grammars for DQDL"
 import CommonLexerRules;
 
 // Sections
