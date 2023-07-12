@@ -14,9 +14,9 @@ import com.amazonaws.glue.ml.dataquality.dqdl.exception.InvalidDataQualityRulese
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedCondition;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.updated.DQRule;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.updated.DQRuleset;
-import com.amazonaws.glue.ml.dataquality.dqdl.parser.updated.DQDLParser;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleset;
+import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLParser;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;

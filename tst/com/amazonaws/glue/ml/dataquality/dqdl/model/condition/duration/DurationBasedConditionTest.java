@@ -10,10 +10,6 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration;
 
-import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.Duration;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationBasedCondition;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationBasedConditionOperator;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationUnit;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;

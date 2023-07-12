@@ -8,15 +8,13 @@
  * Use is subject to license terms.
  */
 
-package com.amazonaws.glue.ml.dataquality.dqdl.parser.updated;
+package com.amazonaws.glue.ml.dataquality.dqdl.parser;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.exception.InvalidDataQualityRulesetException;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.updated.DQRuleset;
-import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLErrorListener;
-import com.amazonaws.glue.ml.dataquality.dqdl.updated.DataQualityDefinitionLanguageUpdatedLexer;
-import com.amazonaws.glue.ml.dataquality.dqdl.updated.DataQualityDefinitionLanguageUpdatedParser;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleset;
+import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageLexer;
+import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageParser;
 import com.amazonaws.glue.ml.dataquality.dqdl.util.Either;
-
 
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -33,12 +31,12 @@ public class DQDLParser {
         CharStream input = CharStreams.fromString(dqdl);
         DQDLErrorListener errorListener = new DQDLErrorListener();
 
-        DataQualityDefinitionLanguageUpdatedLexer lexer = new DataQualityDefinitionLanguageUpdatedLexer(input);
+        DataQualityDefinitionLanguageLexer lexer = new DataQualityDefinitionLanguageLexer(input);
         lexer.removeErrorListeners();
         lexer.addErrorListener(errorListener);
         TokenStream tokens = new CommonTokenStream(lexer);
 
-        DataQualityDefinitionLanguageUpdatedParser parser = new DataQualityDefinitionLanguageUpdatedParser(tokens);
+        DataQualityDefinitionLanguageParser parser = new DataQualityDefinitionLanguageParser(tokens);
         parser.removeErrorListeners();
         parser.addErrorListener(errorListener);
 
