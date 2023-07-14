@@ -1,0 +1,349 @@
+{
+  "rule_types": [
+    {
+      "rule_type_name": "RowCount",
+      "description": "Check the number of rows in the dataset",
+      "parameters": [],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "RowCountMatch",
+      "description": "Checks the percentage match of the row count of the primary dataset against a reference dataset",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "ReferenceDatasetAlias",
+          "description": "Alias of reference dataset"
+        }
+      ],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "ColumnCount",
+      "description": "Checks the number of columns in the dataset",
+      "parameters": [],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "Completeness",
+      "description": "Check the percentage of complete (non-null) values in a given column",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column to check completeness of"
+        }
+      ],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "IsComplete",
+      "description": "Check if all values in a given column are complete (non-null)",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column to check completeness of"
+        }
+      ],
+      "return_type": "BOOLEAN"
+    },
+    {
+      "rule_type_name": "ColumnDataType",
+      "description": "Check the data type of the given column",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column to check data type of"
+        }
+      ],
+      "return_type": "STRING",
+      "is_threshold_supported": true
+    },
+    {
+      "rule_type_name": "ColumnNamesMatchPattern",
+      "description": "Checks if the names of the columns in the dataset match a given pattern",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "PatternToMatch",
+          "description": "Pattern to match against the names of the columns"
+        }
+      ],
+      "return_type": "BOOLEAN"
+    },
+    {
+      "rule_type_name": "ColumnExists",
+      "description": "Check the existence of a given column",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column to check existence of"
+        }
+      ],
+      "return_type": "BOOLEAN"
+    },
+    {
+      "rule_type_name": "ColumnCorrelation",
+      "description": "Check the correlation between two given columns",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn1",
+          "description": "Name of first column"
+        },
+        {
+          "type": "String",
+          "name": "TargetColumn2",
+          "description": "Name of second column"
+        }
+      ],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "Uniqueness",
+      "description": "Check the percentage of unique values in a given column",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column to check uniqueness of"
+        }
+      ],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "IsUnique",
+      "description": "Check if all values in a given column are unique",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column to check uniqueness of"
+        }
+      ],
+      "return_type": "BOOLEAN"
+    },
+    {
+      "rule_type_name": "Mean",
+      "description": "Check the mean (average) of all values in a given column",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column to check mean of"
+        }
+      ],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "Sum",
+      "description": "Check the sum of all values in a given column",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column to check sum of"
+        }
+      ],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "StandardDeviation",
+      "description": "Check the standard deviation of all values in a given column",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column to check standard deviation of"
+        }
+      ],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "Entropy",
+      "description": "Check the entropy of all values in a given column",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column to check entropy of"
+        }
+      ],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "DistinctValuesCount",
+      "description": "Check the number of distinct values in a given column",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column to check distinct values count of"
+        }
+      ],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "UniqueValueRatio",
+      "description": "Check the ratio of unique values in a given column",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column to check unique value ratio of"
+        }
+      ],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "ColumnLength",
+      "description": "Check the length of values of a given column",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column to check the length of the values of"
+        }
+      ],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "IsPrimaryKey",
+      "description": "Check if a given column contains a primary key, by checking for uniqueness and completeness",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column(s) to check if it is (they are) unique and complete",
+          "is_var_arg": true
+        }
+      ],
+      "return_type": "BOOLEAN"
+    },
+    {
+      "rule_type_name": "ColumnValues",
+      "description": "Returns the column values of a given column",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column to return the values of"
+        }
+      ],
+      "return_type": "STRING_ARRAY|NUMBER_ARRAY|DATE_ARRAY",
+      "is_threshold_supported": true
+    },
+    {
+      "rule_type_name": "DataFreshness",
+      "description": "Check the freshness of a date column",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column to check the freshness of"
+        }
+      ],
+      "return_type": "DURATION_ARRAY"
+    },
+    {
+      "rule_type_name": "CustomSql",
+      "description": "Runs a custom SQL against the dataset and returns a single value",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "CustomSqlStatement",
+          "description": "Custom SQL statement to run against the dataset"
+        }
+      ],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "ReferentialIntegrity",
+      "description": "Check the referential integrity of given columns against a reference dataset",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "PrimaryDatasetColumns",
+          "description": "Names of columns from primary dataset separated by commas"
+        },
+        {
+          "type": "String",
+          "name": "ReferenceDatasetColumns",
+          "description": "Alias of reference dataset and comma separated names of columns from reference dataset. The alias and the names should be separated by a period. The names should be enclosed in curly brackets."
+        }
+      ],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "DatasetMatch",
+      "description": "Check the percentage of records in the primary dataset that are equal to records in the reference dataset by joining the datasets using a primary/composite key",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "ReferenceDatasetAlias",
+          "description": "Alias of reference dataset"
+        },
+        {
+          "type": "String",
+          "name": "KeyColumnMappings",
+          "description": "Mappings of key columns used for joining the two datasets"
+        }
+      ],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "DatasetMatch",
+      "description": "Check the percentage of records in the primary dataset that are equal to records in the reference dataset by joining the datasets using a primary/composite key",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "ReferenceDatasetAlias",
+          "description": "Alias of reference dataset"
+        },
+        {
+          "type": "String",
+          "name": "KeyColumnMappings",
+          "description": "Mappings of key columns used for joining the two datasets"
+        },
+        {
+          "type": "String",
+          "name": "MatchColumnMappings",
+          "description": "Mappings of columns used for matching"
+        }
+      ],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "SchemaMatch",
+      "description": "Checks the percentage match of the schema of the primary dataset against a reference dataset",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "ReferenceDatasetAlias",
+          "description": "Alias of reference dataset"
+        }
+      ],
+      "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "AggregateMatch",
+      "description": "Checks the percentage match of two aggregate expressions",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "AggregateExpression1",
+          "description": "The first aggregate expression"
+        },
+        {
+          "type": "String",
+          "name": "AggregateExpression2",
+          "description": "The second aggregate expression"
+        }
+      ],
+      "return_type": "NUMBER"
+    }
+  ]
+}
