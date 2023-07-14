@@ -225,7 +225,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
         Condition thresholdCondition = null;
         if (dqRuleContext.withThresholdCondition() != null) {
-            if (dqRuleType.getSupportsThreshold()) {
+            if (dqRuleType.isThresholdSupported()) {
                 DataQualityDefinitionLanguageParser.NumberBasedConditionContext ctx =
                     dqRuleContext.withThresholdCondition().numberBasedCondition();
 
