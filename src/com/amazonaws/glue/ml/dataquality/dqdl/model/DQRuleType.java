@@ -10,14 +10,21 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Getter
 public class DQRuleType {
@@ -25,18 +32,18 @@ public class DQRuleType {
     private final String description;
     private final List<DQRuleParameter> parameters;
     private final String returnType;
-    private final Boolean supportsThreshold;
+    private final boolean isThresholdSupported;
 
-    public DQRuleType(String ruleTypeName,
-                      String description,
-                      List<DQRuleParameter> parameters,
-                      String returnType,
-                      Boolean supportsThreshold) {
+    public DQRuleType(@JsonProperty(value = "rule_type_name") String ruleTypeName,
+                      @JsonProperty(value = "description") String description,
+                      @JsonProperty(value = "parameters") List<DQRuleParameter> parameters,
+                      @JsonProperty(value = "return_type") String returnType,
+                      @JsonProperty(value = "is_threshold_supported") boolean isThresholdSupported) {
         this.ruleTypeName = ruleTypeName;
         this.description = description;
         this.parameters = parameters;
         this.returnType = returnType;
-        this.supportsThreshold = supportsThreshold;
+        this.isThresholdSupported = isThresholdSupported;
 
         if (parameters.isEmpty()) {
             return;
@@ -50,10 +57,6 @@ public class DQRuleType {
             throw new IllegalArgumentException(
                 "Property isVarArg can only be set to true on last element in parameters list");
         }
-    }
-
-    public DQRuleType(String ruleTypeName, String description, List<DQRuleParameter> parameters, String returnType) {
-        this(ruleTypeName, description, parameters, returnType, false);
     }
 
     public Optional<String> verifyParameters(List<DQRuleParameter> expectedParameters,
@@ -107,433 +110,28 @@ public class DQRuleType {
         return parameterMap;
     }
 
-    private static final DQRuleType JOB_STATUS_RULE_TYPE = new DQRuleType(
-            "JobStatus",
-            "Check the status of the job which populated the table",
-            Collections.emptyList(),
-            "STRING"
-    );
+    @AllArgsConstructor
+    @NoArgsConstructor
+    private static class DQRuleTypes {
+        @JsonProperty(value = "rule_types")
+        private List<DQRuleType> ruleTypes;
+    }
 
-    private static final DQRuleType JOB_DURATION_RULE_TYPE = new DQRuleType(
-            "JobDuration",
-            "Check the duration of the job which populated the table",
-            Collections.emptyList(),
-            "NUMBER"
-    );
+    private static final List<DQRuleType> ALL_RULES = generateRuleTypes("/rules/rules-config.json");
 
-    private static final DQRuleType ROW_COUNT_RULE_TYPE = new DQRuleType(
-            "RowCount",
-            "Check the number of rows in the dataset",
-            Collections.emptyList(),
-            "NUMBER"
-    );
-
-    private static final DQRuleType ROW_COUNT_MATCH_RULE_TYPE = new DQRuleType(
-        "RowCountMatch",
-        "Checks the percentage match of the row count of the primary dataset against a reference dataset",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "ReferenceDatasetAlias",
-                "Alias of reference dataset."
-            )
-        ),
-        "NUMBER"
-    );
-
-    private static final DQRuleType COLUMN_COUNT_RULE_TYPE = new DQRuleType(
-            "ColumnCount",
-            "Checks the number of columns in the dataset",
-            Collections.emptyList(),
-            "NUMBER"
-    );
-
-    private static final DQRuleType FILE_COUNT_RULE_TYPE = new DQRuleType(
-            "FileCount",
-            "Check the number of files in s3 the dataset comprises of",
-            Collections.emptyList(),
-            "NUMBER"
-    );
-
-    private static final DQRuleType COMPLETENESS_RULE_TYPE = new DQRuleType(
-            "Completeness",
-            "Check the percentage of complete (non-null) values in a given column",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn",
-                            "Name of column to check completeness of."
-                    )
-            ),
-            "NUMBER"
-    );
-
-    private static final DQRuleType IS_COMPLETE_RULE_TYPE = new DQRuleType(
-            "IsComplete",
-            "Check if all values in a given column are complete (non-null)",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn",
-                            "Name of column to check completeness of."
-                    )
-            ),
-            "BOOLEAN"
-    );
-
-    private static final DQRuleType COLUMN_DATA_TYPE_RULE_TYPE = new DQRuleType(
-            "ColumnDataType",
-            "Check the data type of the given column",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn",
-                            "Name of column to check data type of."
-                    )
-            ),
-            "STRING",
-            true
-    );
-
-    private static final DQRuleType COLUMN_NAMES_MATCH_PATTERN_RULE_TYPE = new DQRuleType(
-            "ColumnNamesMatchPattern",
-            "Checks if the names of the columns in the dataset match a given pattern",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "PatternToMatch",
-                            "Pattern to match against the names of the columns."
-                    )
-            ),
-            "BOOLEAN"
-    );
-
-    private static final DQRuleType COLUMN_EXISTS_RULE_TYPE = new DQRuleType(
-            "ColumnExists",
-            "Check the existence of a given column",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn",
-                            "Name of column to check existence of."
-                    )
-            ),
-            "BOOLEAN"
-    );
-
-    private static final DQRuleType COLUMN_CORRELATION_RULE_TYPE = new DQRuleType(
-            "ColumnCorrelation",
-            "Check the correlation between two given columns",
-            Arrays.asList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn1",
-                            "Name of first column."
-
-                    ),
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn2",
-                            "Name of second column."
-                    )
-            ),
-            "NUMBER"
-    );
-
-    private static final DQRuleType UNIQUENESS_RULE_TYPE = new DQRuleType(
-            "Uniqueness",
-            "Check the percentage of unique values in a given column",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn",
-                            "Name of column to check uniqueness of."
-                    )
-            ),
-            "NUMBER"
-    );
-
-    private static final DQRuleType IS_UNIQUE_RULE_TYPE = new DQRuleType(
-            "IsUnique",
-            "Check if all values in a given column are unique",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn",
-                            "Name of column to check uniqueness of."
-                    )
-            ),
-            "BOOLEAN"
-    );
-
-    private static final DQRuleType COLUMN_MEAN_RULE_TYPE = new DQRuleType(
-            "Mean",
-            "Check the mean (average) of all values in a given column",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn",
-                            "Name of column to check mean of."
-                    )
-            ),
-            "NUMBER"
-    );
-
-    private static final DQRuleType COLUMN_SUM_RULE_TYPE = new DQRuleType(
-            "Sum",
-            "Check the sum of all values in a given column",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn",
-                            "Name of column to check sum of."
-                    )
-            ),
-            "NUMBER"
-    );
-
-    private static final DQRuleType COLUMN_STD_DEV_RULE_TYPE = new DQRuleType(
-            "StandardDeviation",
-            "Check the standard deviation of all values in a given column",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn",
-                            "Name of column to check standard deviation of."
-                    )
-            ),
-            "NUMBER"
-    );
-
-    private static final DQRuleType COLUMN_ENTROPY_RULE_TYPE = new DQRuleType(
-            "Entropy",
-            "Check the entropy of all values in a given column",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn",
-                            "Name of column to check entropy of."
-                    )
-            ),
-            "NUMBER"
-    );
-
-    private static final DQRuleType DISTINCT_VALUES_COUNT_RULE_TYPE = new DQRuleType(
-            "DistinctValuesCount",
-            "Check the number of distinct values in a given column",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn",
-                            "Name of column to check distinct values count of."
-                    )
-            ),
-            "NUMBER"
-    );
-
-    private static final DQRuleType UNIQUE_VALUE_RATIO_RULE_TYPE = new DQRuleType(
-            "UniqueValueRatio",
-            "Check the ratio of unique values in a given column",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn",
-                            "Name of column to check unique value ratio of."
-                    )
-            ),
-            "NUMBER"
-    );
-
-    private static final DQRuleType COLUMN_LENGTH_RULE_TYPE = new DQRuleType(
-            "ColumnLength",
-            "Check the length of values of a given column",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn",
-                            "Name of column to check the length of the values of."
-                    )
-            ),
-            "NUMBER"
-    );
-
-    private static final DQRuleType IS_PRIMARY_KEY_RULE_TYPE = new DQRuleType(
-            "IsPrimaryKey",
-            "Check if a given column contains a primary key, by checking for uniqueness and completeness",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn",
-                            "Name of first column.",
-                            true
-                    )
-            ),
-            "BOOLEAN"
-    );
-
-    private static final DQRuleType COLUMN_VALUES_RULE_TYPE = new DQRuleType(
-            "ColumnValues",
-            "Returns the column values of a given column",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn",
-                            "Name of column to return the values of."
-                    )
-            ),
-            "STRING_ARRAY|NUMBER_ARRAY|DATE_ARRAY",
-            true
-    );
-
-    private static final DQRuleType DATA_FRESHNESS_RULE_TYPE = new DQRuleType(
-            "DataFreshness",
-            "Check the freshness of a date column",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "TargetColumn",
-                            "Name of column to check the freshness of."
-                    )
-            ),
-            "DURATION_ARRAY"
-    );
-
-    private static final DQRuleType CUSTOM_SQL_RULE_TYPE = new DQRuleType(
-            "CustomSql",
-            "Runs a custom SQL against the dataset and returns a single value",
-            Collections.singletonList(
-                    new DQRuleParameter(
-                            "String",
-                            "CustomSqlStatement",
-                            "Custom SQL statement to run against the dataset."
-                    )
-            ),
-            "NUMBER"
-    );
-
-    private static final DQRuleType REFERENTIAL_INTEGRITY_RULE_TYPE = new DQRuleType(
-        "ReferentialIntegrity",
-        "Runs a referential integrity check against a reference dataset using the given column",
-        Arrays.asList(
-            new DQRuleParameter(
-                "String",
-                "PrimaryDatasetColumns",
-                "Names of columns from primary dataset separated by commas."
-            ),
-            new DQRuleParameter(
-                "String",
-                "ReferenceDatasetColumns",
-                "Alias of reference dataset and comma separated names of columns from reference dataset. " +
-                "The alias and the names should be separated by a period. " +
-                "The names should be enclosed in curly brackets."
-            )
-        ),
-        "NUMBER"
-    );
-
-    private static final DQRuleType DATASET_MATCH_RULE_TYPE_MATCH_ALL_COLUMNS = new DQRuleType(
-        "DatasetMatch",
-        "Checks the percentage of records in the primary dataset that are equal " +
-            "to records in the reference dataset by joining the datasets using a primary/composite key",
-        Arrays.asList(
-            new DQRuleParameter(
-                "String",
-                "ReferenceDatasetAlias",
-                "Alias of reference dataset."
-            ),
-            new DQRuleParameter(
-                "String",
-                "KeyColumnMappings",
-                "Mappings of key columns used for joining the two datasets."
-            )
-        ),
-        "NUMBER"
-    );
-
-    private static final DQRuleType DATASET_MATCH_RULE_TYPE_MATCH_SPECIFIC_COLUMNS = new DQRuleType(
-        "DatasetMatch",
-        "Checks the percentage of records in the primary dataset that are equal " +
-            "to records in the reference dataset by joining the datasets using a primary/composite key",
-        Arrays.asList(
-            new DQRuleParameter(
-                "String",
-                "ReferenceDatasetAlias",
-                "Alias of reference dataset."
-            ),
-            new DQRuleParameter(
-                "String",
-                "KeyColumnMappings",
-                "Mappings of key columns used for joining the two datasets."
-            ),
-            new DQRuleParameter(
-                "String",
-                "MatchColumnMappings",
-                "Mappings of columns used for matching."
-            )
-        ),
-        "NUMBER"
-    );
-
-    private static final DQRuleType SCHEMA_MATCH_RULE_TYPE = new DQRuleType(
-        "SchemaMatch",
-        "Checks the percentage match of the schema of the primary dataset against a reference dataset",
-        Collections.singletonList(
-            new DQRuleParameter(
-                "String",
-                "ReferenceDatasetAlias",
-                "Alias of reference dataset."
-            )
-        ),
-        "NUMBER"
-    );
-
-    private static final DQRuleType AGGREGATE_MATCH_RULE_TYPE = new DQRuleType(
-        "AggregateMatch",
-        "Checks the percentage match of two aggregate expressions",
-        Arrays.asList(
-            new DQRuleParameter(
-                "String",
-                "AggregateExpression1",
-                "The first aggregate expression."
-            ),
-            new DQRuleParameter(
-                "String",
-                "AggregateExpression2",
-                "The second aggregate expression."
-            )
-        ),
-        "NUMBER"
-    );
-
-    private static final List<DQRuleType> ALL_RULES = Arrays.asList(
-        ROW_COUNT_RULE_TYPE,
-        ROW_COUNT_MATCH_RULE_TYPE,
-        COLUMN_COUNT_RULE_TYPE,
-        COMPLETENESS_RULE_TYPE,
-        IS_COMPLETE_RULE_TYPE,
-        COLUMN_DATA_TYPE_RULE_TYPE,
-        COLUMN_NAMES_MATCH_PATTERN_RULE_TYPE,
-        COLUMN_EXISTS_RULE_TYPE,
-        COLUMN_CORRELATION_RULE_TYPE,
-        UNIQUENESS_RULE_TYPE,
-        IS_UNIQUE_RULE_TYPE,
-        COLUMN_MEAN_RULE_TYPE,
-        COLUMN_SUM_RULE_TYPE,
-        COLUMN_STD_DEV_RULE_TYPE,
-        COLUMN_ENTROPY_RULE_TYPE,
-        DISTINCT_VALUES_COUNT_RULE_TYPE,
-        UNIQUE_VALUE_RATIO_RULE_TYPE,
-        COLUMN_LENGTH_RULE_TYPE,
-        IS_PRIMARY_KEY_RULE_TYPE,
-        COLUMN_VALUES_RULE_TYPE,
-        DATA_FRESHNESS_RULE_TYPE,
-        CUSTOM_SQL_RULE_TYPE,
-        REFERENTIAL_INTEGRITY_RULE_TYPE,
-        DATASET_MATCH_RULE_TYPE_MATCH_ALL_COLUMNS,
-        DATASET_MATCH_RULE_TYPE_MATCH_SPECIFIC_COLUMNS,
-        SCHEMA_MATCH_RULE_TYPE,
-        AGGREGATE_MATCH_RULE_TYPE
-    );
+    static List<DQRuleType> generateRuleTypes(final String rulesConfigPath) {
+        try (
+            InputStream inputStream = DQRuleType.class.getResourceAsStream(rulesConfigPath);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
+        ) {
+            String rulesConfig = reader.lines().collect(Collectors.joining("\n"));
+            DQRuleTypes ruleTypes = new ObjectMapper().readValue(rulesConfig, DQRuleTypes.class);
+            return ruleTypes.ruleTypes;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException("Failed to load rule types", e);
+        }
+    }
 
     public static Optional<DQRuleType> getRuleType(String ruleTypeName, int parameterCount) {
         return ALL_RULES.stream()
