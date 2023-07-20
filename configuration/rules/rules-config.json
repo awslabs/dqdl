@@ -258,7 +258,8 @@
           "description": "Custom SQL statement to run against the dataset"
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER|BOOLEAN",
+      "is_threshold_supported": true
     },
     {
       "rule_type_name": "ReferentialIntegrity",
