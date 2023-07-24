@@ -145,7 +145,10 @@ class DQRuleTest {
             Arguments.of("AggregateMatch \"sum(col-A)\" \"sum(colB)\" > 0.9"),
             Arguments.of("AggregateMatch \"sum(col-A)\" \"sum(reference.colA)\" > 0.1"),
             Arguments.of("AggregateMatch \"avg(col-A)\" \"avg(reference.colA)\" between 0.8 and 0.9"),
-            Arguments.of("AggregateMatch \"SUM(col-A)\" \"SUM(reference.colA)\" >= 0.95")
+            Arguments.of("AggregateMatch \"SUM(col-A)\" \"SUM(reference.colA)\" >= 0.95"),
+            Arguments.of( "CustomSql \"select count(*) from primary\" > 0"),
+            Arguments.of( "CustomSql \"select col-A from primary\""),
+            Arguments.of( "CustomSql \"select col-A from primary\" with threshold > 0.5")
         );
     }
 
