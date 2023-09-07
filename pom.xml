@@ -1,0 +1,122 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.amazonaws.services.glue.dataquality</groupId>
+    <artifactId>dqdl</artifactId>
+    <version>1.0.0</version>
+
+    <properties>
+	<antlr.generated.package>com.amazonaws.glue.ml.dataquality.dqdl</antlr.generated.package>
+        <antlr.version>4.7</antlr.version>
+	<configuration.dir>configuration</configuration.dir>
+        <dqdl.antlr.grammar.file>DataQualityDefinitionLanguage.g4</dqdl.antlr.grammar.file>
+        <jackson.databind.version>2.12.7.1</jackson.databind.version>
+        <junit.jupiter.version>5.9.1</junit.jupiter.version>
+	<lombok.version>1.18.28</lombok.version>
+	<maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+
+    <name>dqdl</name>
+    <description>Data Quality Definition Language (DQDL) is a DSL for expressing data quality rules.</description>
+    <url>https://github.com/awslabs/dqdl</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://aws.amazon.com/apache2.0/</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.antlr/antlr4 -->
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4</artifactId>
+            <version>${antlr.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.databind.version}</version>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-params -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <sourceDirectory>src</sourceDirectory>
+        <testSourceDirectory>tst</testSourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
+                <version>${antlr.version}</version>
+                <executions>
+                    <execution>
+                        <id>generate-dqdl-parser</id>
+                        <configuration>
+                            <arguments>
+                                <argument>-package</argument>
+				<argument>${antlr.generated.package}</argument>
+				<argument>${dqdl.antlr.grammar.file}</argument>
+                            </arguments>
+			    <sourceDirectory>${configuration.dir}/dqdl</sourceDirectory>
+                        </configuration>
+                        <goals>
+                            <goal>antlr4</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+		<version>${maven.compiler.plugin.version}</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+        <resources>
+            <resource>
+                <directory>${configuration.dir}</directory>
+            </resource>
+        </resources>
+        <testResources>
+            <testResource>
+                <directory>${configuration.dir}</directory>
+            </testResource>
+        </testResources>
+    </build>
+
+</project>
