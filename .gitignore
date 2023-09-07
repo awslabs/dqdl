@@ -4,8 +4,10 @@ gen
 *.iml
 *.tokens
 *.iml
+.idea
 
 antlr-grammar
 antlr-generated-src
 gen
 dqdl-spec
+target
