@@ -8,16 +8,17 @@
     <version>1.0.0</version>
 
     <properties>
-	<antlr.generated.package>com.amazonaws.glue.ml.dataquality.dqdl</antlr.generated.package>
+        <antlr.generated.package>com.amazonaws.glue.ml.dataquality.dqdl</antlr.generated.package>
         <antlr.version>4.7</antlr.version>
-	<configuration.dir>configuration</configuration.dir>
+        <configuration.dir>configuration</configuration.dir>
         <dqdl.antlr.grammar.file>DataQualityDefinitionLanguage.g4</dqdl.antlr.grammar.file>
         <jackson.databind.version>2.12.7.1</jackson.databind.version>
         <junit.jupiter.version>5.9.1</junit.jupiter.version>
-	<lombok.version>1.18.28</lombok.version>
-	<maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
+        <lombok.version>1.18.28</lombok.version>
+        <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.surefire.plugin.version>3.1.2</maven.surefire.plugin.version>
     </properties>
 
     <name>dqdl</name>
@@ -86,10 +87,10 @@
                         <configuration>
                             <arguments>
                                 <argument>-package</argument>
-				<argument>${antlr.generated.package}</argument>
-				<argument>${dqdl.antlr.grammar.file}</argument>
+                                <argument>${antlr.generated.package}</argument>
+                                <argument>${dqdl.antlr.grammar.file}</argument>
                             </arguments>
-			    <sourceDirectory>${configuration.dir}/dqdl</sourceDirectory>
+                            <sourceDirectory>${configuration.dir}/dqdl</sourceDirectory>
                         </configuration>
                         <goals>
                             <goal>antlr4</goal>
@@ -100,11 +101,23 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-		<version>${maven.compiler.plugin.version}</version>
+                <version>${maven.compiler.plugin.version}</version>
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+		<version>${maven.surefire.plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-junit-platform</artifactId>
+			<version>${maven.surefire.plugin.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
         <resources>
