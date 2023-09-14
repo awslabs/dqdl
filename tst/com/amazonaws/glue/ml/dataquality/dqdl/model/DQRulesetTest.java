@@ -181,6 +181,39 @@ public class DQRulesetTest {
         assertEquals(dqdlFormatted, dqRuleset.toString());
     }
 
+    @Test
+    void test_isPrimaryCheckWithMetadataAndSourcesAndMonitors() {
+        String dqdl = "Metadata = { \"Version\": \"1.0\" }" + LINE_SEP +
+            "DataSources = { \"Primary\": \"orders-table\", \"AdditionalDataSources\": [ \"ref-table\" ] } " + LINE_SEP +
+            "Rules = [ IsPrimaryKey \"colA\" ] " + LINE_SEP +
+            "Monitors = [ Completeness \"colA\" ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals("orders-table", dqRuleset.getPrimarySourceName());
+        assertEquals(1, dqRuleset.getAdditionalDataSourcesNames().size());
+        assertEquals("ref-table", dqRuleset.getAdditionalDataSourcesNames().get(0));
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("IsPrimaryKey", dqRuleset.getRules().get(0).getRuleType());
+        assertEquals(1, dqRuleset.getMonitors().size());
+        assertEquals("Completeness", dqRuleset.getMonitors().get(0).getRuleType());
+
+        String dqdlFormatted =
+                "Metadata = {" + LINE_SEP +
+                "    \"Version\": \"1.0\"" + LINE_SEP +
+                "}" + LINE_SEP + LINE_SEP +
+                "DataSources = {" + LINE_SEP +
+                "    \"Primary\": \"orders-table\"," + LINE_SEP +
+                "    \"AdditionalDataSources\": [ \"ref-table\" ]" + LINE_SEP +
+                "}" + LINE_SEP + LINE_SEP +
+                "Rules = [" + LINE_SEP +
+                "    IsPrimaryKey \"colA\"" + LINE_SEP +
+                "]" + LINE_SEP + LINE_SEP +
+                "Monitors = [" + LINE_SEP +
+                "    Completeness \"colA\"" + LINE_SEP +
+                "]";
+        assertEquals(dqdlFormatted, dqRuleset.toString());
+    }
+
     @Disabled
     void test_jobStatusRuleWithEqualityCheck() {
         String dqdl = "Rules = [ JobStatus = \"SUCCEEDED\" ]";

@@ -73,9 +73,31 @@ public class InvalidDQRulesetTest {
         );
     }
 
+    private static Stream<Arguments> provideInvalidRulesetsWithMonitors() {
+        return Stream.of(
+            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Monitors = [ ]"),
+            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Monitors = [ IsComplete \"colA\" ]"),
+            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Monitors = [ Completeness \"colA\", ]"),
+            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Monitors = [ Completeness \"colA\", Foo ]"),
+            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Monitors = [ Completeness \"colA\" > 1.0 ]"),
+            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Monitors = [ Completeness \"colA\", Uniqueness \"colB\" = 1.0 ]")
+        );
+    }
+
     @ParameterizedTest
     @MethodSource("provideInvalidRulesets")
     void test_invalidRulesetParsing(String ruleset) {
+        try {
+            parser.parse(ruleset);
+            fail("Ruleset validation exception was expected");
+        } catch (InvalidDataQualityRulesetException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideInvalidRulesetsWithMonitors")
+    void test_invalidRulesetWithMonitorsParsing(String ruleset) {
         try {
             parser.parse(ruleset);
             fail("Ruleset validation exception was expected");

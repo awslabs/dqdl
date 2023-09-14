@@ -10,6 +10,7 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.parser;
 
+import com.amazonaws.glue.ml.dataquality.dqdl.model.DQMonitor;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleLogicalOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleType;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
@@ -50,6 +51,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     private String primarySource;
     private List<String> additionalSources;
     private final List<DQRule> dqRules = new ArrayList<>();
+    private final List<DQMonitor> dqMonitors = new ArrayList<>();
 
     private static final String METADATA_VERSION_KEY = "Version";
     private static final Set<String> ALLOWED_METADATA_KEYS;
@@ -73,7 +75,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
     public Either<List<String>, DQRuleset> getParsedRuleset() {
         if (errorMessages.isEmpty() && errorListener.getErrorMessages().isEmpty()) {
-            return Either.fromRight(new DQRuleset(metadata, primarySource, additionalSources, dqRules));
+            return Either.fromRight(new DQRuleset(metadata, primarySource, additionalSources, dqRules, dqMonitors));
         } else {
             List<String> allErrorMessages = new ArrayList<>();
             allErrorMessages.addAll(errorMessages);
@@ -176,6 +178,23 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
     }
 
+    @Override
+    public void enterDqMonitors(DataQualityDefinitionLanguageParser.DqMonitorsContext dqMonitorsContext) {
+        if (!errorMessages.isEmpty()) {
+            return;
+        }
+
+        for (DataQualityDefinitionLanguageParser.DqMonitorContext dmc: dqMonitorsContext.dqMonitor()) {
+            Either<String, DQMonitor> dqMonitorEither = getDQMonitor(dmc);
+            if (dqMonitorEither.isLeft()) {
+                errorMessages.add(dqMonitorEither.getLeft());
+                return;
+            } else {
+                dqMonitors.add(dqMonitorEither.getRight());
+            }
+        }
+    }
+
     private Either<String, DQRule> getDQRule(
         DataQualityDefinitionLanguageParser.DqRuleContext dqRuleContext) {
         String ruleType = dqRuleContext.ruleType().getText();
@@ -252,6 +271,38 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             new DQRule(dqRuleType.getRuleTypeName(), parameterMap, condition,
                 thresholdCondition, DQRuleLogicalOperator.AND, new ArrayList<>())
         );
+    }
+
+    private Either<String, DQMonitor> getDQMonitor(
+        DataQualityDefinitionLanguageParser.DqMonitorContext dqMonitorContext) {
+        String monitorType = dqMonitorContext.monitorType().getText();
+        List<String> parameters = dqMonitorContext.parameter().stream()
+            .map(p -> p.getText().replaceAll("\"", ""))
+            .collect(Collectors.toList());
+
+        // We just use the DQ Rule names to valid what monitor names to allow.
+        // This might change closer to re:Invent, but keeping it simple for now.
+        Optional<DQRuleType> optionalDQMonitorType = DQRuleType.getRuleType(monitorType, parameters.size());
+
+        if (!optionalDQMonitorType.isPresent()) {
+            return Either.fromLeft(String.format("Monitor Type: %s is not valid", monitorType));
+        }
+
+        DQRuleType dqRuleType = optionalDQMonitorType.get();
+
+        if (dqRuleType.getReturnType().equals("BOOLEAN")) {
+            return Either.fromLeft(String.format("Monitor Type: %s is not supported", monitorType));
+        }
+
+        Optional<String> errorMessage = dqRuleType.verifyParameters(dqRuleType.getParameters(), parameters);
+
+        if (errorMessage.isPresent()) {
+            return Either.fromLeft(String.format(errorMessage.get() + ": %s", monitorType));
+        }
+
+        Map<String, String> parameterMap = dqRuleType.createParameterMap(dqRuleType.getParameters(), parameters);
+
+        return Either.fromRight(new DQMonitor(monitorType, parameterMap));
     }
 
     private Either<String, Condition> parseCondition(
