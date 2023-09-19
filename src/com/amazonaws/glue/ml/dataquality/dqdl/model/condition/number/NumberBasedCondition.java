@@ -10,6 +10,7 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number;
 
+import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
 import com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils;
 import lombok.EqualsAndHashCode;
@@ -22,20 +23,22 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true)
 public class NumberBasedCondition extends Condition {
     private final NumberBasedConditionOperator operator;
-    private final List<String> operands;
+    private final List<NumericOperand> operands;
 
     public NumberBasedCondition(final String conditionAsString,
                                 final NumberBasedConditionOperator operator,
-                                final List<String> operands) {
+                                final List<NumericOperand> operands) {
         super(conditionAsString);
         this.operator = operator;
         this.operands = operands;
     }
 
-    public Boolean evaluate(Double metric) {
+    public Boolean evaluate(Double metric, DQRule dqRule, OperandEvaluator evaluator) {
         if (operands == null) return false;
 
-        List<Double> operandsAsDouble = operands.stream().map(Double::parseDouble).collect(Collectors.toList());
+        List<Double> operandsAsDouble = operands.stream()
+            .map(operand -> operand.evaluate(dqRule, evaluator))
+            .collect(Collectors.toList());
 
         switch (operator) {
             case BETWEEN:
@@ -69,19 +72,23 @@ public class NumberBasedCondition extends Condition {
 
         switch (operator) {
             case BETWEEN:
-                return String.format("between %s and %s", operands.get(0), operands.get(1));
+                return String.format("between %s and %s", operands.get(0).toString(), operands.get(1).toString());
             case GREATER_THAN:
-                return String.format("> %s", operands.get(0));
+                return String.format("> %s", operands.get(0).toString());
             case GREATER_THAN_EQUAL_TO:
-                return String.format(">= %s", operands.get(0));
+                return String.format(">= %s", operands.get(0).toString());
             case LESS_THAN:
-                return String.format("< %s", operands.get(0));
+                return String.format("< %s", operands.get(0).toString());
             case LESS_THAN_EQUAL_TO:
-                return String.format("<= %s", operands.get(0));
+                return String.format("<= %s", operands.get(0).toString());
             case EQUALS:
-                return String.format("= %s", operands.get(0));
+                return String.format("= %s", operands.get(0).toString());
             case IN:
-                return String.format("in [%s]", String.join(",", operands));
+                return String.format("in [%s]",
+                    operands.stream()
+                        .map(NumericOperand::toString)
+                        .collect(Collectors.joining(","))
+                );
             default:
                 break;
         }

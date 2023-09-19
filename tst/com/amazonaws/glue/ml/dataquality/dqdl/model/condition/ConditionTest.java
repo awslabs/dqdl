@@ -117,7 +117,7 @@ public class ConditionTest {
 
             NumberBasedCondition condition = (NumberBasedCondition) dqRule.getCondition();
             assertTrue(dqRule.toString().contains(condition.getFormattedCondition()));
-            assertEquals(shouldRulePass, condition.evaluate(metric));
+            assertEquals(shouldRulePass, condition.evaluate(metric, dqRule, null));
         } catch (InvalidDataQualityRulesetException e) {
             fail(e.getMessage());
         }
@@ -136,7 +136,7 @@ public class ConditionTest {
 
             NumberBasedCondition thresholdCondition = (NumberBasedCondition) dqRule.getThresholdCondition();
             assertTrue(dqRule.toString().contains(thresholdCondition.getFormattedCondition()));
-            assertEquals(shouldRulePass, thresholdCondition.evaluate(metric));
+            assertEquals(shouldRulePass, thresholdCondition.evaluate(metric, dqRule, null));
         } catch (InvalidDataQualityRulesetException e) {
             fail(e.getMessage());
         }

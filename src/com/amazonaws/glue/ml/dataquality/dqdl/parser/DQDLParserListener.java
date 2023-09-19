@@ -21,8 +21,12 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.Duration;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationBasedConditionOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationUnit;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.AtomicNumberOperand;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.BinaryExpressionOperand;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.FunctionCallOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedConditionOperator;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumericOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedConditionOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
@@ -30,7 +34,6 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleset;
 import com.amazonaws.glue.ml.dataquality.dqdl.util.Either;
 import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageBaseListener;
 import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageParser;
-import org.antlr.v4.runtime.RuleContext;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -401,32 +404,113 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         Condition condition = null;
 
         if (ctx.BETWEEN() != null && ctx.number().size() == 2) {
-            condition = new NumberBasedCondition(exprStr, NumberBasedConditionOperator.BETWEEN,
-                Arrays.asList(ctx.number(0).getText(), ctx.number(1).getText()));
+            Optional<NumericOperand> operand1 = parseNumericOperand(ctx.number(0), false);
+            Optional<NumericOperand> operand2 = parseNumericOperand(ctx.number(1), false);
+
+            if (operand1.isPresent() && operand2.isPresent()) {
+                condition = new NumberBasedCondition(exprStr, NumberBasedConditionOperator.BETWEEN,
+                    Arrays.asList(operand1.get(), operand2.get())
+                );
+            }
         } else if (ctx.GREATER_THAN_EQUAL_TO() != null && ctx.number().size() == 1) {
-            condition = new NumberBasedCondition(exprStr, NumberBasedConditionOperator.GREATER_THAN_EQUAL_TO,
-                Collections.singletonList(ctx.number(0).getText()));
+            Optional<NumericOperand> operand = parseNumericOperand(ctx.number(0), false);
+            if (operand.isPresent()) {
+                condition = new NumberBasedCondition(
+                    exprStr, NumberBasedConditionOperator.GREATER_THAN_EQUAL_TO,
+                    Collections.singletonList(operand.get()));
+            }
         } else if (ctx.GREATER_THAN() != null && ctx.number().size() == 1) {
-            condition = new NumberBasedCondition(exprStr, NumberBasedConditionOperator.GREATER_THAN,
-                Collections.singletonList(ctx.number(0).getText()));
+            Optional<NumericOperand> operand = parseNumericOperand(ctx.number(0), false);
+            if (operand.isPresent()) {
+                condition = new NumberBasedCondition(
+                    exprStr, NumberBasedConditionOperator.GREATER_THAN,
+                    Collections.singletonList(operand.get()));
+            }
         } else if (ctx.LESS_THAN() != null && ctx.number().size() == 1) {
-            condition = new NumberBasedCondition(exprStr, NumberBasedConditionOperator.LESS_THAN,
-                Collections.singletonList(ctx.number(0).getText()));
+            Optional<NumericOperand> operand = parseNumericOperand(ctx.number(0), false);
+            if (operand.isPresent()) {
+                condition = new NumberBasedCondition(
+                    exprStr, NumberBasedConditionOperator.LESS_THAN,
+                    Collections.singletonList(operand.get()));
+            }
         } else if (ctx.LESS_THAN_EQUAL_TO() != null && ctx.number().size() == 1) {
-            condition = new NumberBasedCondition(exprStr, NumberBasedConditionOperator.LESS_THAN_EQUAL_TO,
-                Collections.singletonList(ctx.number(0).getText()));
+            Optional<NumericOperand> operand = parseNumericOperand(ctx.number(0), false);
+            if (operand.isPresent()) {
+                condition = new NumberBasedCondition(
+                    exprStr, NumberBasedConditionOperator.LESS_THAN_EQUAL_TO,
+                    Collections.singletonList(operand.get()));
+            }
         } else if (ctx.EQUAL_TO() != null && ctx.number().size() == 1) {
-            condition = new NumberBasedCondition(exprStr, NumberBasedConditionOperator.EQUALS,
-                Collections.singletonList(ctx.number(0).getText()));
+            Optional<NumericOperand> operand = parseNumericOperand(ctx.number(0), false);
+            if (operand.isPresent()) {
+                condition = new NumberBasedCondition(
+                    exprStr, NumberBasedConditionOperator.EQUALS,
+                    Collections.singletonList(operand.get()));
+            }
         } else if (ctx.IN() != null && ctx.numberArray() != null && ctx.numberArray().number().size() > 0) {
-            List<String> numbers = ctx.numberArray().number().stream()
-                .map(RuleContext::getText)
+            List<Optional<NumericOperand>> numbers = ctx.numberArray().number()
+                .stream()
+                .map(op -> parseNumericOperand(op, false))
                 .collect(Collectors.toList());
 
-            condition = new NumberBasedCondition(exprStr, NumberBasedConditionOperator.IN, numbers);
+            if (numbers.stream().allMatch(Optional::isPresent)) {
+                condition = new NumberBasedCondition(
+                    exprStr, NumberBasedConditionOperator.IN,
+                    numbers.stream().map(Optional::get).collect(Collectors.toList()));
+            }
         }
 
         return Optional.ofNullable(condition);
+    }
+
+    private Optional<NumericOperand> parseNumericOperand(
+        DataQualityDefinitionLanguageParser.NumberContext numberContext, boolean isParenthesized
+    ) {
+        if (numberContext.numberOp() != null) {
+            Optional<NumericOperand> operand1 = parseNumericOperand(numberContext.number(0), false);
+            Optional<NumericOperand> operand2 = parseNumericOperand(numberContext.number(1), false);
+            if (operand1.isPresent() && operand2.isPresent()) {
+                return Optional.of(
+                    new BinaryExpressionOperand(
+                        numberContext.getText(),
+                        numberContext.numberOp().getText(),
+                        operand1.get(), operand2.get(),
+                        isParenthesized
+                    )
+                );
+            } else {
+                return Optional.empty();
+            }
+        } else if (numberContext.functionCall() != null) {
+            DataQualityDefinitionLanguageParser.FunctionCallContext fcc = numberContext.functionCall();
+            String functionName = fcc.IDENTIFIER().getText();
+            List<NumericOperand> functionParameters = new ArrayList<>();
+
+            if (fcc.functionParameters() != null) {
+                List<Optional<NumericOperand>> parameters = fcc.functionParameters().number()
+                    .stream()
+                    .map(op -> parseNumericOperand(op, false))
+                    .collect(Collectors.toList());
+
+                if (parameters.stream().allMatch(Optional::isPresent)) {
+                    functionParameters = parameters.stream().map(Optional::get).collect(Collectors.toList());
+                    return Optional.of(
+                        new FunctionCallOperand(fcc.getText(), functionName, functionParameters)
+                    );
+                }
+            } else {
+                // No parameter function
+                return Optional.of(
+                    new FunctionCallOperand(fcc.getText(), functionName, functionParameters)
+                );
+            }
+        } else if (numberContext.LPAREN() != null) {
+            return parseNumericOperand(numberContext.number(0), true);
+        } else if (numberContext.atomicNumber() != null) {
+            return Optional.of(new AtomicNumberOperand(numberContext.getText()));
+        }
+
+        return Optional.empty();
     }
 
     private Optional<Condition> parseStringBasedCondition(

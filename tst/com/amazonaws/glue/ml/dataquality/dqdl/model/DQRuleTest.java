@@ -75,12 +75,14 @@ class DQRuleTest {
             Arguments.of("IsPrimaryKey \"colA\" \"colB\" \"colC\""),
             Arguments.of("RowCount = 100"),
             Arguments.of("RowCount = -100"),
+            Arguments.of("RowCount between (0.9 * average(last(10))) and 1.1 * average(last(10))"),
             Arguments.of("RowCountMatch \"reference\" = 1.0"),
             Arguments.of("RowCountMatch \"reference\" >= 0.95"),
             Arguments.of("RowCountMatch \"reference\" between 0.8 and 0.98"),
             Arguments.of("Completeness \"col_1\" between 0.5 and 0.8"),
             Arguments.of("IsComplete \"col_1\""),
             Arguments.of("Completeness \"col_1\" between -0.5 and -0.4"),
+            Arguments.of("Completeness \"col_1\" between (0.9 * avg(last(10))) and (1.1 * avg(last(10)))"),
             Arguments.of("ColumnDataType \"col_1\" = \"String\""),
             Arguments.of("ColumnDataType \"col_1\" = \"String\" with threshold between 0.4 and 0.8"),
             Arguments.of("ColumnDataType \"col_1\" in [\"Date\",\"String\"]"),
@@ -88,6 +90,8 @@ class DQRuleTest {
             Arguments.of("ColumnNamesMatchPattern \"aws_.*_[a-zA-Z0-9]+\""),
             Arguments.of("ColumnExists \"load_dt\""),
             Arguments.of("ColumnCount >= 100"),
+            Arguments.of("ColumnCount = avg(std(last(10)))"),
+            Arguments.of("ColumnCount = avg(std(last(percentile(1,2,3))))"),
             Arguments.of("ColumnCount > -100.123456"),
             Arguments.of("ColumnCorrelation \"col_1\" \"col_2\" between 0.4 and 0.8"),
             Arguments.of("ColumnCorrelation \"col_1\" \"col_2\" between -0.44444 and 0.888888"),
@@ -251,12 +255,12 @@ class DQRuleTest {
         assertEquals(1, dqRuleset.getRules().size());
         DQRule dqRule = dqRuleset.getRules().get(0);
         assertEquals(NumberBasedCondition.class, dqRule.getCondition().getClass());
-        assertTrue(((NumberBasedCondition) dqRule.getCondition()).evaluate(0.4));
+        assertTrue(((NumberBasedCondition) dqRule.getCondition()).evaluate(0.4, dqRule, null));
         byte[] serialized = serialize(dqRule);
         DQRule deserialized = deserialize(serialized, DQRule.class);
         assertEquals(dqRule.toString(), deserialized.toString());
         assertEquals(NumberBasedCondition.class, deserialized.getCondition().getClass());
-        assertFalse(((NumberBasedCondition) deserialized.getCondition()).evaluate(0.9));
+        assertFalse(((NumberBasedCondition) deserialized.getCondition()).evaluate(0.9, dqRule, null));
     }
 
     @Test

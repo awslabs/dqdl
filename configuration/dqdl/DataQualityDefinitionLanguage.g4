@@ -20,13 +20,29 @@ dateExpression:
 	| dateNow
 	| LPAREN dateNow dateExpressionOp durationExpression RPAREN;
 
-number:
+atomicNumber:
 	DIGIT
 	| NEGATIVE DIGIT
 	| INT
 	| NEGATIVE INT
 	| DECIMAL
 	| NEGATIVE DECIMAL;
+
+functionParameters:
+    number
+    | number (COMMA number)*;
+
+functionCall:
+  IDENTIFIER LPAREN RPAREN
+  | IDENTIFIER LPAREN functionParameters RPAREN;
+
+numberOp: '+' | '-' | '/' | '*';
+
+number:
+    number numberOp number
+    | functionCall
+    | LPAREN number RPAREN
+    | atomicNumber;
 
 quotedString: QUOTED_STRING;
 
