@@ -345,6 +345,19 @@
         }
       ],
       "return_type": "NUMBER"
+    },
+    {
+      "rule_type_name": "DetectAnomalies",
+      "description": "Checks if the current value of the metric is anomalous with respect to the historical values",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "MetricParameter",
+          "description": "The parameters required to evaluate the metric. The first parameter must be the metric name.",
+          "is_var_arg": true
+        }
+      ],
+      "return_type": "BOOLEAN"
     }
   ]
 }
