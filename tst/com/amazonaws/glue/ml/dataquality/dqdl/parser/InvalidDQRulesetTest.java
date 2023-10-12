@@ -70,7 +70,9 @@ public class InvalidDQRulesetTest {
             Arguments.of("Rules = [ AggregateMatch > 0.1 ]"),
             Arguments.of("Rules = [ AggregateMatch \"sum(col-A)\" > 0.1 ]"),
             Arguments.of("Rules = [ AggregateMatch \"sum(col-A)\" \"sum(reference.colA)\"]"),
-            Arguments.of("Rules = [ DetectAnomalies ]")
+            Arguments.of("Rules = [ DetectAnomalies ]"),
+            Arguments.of("Rules = [ AllStatistics \"id\" > 0 ]"),
+            Arguments.of("Rules = [ AllStatistics \"id\" ]")
         );
     }
 

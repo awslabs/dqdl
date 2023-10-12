@@ -358,6 +358,19 @@
         }
       ],
       "return_type": "BOOLEAN"
+    },
+    {
+      "rule_type_name": "AllStatistics",
+      "is_monitor_only": true,
+      "description": "Monitor Only. Produces a collection of statistics.",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of the column to analyze"
+        }
+      ],
+      "return_type": "NUMBER"
     }
   ]
 }

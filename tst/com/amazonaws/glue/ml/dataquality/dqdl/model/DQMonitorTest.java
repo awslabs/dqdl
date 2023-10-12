@@ -82,7 +82,8 @@ public class DQMonitorTest {
             Arguments.of("AggregateMatch \"sum(col-A)\" \"sum(reference.colA)\""),
             Arguments.of("AggregateMatch \"avg(col-A)\" \"avg(reference.colA)\""),
             Arguments.of("AggregateMatch \"SUM(col-A)\" \"SUM(reference.colA)\""),
-            Arguments.of("CustomSql \"select count(*) from primary\"")
+            Arguments.of("CustomSql \"select count(*) from primary\""),
+            Arguments.of("AllStatistics \"id\"")
         );
     }
 }

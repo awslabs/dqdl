@@ -213,6 +213,10 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
         DQRuleType dqRuleType = optionalDQRuleType.get();
 
+        if (dqRuleType.isMonitorOnly()) {
+            return Either.fromLeft(String.format("Type %s is not supported in rules section", ruleType));
+        }
+
         Optional<String> errorMessage = dqRuleType.verifyParameters(dqRuleType.getParameters(), parameters);
 
         if (errorMessage.isPresent()) {
