@@ -10,7 +10,7 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.parser;
 
-import com.amazonaws.glue.ml.dataquality.dqdl.model.DQMonitor;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.DQAnalyzer;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleLogicalOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleType;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
@@ -54,7 +54,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     private String primarySource;
     private List<String> additionalSources;
     private final List<DQRule> dqRules = new ArrayList<>();
-    private final List<DQMonitor> dqMonitors = new ArrayList<>();
+    private final List<DQAnalyzer> dqAnalyzers = new ArrayList<>();
 
     private static final String METADATA_VERSION_KEY = "Version";
     private static final Set<String> ALLOWED_METADATA_KEYS;
@@ -78,7 +78,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
     public Either<List<String>, DQRuleset> getParsedRuleset() {
         if (errorMessages.isEmpty() && errorListener.getErrorMessages().isEmpty()) {
-            return Either.fromRight(new DQRuleset(metadata, primarySource, additionalSources, dqRules, dqMonitors));
+            return Either.fromRight(new DQRuleset(metadata, primarySource, additionalSources, dqRules, dqAnalyzers));
         } else {
             List<String> allErrorMessages = new ArrayList<>();
             allErrorMessages.addAll(errorMessages);
@@ -182,18 +182,18 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     }
 
     @Override
-    public void enterDqMonitors(DataQualityDefinitionLanguageParser.DqMonitorsContext dqMonitorsContext) {
+    public void enterDqAnalyzers(DataQualityDefinitionLanguageParser.DqAnalyzersContext dqAnalyzersContext) {
         if (!errorMessages.isEmpty()) {
             return;
         }
 
-        for (DataQualityDefinitionLanguageParser.DqMonitorContext dmc: dqMonitorsContext.dqMonitor()) {
-            Either<String, DQMonitor> dqMonitorEither = getDQMonitor(dmc);
-            if (dqMonitorEither.isLeft()) {
-                errorMessages.add(dqMonitorEither.getLeft());
+        for (DataQualityDefinitionLanguageParser.DqAnalyzerContext dac: dqAnalyzersContext.dqAnalyzer()) {
+            Either<String, DQAnalyzer> dqAnalyzerEither = getDQAnalyzer(dac);
+            if (dqAnalyzerEither.isLeft()) {
+                errorMessages.add(dqAnalyzerEither.getLeft());
                 return;
             } else {
-                dqMonitors.add(dqMonitorEither.getRight());
+                dqAnalyzers.add(dqAnalyzerEither.getRight());
             }
         }
     }
@@ -213,8 +213,8 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
         DQRuleType dqRuleType = optionalDQRuleType.get();
 
-        if (dqRuleType.isMonitorOnly()) {
-            return Either.fromLeft(String.format("Type %s is not supported in rules section", ruleType));
+        if (dqRuleType.isAnalyzerOnly()) {
+            return Either.fromLeft(String.format("Analyzer Type: %s is not supported in rules section", ruleType));
         }
 
         Optional<String> errorMessage = dqRuleType.verifyParameters(dqRuleType.getParameters(), parameters);
@@ -280,36 +280,36 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         );
     }
 
-    private Either<String, DQMonitor> getDQMonitor(
-        DataQualityDefinitionLanguageParser.DqMonitorContext dqMonitorContext) {
-        String monitorType = dqMonitorContext.monitorType().getText();
-        List<String> parameters = dqMonitorContext.parameter().stream()
+    private Either<String, DQAnalyzer> getDQAnalyzer(
+        DataQualityDefinitionLanguageParser.DqAnalyzerContext dqAnalyzerContext) {
+        String analyzerType = dqAnalyzerContext.analyzerType().getText();
+        List<String> parameters = dqAnalyzerContext.parameter().stream()
             .map(p -> p.getText().replaceAll("\"", ""))
             .collect(Collectors.toList());
 
-        // We just use the DQ Rule names to valid what monitor names to allow.
+        // We just use the DQ Rule names to validate what analyzer names to allow.
         // This might change closer to re:Invent, but keeping it simple for now.
-        Optional<DQRuleType> optionalDQMonitorType = DQRuleType.getRuleType(monitorType, parameters.size());
+        Optional<DQRuleType> optionalDQAnalyzerType = DQRuleType.getRuleType(analyzerType, parameters.size());
 
-        if (!optionalDQMonitorType.isPresent()) {
-            return Either.fromLeft(String.format("Monitor Type: %s is not valid", monitorType));
+        if (!optionalDQAnalyzerType.isPresent()) {
+            return Either.fromLeft(String.format("Analyzer Type: %s is not valid", analyzerType));
         }
 
-        DQRuleType dqRuleType = optionalDQMonitorType.get();
+        DQRuleType dqRuleType = optionalDQAnalyzerType.get();
 
         if (dqRuleType.getReturnType().equals("BOOLEAN")) {
-            return Either.fromLeft(String.format("Monitor Type: %s is not supported", monitorType));
+            return Either.fromLeft(String.format("Analyzer Type: %s is not supported", analyzerType));
         }
 
         Optional<String> errorMessage = dqRuleType.verifyParameters(dqRuleType.getParameters(), parameters);
 
         if (errorMessage.isPresent()) {
-            return Either.fromLeft(String.format(errorMessage.get() + ": %s", monitorType));
+            return Either.fromLeft(String.format(errorMessage.get() + ": %s", analyzerType));
         }
 
         Map<String, String> parameterMap = dqRuleType.createParameterMap(dqRuleType.getParameters(), parameters);
 
-        return Either.fromRight(new DQMonitor(monitorType, parameterMap));
+        return Either.fromRight(new DQAnalyzer(analyzerType, parameterMap));
     }
 
     private Either<String, Condition> parseCondition(

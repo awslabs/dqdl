@@ -1,5 +1,5 @@
 /*
- * DQMonitorTest.java
+ * DQAnalyzerTest.java
  *
  * Copyright (c) 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -23,42 +23,42 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-public class DQMonitorTest {
+public class DQAnalyzerTest {
     DQDLParser parser = new DQDLParser();
 
     @Test
-    void test_singleMonitor() {
+    void test_singleAnalyzer() {
         String column = "colA";
-        String ruleset = String.format("Rules = [ IsComplete \"%s\" ] Monitors = [ Completeness \"%s\" ]", column, column);
+        String ruleset = String.format("Rules = [ IsComplete \"%s\" ] Analyzers = [ Completeness \"%s\" ]", column, column);
 
         try {
             DQRuleset dqRuleset = parser.parse(ruleset);
-            DQMonitor dqMonitor = dqRuleset.getMonitors().get(0);
-            assertEquals("Completeness", dqMonitor.getRuleType());
-            assertEquals(1, dqMonitor.getParameters().size());
-            assertTrue(dqMonitor.getParameters().containsValue(column));
+            DQAnalyzer dqAnalyzer = dqRuleset.getAnalyzers().get(0);
+            assertEquals("Completeness", dqAnalyzer.getRuleType());
+            assertEquals(1, dqAnalyzer.getParameters().size());
+            assertTrue(dqAnalyzer.getParameters().containsValue(column));
         } catch (InvalidDataQualityRulesetException e) {
             fail(e.getMessage());
         }
     }
 
     @ParameterizedTest
-    @MethodSource("provideRawMonitors")
-    void test_monitorParsingAndGeneratingWithParser(String monitor) {
+    @MethodSource("provideRawAnalyzers")
+    void test_analyzerParsingAndGeneratingWithParser(String analyzer) {
         try {
-            DQRuleset dqRuleset = parser.parse(String.format("Rules = [ IsComplete \"colA\" ] Monitors = [ %s ]", monitor));
+            DQRuleset dqRuleset = parser.parse(String.format("Rules = [ IsComplete \"colA\" ] Analyzers = [ %s ]", analyzer));
             assertEquals(1, dqRuleset.getRules().size());
-            assertEquals(1, dqRuleset.getMonitors().size());
+            assertEquals(1, dqRuleset.getAnalyzers().size());
 
-            DQMonitor dqMonitor = dqRuleset.getMonitors().get(0);
-            String dqMonitorAsString = dqMonitor.toString();
-            assertEquals(monitor, dqMonitorAsString);
+            DQAnalyzer dqAnalyzer = dqRuleset.getAnalyzers().get(0);
+            String dqAnalyzerAsString = dqAnalyzer.toString();
+            assertEquals(analyzer, dqAnalyzerAsString);
         } catch (InvalidDataQualityRulesetException e) {
             fail(e.getMessage());
         }
     }
 
-    private static Stream<Arguments> provideRawMonitors() {
+    private static Stream<Arguments> provideRawAnalyzers() {
         return Stream.of(
             Arguments.of("RowCount"),
             Arguments.of("RowCountMatch \"reference\""),

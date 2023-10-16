@@ -1,5 +1,5 @@
 /*
- * DQMonitor.java
+ * DQAnalyzer.java
  *
  * Copyright (c) 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -17,7 +17,7 @@ import java.util.Map;
 
 @AllArgsConstructor
 @Getter
-public class DQMonitor {
+public class DQAnalyzer {
     private final String ruleType;
     private final Map<String, String> parameters;
 

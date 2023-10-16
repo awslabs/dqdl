@@ -33,7 +33,7 @@ public class DQRuleType {
     private final List<DQRuleParameter> parameters;
     private final String returnType;
     private final boolean isThresholdSupported;
-    private final boolean isMonitorOnly;
+    private final boolean isAnalyzerOnly;
 
     public DQRuleType(@JsonProperty(value = "rule_type_name") String ruleTypeName,
                       @JsonProperty(value = "description") String description,
@@ -41,13 +41,13 @@ public class DQRuleType {
                       @JsonProperty(value = "return_type") String returnType,
                       // boolean defaults to false if not present
                       @JsonProperty(value = "is_threshold_supported") boolean isThresholdSupported,
-                      @JsonProperty(value = "is_monitor_only") boolean isMonitorOnly) {
+                      @JsonProperty(value = "is_analyzer_only") boolean isAnalyzerOnly) {
         this.ruleTypeName = ruleTypeName;
         this.description = description;
         this.parameters = parameters;
         this.returnType = returnType;
         this.isThresholdSupported = isThresholdSupported;
-        this.isMonitorOnly = isMonitorOnly;
+        this.isAnalyzerOnly = isAnalyzerOnly;
 
         if (parameters.isEmpty()) {
             return;

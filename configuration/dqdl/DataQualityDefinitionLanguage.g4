@@ -5,7 +5,7 @@ import CommonLexerRules;
 metadataSectionStart: 'Metadata';
 dataSourcesSectionStart: 'DataSources';
 rulesSectionStart: 'Rules';
-monitorsSectionStart: 'Monitors';
+analyzersSectionStart: 'Analyzers';
 
 // Expressions
 dateNow: 'now()';
@@ -85,7 +85,7 @@ durationBasedCondition:
     | IN durationExpressionArray;
 
 ruleType: IDENTIFIER;
-monitorType: IDENTIFIER;
+analyzerType: IDENTIFIER;
 parameter: (QUOTED_STRING | INT | DIGIT);
 
 condition:
@@ -97,7 +97,7 @@ condition:
 withThresholdCondition: 'with' 'threshold' numberBasedCondition;
 
 dqRule: ruleType parameter* condition? withThresholdCondition?;
-dqMonitor: monitorType parameter*;
+dqAnalyzer: analyzerType parameter*;
 
 topLevelRule:
 	dqRule
@@ -106,14 +106,14 @@ topLevelRule:
 
 // Rules Definition
 dqRules: topLevelRule (COMMA topLevelRule)*;
-dqMonitors: dqMonitor (COMMA dqMonitor)*;
+dqAnalyzers: dqAnalyzer (COMMA dqAnalyzer)*;
 
 // Top Level Document
 rules:
 	rulesSectionStart EQUAL_TO LBRAC dqRules RBRAC
 	| rulesSectionStart EQUAL_TO LBRAC RBRAC; // empty array
 
-monitors: monitorsSectionStart EQUAL_TO LBRAC dqMonitors RBRAC;
+analyzers: analyzersSectionStart EQUAL_TO LBRAC dqAnalyzers RBRAC;
 
 // This dictionary does not support nested dictionaries. Just strings and arrays.
 dictionary: LCURL pair (COMMA pair)* RCURL;
@@ -124,4 +124,4 @@ array: LBRAC QUOTED_STRING (COMMA QUOTED_STRING)* RBRAC;
 metadata: metadataSectionStart EQUAL_TO dictionary;
 dataSources: dataSourcesSectionStart EQUAL_TO dictionary;
 
-document: metadata? dataSources? rules monitors?;
+document: metadata? dataSources? rules analyzers?;

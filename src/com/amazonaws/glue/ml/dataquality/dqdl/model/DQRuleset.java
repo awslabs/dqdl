@@ -30,7 +30,7 @@ public class DQRuleset {
     private final String primarySourceName;
     private final List<String> additionalDataSourcesNames;
     private final List<DQRule> rules;
-    private final List<DQMonitor> monitors;
+    private final List<DQAnalyzer> analyzers;
 
     private static final String LINE_SEP = System.lineSeparator();
 
@@ -38,12 +38,12 @@ public class DQRuleset {
         this(rules, new ArrayList<>());
     }
 
-    public DQRuleset(final List<DQRule> rules, final List<DQMonitor> monitors) {
+    public DQRuleset(final List<DQRule> rules, final List<DQAnalyzer> analyzers) {
         this.metadata = new HashMap<>();
         this.primarySourceName = null;
         this.additionalDataSourcesNames = new ArrayList<>();
         this.rules = rules;
-        this.monitors = monitors;
+        this.analyzers = analyzers;
     }
 
     @Override
@@ -87,10 +87,10 @@ public class DQRuleset {
                 .collect(Collectors.joining("," + LINE_SEP)) +
             LINE_SEP + "]";
 
-        String monitorsStr = "";
-        if (!monitors.isEmpty()) {
-            monitorsStr = "Monitors = [" + LINE_SEP +
-                monitors.stream()
+        String analyzersStr = "";
+        if (!analyzers.isEmpty()) {
+            analyzersStr = "Analyzers = [" + LINE_SEP +
+                analyzers.stream()
                     .map(i -> "    " + i)
                     .collect(Collectors.joining("," + LINE_SEP)) +
                 LINE_SEP + "]";
@@ -107,8 +107,8 @@ public class DQRuleset {
 
         sb.append(rulesStr);
 
-        if (!monitorsStr.isEmpty()) {
-            sb.append(LINE_SEP).append(LINE_SEP).append(monitorsStr);
+        if (!analyzersStr.isEmpty()) {
+            sb.append(LINE_SEP).append(LINE_SEP).append(analyzersStr);
         }
 
         return sb.toString();

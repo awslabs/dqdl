@@ -361,8 +361,8 @@
     },
     {
       "rule_type_name": "AllStatistics",
-      "is_monitor_only": true,
-      "description": "Monitor Only. Produces a collection of statistics.",
+      "is_analyzer_only": true,
+      "description": "Analyzer Only. Produces a collection of statistics.",
       "parameters": [
         {
           "type": "String",

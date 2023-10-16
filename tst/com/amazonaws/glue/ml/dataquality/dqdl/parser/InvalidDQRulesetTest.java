@@ -76,14 +76,14 @@ public class InvalidDQRulesetTest {
         );
     }
 
-    private static Stream<Arguments> provideInvalidRulesetsWithMonitors() {
+    private static Stream<Arguments> provideInvalidRulesetsWithAnalyzers() {
         return Stream.of(
-            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Monitors = [ ]"),
-            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Monitors = [ IsComplete \"colA\" ]"),
-            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Monitors = [ Completeness \"colA\", ]"),
-            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Monitors = [ Completeness \"colA\", Foo ]"),
-            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Monitors = [ Completeness \"colA\" > 1.0 ]"),
-            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Monitors = [ Completeness \"colA\", Uniqueness \"colB\" = 1.0 ]")
+            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ ]"),
+            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ IsComplete \"colA\" ]"),
+            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ Completeness \"colA\", ]"),
+            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ Completeness \"colA\", Foo ]"),
+            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ Completeness \"colA\" > 1.0 ]"),
+            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ Completeness \"colA\", Uniqueness \"colB\" = 1.0 ]")
         );
     }
 
@@ -99,8 +99,8 @@ public class InvalidDQRulesetTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideInvalidRulesetsWithMonitors")
-    void test_invalidRulesetWithMonitorsParsing(String ruleset) {
+    @MethodSource("provideInvalidRulesetsWithAnalyzers")
+    void test_invalidRulesetWithAnalyzersParsing(String ruleset) {
         try {
             parser.parse(ruleset);
             fail("Ruleset validation exception was expected");
