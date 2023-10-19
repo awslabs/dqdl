@@ -10,7 +10,6 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number;
 
-import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -26,6 +25,4 @@ public abstract class NumericOperand implements Serializable {
         this.operand = operand;
         isParenthesized = false;
     }
-
-    public abstract Double evaluate(DQRule dqRule, OperandEvaluator evaluator);
 }

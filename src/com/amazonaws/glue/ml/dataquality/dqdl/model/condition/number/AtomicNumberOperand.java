@@ -10,8 +10,6 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number;
 
-import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
-
 /*
  * Atomic number operands are decimal numbers like 1.0, 3.14 etc that can be used in number based conditions.
  * They are used for defining static thresholds on rules.
@@ -19,11 +17,6 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
 public class AtomicNumberOperand extends NumericOperand {
     public AtomicNumberOperand(final String operand) {
         super(operand);
-    }
-
-    @Override
-    public Double evaluate(DQRule dqRule, OperandEvaluator evaluator) {
-        return Double.parseDouble(getOperand());
     }
 
     @Override

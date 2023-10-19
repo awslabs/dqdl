@@ -10,7 +10,6 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number;
 
-import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
 import lombok.Getter;
 
 import java.util.List;
@@ -33,15 +32,6 @@ public class FunctionCallOperand extends NumericOperand {
         super(operand);
         this.functionName = functionName;
         this.operands = operands;
-    }
-
-    @Override
-    public Double evaluate(DQRule dqRule, OperandEvaluator evaluator) {
-        return evaluator.evaluate(
-            dqRule,
-            this.functionName,
-            this.operands.stream().map(o -> o.evaluate(dqRule, evaluator)).collect(Collectors.toList())
-        );
     }
 
     @Override

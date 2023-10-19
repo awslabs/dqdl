@@ -13,8 +13,12 @@ package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
 
 import java.io.Serializable;
-import java.util.List;
 
+/**
+ * Class encapsulates implementation logic for resolving NumericOperand to a number (double).
+ */
 public abstract class OperandEvaluator implements Serializable {
-    public abstract Double evaluate(DQRule rule, String functionName, List<Double> operands);
+
+    // resolve operand to number
+    public abstract Double evaluate(DQRule rule, NumericOperand operand);
 }

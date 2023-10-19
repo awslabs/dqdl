@@ -10,7 +10,7 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number;
 
-import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
+import lombok.Getter;
 
 /*
  * A BinaryExpressionOperand is a numerical expression that consists of two operands and an operator.
@@ -18,6 +18,7 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
  * The operator can be one of: +, -, /, *
  * The purpose of this operand is for combining with a dynamic function call operand to create dynamic rule thresholds.
  */
+@Getter
 public class BinaryExpressionOperand extends NumericOperand {
     private final String operator;
     private final NumericOperand operand1;
@@ -32,24 +33,6 @@ public class BinaryExpressionOperand extends NumericOperand {
         this.operator = operator;
         this.operand1 = operand1;
         this.operand2 = operand2;
-    }
-
-    public Double evaluate(DQRule dqRule, OperandEvaluator evaluator) {
-        Double operand1Evaluated = operand1.evaluate(dqRule, evaluator);
-        Double operand2Evaluated = operand2.evaluate(dqRule, evaluator);
-
-        switch (operator) {
-            case "+":
-                return operand1Evaluated + operand2Evaluated;
-            case "-":
-                return operand1Evaluated - operand2Evaluated;
-            case "/":
-                return operand1Evaluated / operand2Evaluated;
-            case "*":
-                return operand1Evaluated * operand2Evaluated;
-            default:
-                throw new IllegalArgumentException("Bad operator");
-        }
     }
 
     @Override

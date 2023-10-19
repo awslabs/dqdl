@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumericOperandTest.testEvaluator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -258,12 +259,12 @@ class DQRuleTest {
         assertEquals(1, dqRuleset.getRules().size());
         DQRule dqRule = dqRuleset.getRules().get(0);
         assertEquals(NumberBasedCondition.class, dqRule.getCondition().getClass());
-        assertTrue(((NumberBasedCondition) dqRule.getCondition()).evaluate(0.4, dqRule, null));
+        assertTrue(((NumberBasedCondition) dqRule.getCondition()).evaluate(0.4, dqRule, testEvaluator));
         byte[] serialized = serialize(dqRule);
         DQRule deserialized = deserialize(serialized, DQRule.class);
         assertEquals(dqRule.toString(), deserialized.toString());
         assertEquals(NumberBasedCondition.class, deserialized.getCondition().getClass());
-        assertFalse(((NumberBasedCondition) deserialized.getCondition()).evaluate(0.9, dqRule, null));
+        assertFalse(((NumberBasedCondition) deserialized.getCondition()).evaluate(0.9, dqRule, testEvaluator));
     }
 
     @Test

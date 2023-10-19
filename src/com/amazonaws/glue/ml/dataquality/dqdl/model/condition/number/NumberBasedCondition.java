@@ -37,8 +37,7 @@ public class NumberBasedCondition extends Condition {
         if (operands == null) return false;
 
         List<Double> operandsAsDouble = operands.stream()
-            .map(operand -> operand.evaluate(dqRule, evaluator))
-            .collect(Collectors.toList());
+            .map(operand -> evaluator.evaluate(dqRule, operand)).collect(Collectors.toList());
 
         switch (operator) {
             case BETWEEN:
