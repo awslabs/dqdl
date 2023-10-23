@@ -25,7 +25,7 @@ import static com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils.isBlank;
 @AllArgsConstructor
 @Getter
 @EqualsAndHashCode
-public class DQRule implements Serializable {
+public class DQRule implements Serializable, HasRuleTypeAndParameters {
     private final String ruleType;
     private final Map<String, String> parameters;
     private final Condition condition;

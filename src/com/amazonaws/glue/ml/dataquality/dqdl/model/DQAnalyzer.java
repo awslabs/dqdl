@@ -17,7 +17,7 @@ import java.util.Map;
 
 @AllArgsConstructor
 @Getter
-public class DQAnalyzer {
+public class DQAnalyzer implements HasRuleTypeAndParameters {
     private final String ruleType;
     private final Map<String, String> parameters;
 
