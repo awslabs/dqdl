@@ -179,4 +179,30 @@ public class DeserializationTest {
         assertEquals(IllegalArgumentException.class, thrown.getCause().getClass());
         assertTrue(thrown.getMessage().contains("Property isVarArg can only be set to true on last element in parameters list"));
     }
+
+    @Test
+    public void test_parseDQRuleTypeScope() throws JsonProcessingException {
+        String ruleTypeName = "ColumnCount";
+        String ruleTypeDesc = "This rule checks the column count";
+        String returnType = "NUMBER";
+        String scope = "table";
+
+        String json = String.format(
+            "{" +
+                "\"rule_type_name\":\"%s\"," +
+                "\"description\":\"%s\"," +
+                "\"parameters\": [ ]," +
+                "\"return_type\": \"%s\"," +
+                "\"scope\": \"%s\"" +
+            "}",
+            ruleTypeName, ruleTypeDesc, returnType, scope);
+
+        DQRuleType ruleType = new ObjectMapper().readValue(json, DQRuleType.class);
+
+        assertEquals(ruleTypeName, ruleType.getRuleTypeName());
+        assertEquals(ruleTypeDesc, ruleType.getDescription());
+        assertEquals(returnType, ruleType.getReturnType());
+        assertEquals(scope, ruleType.getScope());
+        assertTrue(ruleType.getParameters().isEmpty());
+    }
 }
