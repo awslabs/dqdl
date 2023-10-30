@@ -277,6 +277,38 @@ class DQRuleTest {
         assertEquals(reStringed, rulesetString);
     }
 
+    @Test
+    void test_parametersWithoutQuotesAreParsed() throws InvalidDataQualityRulesetException {
+        String colA = "colA";
+        String colB = "col\\\"B";
+        String colC = "col C";
+
+        String allCols = "AllColumns";
+
+        String rule1 = String.format("IsPrimaryKey %s \"%s\" \"%s\"", colA, colB, colC);
+        String rule2 = String.format("ColumnValues %s between 1 and 10", colA);
+
+        String analyzer1 = String.format("Completeness \"%s\"", colC);
+        String analyzer2 = String.format("AllStatistics %s", allCols);
+
+        String ruleset = String.format(
+            "Rules = [ %s, %s ] Analyzers = [ %s, %s ]", rule1, rule2, analyzer1, analyzer2);
+
+        DQRuleset dqRuleset = parser.parse(ruleset);
+
+        DQRule parsedRule1 = dqRuleset.getRules().get(0);
+        DQRule parsedRule2 = dqRuleset.getRules().get(1);
+
+        DQAnalyzer parsedAnalyzer1 = dqRuleset.getAnalyzers().get(0);
+        DQAnalyzer parsedAnalyzer2 = dqRuleset.getAnalyzers().get(1);
+
+        assertTrue(Stream.of(colA, colB, colC).allMatch(c -> parsedRule1.getParameters().containsValue(c)));
+        assertTrue(Stream.of(colA).allMatch(c -> parsedRule2.getParameters().containsValue(c)));
+
+        assertTrue(Stream.of(colC).allMatch(c -> parsedAnalyzer1.getParameters().containsValue(c)));
+        assertTrue(Stream.of(allCols).allMatch(c -> parsedAnalyzer2.getParameters().containsValue(c)));
+    }
+
     @Disabled
     void test_nullParametersAreCorrectlyHandled() {
         Map<String, String> parameters = null;

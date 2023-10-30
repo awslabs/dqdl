@@ -202,7 +202,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         DataQualityDefinitionLanguageParser.DqRuleContext dqRuleContext) {
         String ruleType = dqRuleContext.ruleType().getText();
         List<String> parameters = dqRuleContext.parameter().stream()
-            .map(p -> p.getText().replaceAll("\"", ""))
+            .map(this::parseParameter)
             .collect(Collectors.toList());
 
         Optional<DQRuleType> optionalDQRuleType = DQRuleType.getRuleType(ruleType, parameters.size());
@@ -284,7 +284,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         DataQualityDefinitionLanguageParser.DqAnalyzerContext dqAnalyzerContext) {
         String analyzerType = dqAnalyzerContext.analyzerType().getText();
         List<String> parameters = dqAnalyzerContext.parameter().stream()
-            .map(p -> p.getText().replaceAll("\"", ""))
+            .map(this::parseParameter)
             .collect(Collectors.toList());
 
         // We just use the DQ Rule names to validate what analyzer names to allow.
@@ -722,5 +722,15 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     private String removeEscapes(String stringWithEscapes) {
         stringWithEscapes = stringWithEscapes.replaceAll("\\\\(.)", "$1");
         return stringWithEscapes;
+    }
+
+    private String parseParameter(DataQualityDefinitionLanguageParser.ParameterContext pc) {
+        if (pc.QUOTED_STRING() != null) {
+            return removeQuotes(pc.QUOTED_STRING().getText());
+        } else if (pc.IDENTIFIER() != null) {
+            return pc.IDENTIFIER().getText();
+        } else {
+            return pc.getText();
+        }
     }
 }

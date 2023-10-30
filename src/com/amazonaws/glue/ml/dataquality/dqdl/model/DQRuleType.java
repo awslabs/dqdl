@@ -34,9 +34,10 @@ public class DQRuleType {
     private final String returnType;
     private final boolean isThresholdSupported;
     private final boolean isAnalyzerOnly;
-
     private final String scope;
+    private final boolean isExperimental;
 
+    @SuppressWarnings("checkstyle:parameternumber")
     public DQRuleType(@JsonProperty(value = "rule_type_name") String ruleTypeName,
                       @JsonProperty(value = "description") String description,
                       @JsonProperty(value = "parameters") List<DQRuleParameter> parameters,
@@ -44,7 +45,8 @@ public class DQRuleType {
                       // boolean defaults to false if not present
                       @JsonProperty(value = "is_threshold_supported") boolean isThresholdSupported,
                       @JsonProperty(value = "is_analyzer_only") boolean isAnalyzerOnly,
-                        @JsonProperty(value = "scope") String scope) {
+                      @JsonProperty(value = "scope") String scope,
+                      @JsonProperty(value = "experimental") boolean isExperimental) {
         this.ruleTypeName = ruleTypeName;
         this.description = description;
         this.parameters = parameters;
@@ -52,6 +54,7 @@ public class DQRuleType {
         this.isThresholdSupported = isThresholdSupported;
         this.isAnalyzerOnly = isAnalyzerOnly;
         this.scope = scope;
+        this.isExperimental = isExperimental;
 
         if (parameters.isEmpty()) {
             return;

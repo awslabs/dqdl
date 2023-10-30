@@ -86,7 +86,8 @@ durationBasedCondition:
 
 ruleType: IDENTIFIER;
 analyzerType: IDENTIFIER;
-parameter: (QUOTED_STRING | INT | DIGIT);
+parameter: QUOTED_STRING
+           | IDENTIFIER;
 
 condition:
     numberBasedCondition
