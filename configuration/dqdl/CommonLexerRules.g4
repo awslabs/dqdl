@@ -12,6 +12,7 @@ LPAREN: '(';
 RPAREN: ')';
 AND: 'and' | 'AND';
 OR: 'or' | 'OR';
+OF: 'of' | 'OF';
 
 BETWEEN: 'between';
 EQUAL_TO: '=';

@@ -17,6 +17,8 @@ import lombok.Getter;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,20 +30,45 @@ import static com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils.isBlank;
 public class DQRule implements Serializable, HasRuleTypeAndParameters {
     private final String ruleType;
     private final Map<String, String> parameters;
+    private final LinkedHashMap<String, DQRuleParameterValue> parameterValueMap;
     private final Condition condition;
     private final Condition thresholdCondition;
     private final DQRuleLogicalOperator operator;
     private final List<DQRule> nestedRules;
+
+    // Adding this constructor so as to not break the Data Quality ETL package.
+    public DQRule(final String ruleType,
+                  final Map<String, String> parameters,
+                  final Condition condition,
+                  final Condition thresholdCondition,
+                  final DQRuleLogicalOperator operator,
+                  final List<DQRule> nestedRules) {
+        this.ruleType = ruleType;
+        this.parameters = parameters;
+        this.parameterValueMap = createParameterValueMap(parameters);
+        this.condition = condition;
+        this.thresholdCondition = thresholdCondition;
+        this.operator = operator;
+        this.nestedRules = nestedRules;
+    }
 
     public DQRule(final String ruleType,
                   final Map<String, String> parameters,
                   final Condition condition) {
         this.ruleType = ruleType;
         this.parameters = parameters;
+        this.parameterValueMap = createParameterValueMap(parameters);
         this.condition = condition;
         this.thresholdCondition = null;
         this.operator = DQRuleLogicalOperator.AND;
         this.nestedRules = new ArrayList<>();
+    }
+
+    // Can't overload the constructor above, due to type erasure
+    public static DQRule createFromParameterValueMap(final String ruleType,
+                                                     final LinkedHashMap<String, DQRuleParameterValue> parameters,
+                                                     final Condition condition) {
+        return createFromParameterValueMap(ruleType, parameters, condition, null);
     }
 
     public DQRule(final String ruleType,
@@ -50,10 +77,33 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
                   final Condition thresholdCondition) {
         this.ruleType = ruleType;
         this.parameters = parameters;
+        this.parameterValueMap = createParameterValueMap(parameters);
         this.condition = condition;
         this.thresholdCondition = thresholdCondition;
         this.operator = DQRuleLogicalOperator.AND;
         this.nestedRules = new ArrayList<>();
+    }
+
+    // Can't overload the constructor above, due to type erasure
+    public static DQRule createFromParameterValueMap(final String ruleType,
+                                                     final LinkedHashMap<String, DQRuleParameterValue> parameters,
+                                                     final Condition condition,
+                                                     final Condition thresholdCondition) {
+        Map<String, String> paramValuesAsStringsMap = new HashMap<>();
+        parameters.forEach((k, v) -> paramValuesAsStringsMap.put(k, v.getValue()));
+
+        DQRuleLogicalOperator operator = DQRuleLogicalOperator.AND;
+        List<DQRule> nestedRules = new ArrayList<>();
+
+        return new DQRule(
+            ruleType,
+            paramValuesAsStringsMap,
+            parameters,
+            condition,
+            thresholdCondition,
+            operator,
+            nestedRules
+        );
     }
 
     @Override
@@ -63,8 +113,8 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
         if (nestedRules == null || nestedRules.isEmpty()) {
             sb.append(ruleType);
 
-            if (parameters != null) {
-                parameters.values().forEach(p -> sb.append(" ").append("\"").append(p).append("\""));
+            if (parameterValueMap != null) {
+                parameterValueMap.values().forEach(p -> sb.append(" ").append(p.toString()));
             }
 
             if (condition != null) {
@@ -88,5 +138,17 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
         }
 
         return sb.toString();
+    }
+
+    private static LinkedHashMap<String, DQRuleParameterValue> createParameterValueMap(Map<String, String> parameters) {
+        LinkedHashMap<String, DQRuleParameterValue> map = new LinkedHashMap<>();
+        if (parameters == null) return map;
+
+        // Add quotes when converting from the map of string values, and do not use connector word.
+        // This is to maintain backwards compatibility.
+        boolean isQuoted = true;
+        parameters.forEach((k, v) -> map.put(k, new DQRuleParameterValue(v, isQuoted)));
+
+        return map;
     }
 }

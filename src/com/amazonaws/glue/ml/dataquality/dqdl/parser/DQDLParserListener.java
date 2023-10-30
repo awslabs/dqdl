@@ -181,7 +181,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                     }
                 }
 
-                dqRules.add(new DQRule("Composite", null, null, null, op, nestedRules));
+                dqRules.add(new DQRule("Composite", null, null, null, null, op, nestedRules));
             } else if (tlc.dqRule(0) != null) {
                 Either<String, DQRule> dqRuleEither = getDQRule(tlc.dqRule(0));
                 if (dqRuleEither.isLeft()) {
@@ -217,9 +217,8 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     private Either<String, DQRule> getDQRule(
         DataQualityDefinitionLanguageParser.DqRuleContext dqRuleContext) {
         String ruleType = dqRuleContext.ruleType().getText();
-        List<String> parameters = dqRuleContext.parameter().stream()
-            .map(this::parseParameter)
-            .collect(Collectors.toList());
+
+        List<String> parameters = parseParameters(dqRuleContext.parameters());
 
         Optional<DQRuleType> optionalDQRuleType = DQRuleType.getRuleType(ruleType, parameters.size());
 
@@ -291,17 +290,15 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
 
         return Either.fromRight(
-            new DQRule(dqRuleType.getRuleTypeName(), parameterMap, condition,
-                thresholdCondition, DQRuleLogicalOperator.AND, new ArrayList<>())
+            new DQRule(dqRuleType.getRuleTypeName(), parameterMap, condition, thresholdCondition)
         );
     }
 
     private Either<String, DQAnalyzer> getDQAnalyzer(
         DataQualityDefinitionLanguageParser.DqAnalyzerContext dqAnalyzerContext) {
         String analyzerType = dqAnalyzerContext.analyzerType().getText();
-        List<String> parameters = dqAnalyzerContext.parameter().stream()
-            .map(this::parseParameter)
-            .collect(Collectors.toList());
+
+        List<String> parameters = parseParameters(dqAnalyzerContext.parameters());
 
         // We just use the DQ Rule names to validate what analyzer names to allow.
         // This might change closer to re:Invent, but keeping it simple for now.
@@ -738,6 +735,11 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     private String removeEscapes(String stringWithEscapes) {
         stringWithEscapes = stringWithEscapes.replaceAll("\\\\(.)", "$1");
         return stringWithEscapes;
+    }
+
+    private List<String> parseParameters(DataQualityDefinitionLanguageParser.ParametersContext psc) {
+        if (psc == null || psc.parameter() == null) return new ArrayList<>();
+        return psc.parameter().stream().map(this::parseParameter).collect(Collectors.toList());
     }
 
     private String parseParameter(DataQualityDefinitionLanguageParser.ParameterContext pc) {
