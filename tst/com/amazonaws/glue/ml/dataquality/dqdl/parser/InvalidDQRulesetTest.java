@@ -24,6 +24,12 @@ public class InvalidDQRulesetTest {
 
     private static Stream<Arguments> provideInvalidRulesets() {
         return Stream.of(
+            Arguments.of(""),
+            Arguments.of("Metadata = {}"),
+            Arguments.of("DataSources = {}"),
+            Arguments.of("Metadata = { \"Version\": \"1.0\" }"),
+            Arguments.of("Metadata = { \"Version\": \"1.0\" } DataSources = {}"),
+            Arguments.of("Metadata = { \"Version\": \"1.0\" } DataSources = { \"Primary\": \"Foo\" }"),
             Arguments.of("Rules = {"),
             Arguments.of("Rules = }"),
             Arguments.of("Rules = { }"),
@@ -78,6 +84,7 @@ public class InvalidDQRulesetTest {
 
     private static Stream<Arguments> provideInvalidRulesetsWithAnalyzers() {
         return Stream.of(
+            Arguments.of("Rules = [ ] Analyzers = [ Completeness \"colA\" ]"),
             Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ ]"),
             Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ IsComplete \"colA\" ]"),
             Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ Completeness \"colA\", ]"),

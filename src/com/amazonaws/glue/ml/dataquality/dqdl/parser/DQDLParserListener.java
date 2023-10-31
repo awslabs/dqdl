@@ -90,8 +90,18 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
     @Override
     public void enterMetadata(DataQualityDefinitionLanguageParser.MetadataContext ctx) {
-        for (DataQualityDefinitionLanguageParser.PairContext pairContext
-            : ctx.dictionary().pair()) {
+        // The logic below, just above the loop is a guard against an NPE caused by empty dictionaries.
+        // Need to investigate why dictionaryContext.pair() returns 1 element,
+        // which is an empty string, for an empty dictionary.
+        // We would not have this problem if dictionaryContext.pair() returned 0 entries in the list.
+        DataQualityDefinitionLanguageParser.DictionaryContext dictionaryContext = ctx.dictionary();
+        List<String> dictionaryErrors = validateDictionary(dictionaryContext);
+        if (!dictionaryErrors.isEmpty()) {
+            errorMessages.addAll(dictionaryErrors);
+            return;
+        }
+
+        for (DataQualityDefinitionLanguageParser.PairContext pairContext: dictionaryContext.pair()) {
             String key = removeEscapes(removeQuotes(pairContext.QUOTED_STRING().getText()));
             if (!ALLOWED_METADATA_KEYS.contains(key)) {
                 errorMessages.add("Unsupported key provided in Metadata section");
@@ -112,8 +122,14 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
     @Override
     public void enterDataSources(DataQualityDefinitionLanguageParser.DataSourcesContext ctx) {
-        for (DataQualityDefinitionLanguageParser.PairContext pairContext
-            : ctx.dictionary().pair()) {
+        DataQualityDefinitionLanguageParser.DictionaryContext dictionaryContext = ctx.dictionary();
+        List<String> dictionaryErrors = validateDictionary(dictionaryContext);
+        if (!dictionaryErrors.isEmpty()) {
+            errorMessages.addAll(dictionaryErrors);
+            return;
+        }
+
+        for (DataQualityDefinitionLanguageParser.PairContext pairContext: dictionaryContext.pair()) {
             String key = removeEscapes(removeQuotes(pairContext.QUOTED_STRING().getText()));
 
             if (!ALLOWED_SOURCES_KEYS.contains(key)) {
@@ -732,5 +748,13 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         } else {
             return pc.getText();
         }
+    }
+
+    private List<String> validateDictionary(DataQualityDefinitionLanguageParser.DictionaryContext dc) {
+        List<String> dictionaryErrors = new ArrayList<>();
+        if (dc.pair() == null || (dc.pair().size() == 1 && dc.pair().get(0).getText().isEmpty())) {
+            dictionaryErrors.add("Empty dictionary provided");
+        }
+        return dictionaryErrors;
     }
 }

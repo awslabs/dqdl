@@ -124,5 +124,6 @@ array: LBRAC QUOTED_STRING (COMMA QUOTED_STRING)* RBRAC;
 
 metadata: metadataSectionStart EQUAL_TO dictionary;
 dataSources: dataSourcesSectionStart EQUAL_TO dictionary;
+rulesOrAnalyzers: rules | analyzers | rules analyzers;
 
-document: metadata? dataSources? rules analyzers?;
+document: metadata? dataSources? rulesOrAnalyzers;
