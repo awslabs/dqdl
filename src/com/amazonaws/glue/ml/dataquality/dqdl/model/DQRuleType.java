@@ -22,7 +22,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -71,11 +70,9 @@ public class DQRuleType {
     }
 
     public Optional<String> verifyParameters(List<DQRuleParameter> expectedParameters,
-                                             List<String> actualParameters) {
+                                             List<DQRuleParameterValue> actualParameters) {
         if (!expectedParameters.isEmpty()) {
-
-            boolean isVarArg = expectedParameters.get(
-                    expectedParameters.size() - 1).isVarArg();
+            boolean isVarArg = expectedParameters.get(expectedParameters.size() - 1).isVarArg();
 
             if (isVarArg) {
                 if (expectedParameters.size() > actualParameters.size()) {
@@ -93,9 +90,9 @@ public class DQRuleType {
         return Optional.empty();
     }
 
-    public Map<String, String> createParameterMap(List<DQRuleParameter> dqRuleTypeParameters,
-                                                  List<String> actualParameters) {
-        Map<String, String> parameterMap = new LinkedHashMap<>();
+    public LinkedHashMap<String, DQRuleParameterValue> createParameterMap(List<DQRuleParameter> dqRuleTypeParameters,
+                                                                          List<DQRuleParameterValue> actualParameters) {
+        LinkedHashMap<String, DQRuleParameterValue> parameterMap = new LinkedHashMap<>();
 
         for (int i = 0; i < dqRuleTypeParameters.size(); i++) {
             String dqRuleTypeParameterName = dqRuleTypeParameters.get(i).getName();
@@ -109,7 +106,7 @@ public class DQRuleType {
 
                 for (int j = counter; j < actualParameters.size(); j++) {
                     String newDqRuleTypeParameterName = dqRuleTypeParameterName + (j + 1);
-                    String actualParameterName = actualParameters.get(j);
+                    DQRuleParameterValue actualParameterName = actualParameters.get(j);
 
                     parameterMap.put(newDqRuleTypeParameterName, actualParameterName);
                 }

@@ -13,6 +13,7 @@ package com.amazonaws.glue.ml.dataquality.dqdl.model;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @AllArgsConstructor
@@ -20,14 +21,27 @@ import java.util.Map;
 public class DQAnalyzer implements HasRuleTypeAndParameters {
     private final String ruleType;
     private final Map<String, String> parameters;
+    private final Map<String, DQRuleParameterValue> parameterValueMap;
+
+    public DQAnalyzer(final String ruleType,
+                      final Map<String, String> parameters) {
+        this.ruleType = ruleType;
+        this.parameters = parameters;
+        this.parameterValueMap = DQRuleParameterValue.createParameterValueMap(this.parameters);
+    }
+
+    public static DQAnalyzer createFromValueMap(final String ruleType,
+                                                final LinkedHashMap<String, DQRuleParameterValue> parameters) {
+        return new DQAnalyzer(ruleType, DQRuleParameterValue.createParameterMap(parameters), parameters);
+    }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(ruleType);
 
-        if (parameters != null) {
-            parameters.values().forEach(p -> sb.append(" ").append("\"").append(p).append("\""));
+        if (parameterValueMap != null) {
+            parameterValueMap.values().forEach(p -> sb.append(" ").append(p.toString()));
         }
 
         return sb.toString();

@@ -88,7 +88,8 @@ ruleType: IDENTIFIER;
 analyzerType: IDENTIFIER;
 parameter: QUOTED_STRING
            | IDENTIFIER;
-parameters: OF? parameter (AND? parameter)*;
+connectorWord: OF | AND;
+parameterWithConnectorWord: connectorWord? parameter;
 
 condition:
     numberBasedCondition
@@ -98,8 +99,8 @@ condition:
 
 withThresholdCondition: 'with' 'threshold' numberBasedCondition;
 
-dqRule: ruleType parameters? condition? withThresholdCondition?;
-dqAnalyzer: analyzerType parameters?;
+dqRule: ruleType parameterWithConnectorWord* condition? withThresholdCondition?;
+dqAnalyzer: analyzerType parameterWithConnectorWord*;
 
 topLevelRule:
 	dqRule

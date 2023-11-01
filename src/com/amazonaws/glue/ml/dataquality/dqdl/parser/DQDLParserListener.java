@@ -12,6 +12,7 @@ package com.amazonaws.glue.ml.dataquality.dqdl.parser;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQAnalyzer;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleLogicalOperator;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleParameterValue;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleType;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedCondition;
@@ -40,6 +41,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -218,7 +220,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         DataQualityDefinitionLanguageParser.DqRuleContext dqRuleContext) {
         String ruleType = dqRuleContext.ruleType().getText();
 
-        List<String> parameters = parseParameters(dqRuleContext.parameters());
+        List<DQRuleParameterValue> parameters = parseParameters(dqRuleContext.parameterWithConnectorWord());
 
         Optional<DQRuleType> optionalDQRuleType = DQRuleType.getRuleType(ruleType, parameters.size());
 
@@ -238,7 +240,8 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             return Either.fromLeft(String.format(errorMessage.get() + ": %s", ruleType));
         }
 
-        Map<String, String> parameterMap = dqRuleType.createParameterMap(dqRuleType.getParameters(), parameters);
+        LinkedHashMap<String, DQRuleParameterValue> parameterMap =
+            dqRuleType.createParameterMap(dqRuleType.getParameters(), parameters);
 
         Condition condition;
 
@@ -290,7 +293,8 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
 
         return Either.fromRight(
-            new DQRule(dqRuleType.getRuleTypeName(), parameterMap, condition, thresholdCondition)
+            DQRule.createFromParameterValueMap(
+                dqRuleType.getRuleTypeName(), parameterMap, condition, thresholdCondition)
         );
     }
 
@@ -298,7 +302,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         DataQualityDefinitionLanguageParser.DqAnalyzerContext dqAnalyzerContext) {
         String analyzerType = dqAnalyzerContext.analyzerType().getText();
 
-        List<String> parameters = parseParameters(dqAnalyzerContext.parameters());
+        List<DQRuleParameterValue> parameters = parseParameters(dqAnalyzerContext.parameterWithConnectorWord());
 
         // We just use the DQ Rule names to validate what analyzer names to allow.
         // This might change closer to re:Invent, but keeping it simple for now.
@@ -320,9 +324,10 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             return Either.fromLeft(String.format(errorMessage.get() + ": %s", analyzerType));
         }
 
-        Map<String, String> parameterMap = dqRuleType.createParameterMap(dqRuleType.getParameters(), parameters);
+        LinkedHashMap<String, DQRuleParameterValue> parameterMap =
+            dqRuleType.createParameterMap(dqRuleType.getParameters(), parameters);
 
-        return Either.fromRight(new DQAnalyzer(analyzerType, parameterMap));
+        return Either.fromRight(DQAnalyzer.createFromValueMap(analyzerType, parameterMap));
     }
 
     private Either<String, Condition> parseCondition(
@@ -737,18 +742,24 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         return stringWithEscapes;
     }
 
-    private List<String> parseParameters(DataQualityDefinitionLanguageParser.ParametersContext psc) {
-        if (psc == null || psc.parameter() == null) return new ArrayList<>();
-        return psc.parameter().stream().map(this::parseParameter).collect(Collectors.toList());
+    private List<DQRuleParameterValue> parseParameters(
+        List<DataQualityDefinitionLanguageParser.ParameterWithConnectorWordContext> parameters) {
+        if (parameters == null) return new ArrayList<>();
+        return parameters.stream().map(this::parseParameter).collect(Collectors.toList());
     }
 
-    private String parseParameter(DataQualityDefinitionLanguageParser.ParameterContext pc) {
-        if (pc.QUOTED_STRING() != null) {
-            return removeQuotes(pc.QUOTED_STRING().getText());
-        } else if (pc.IDENTIFIER() != null) {
-            return pc.IDENTIFIER().getText();
+    private DQRuleParameterValue parseParameter(
+        DataQualityDefinitionLanguageParser.ParameterWithConnectorWordContext pc) {
+        String connectorWord = pc.connectorWord() == null ? "" : pc.connectorWord().getText();
+
+        if (pc.parameter().QUOTED_STRING() != null) {
+            return new DQRuleParameterValue(
+                removeQuotes(pc.parameter().QUOTED_STRING().getText()), true, connectorWord);
+        } else if (pc.parameter().IDENTIFIER() != null) {
+            return new DQRuleParameterValue(
+                pc.parameter().IDENTIFIER().getText(), false, connectorWord);
         } else {
-            return pc.getText();
+            return new DQRuleParameterValue(pc.parameter().getText(), true, connectorWord);
         }
     }
 

@@ -15,6 +15,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @AllArgsConstructor
 @Getter
@@ -49,5 +52,23 @@ public class DQRuleParameterValue implements Serializable {
         String surroundBy = isQuoted ? "\"" : "";
         sb.append(surroundBy).append(value).append(surroundBy);
         return sb.toString();
+    }
+
+    public static Map<String, DQRuleParameterValue> createParameterValueMap(Map<String, String> parameters) {
+        Map<String, DQRuleParameterValue> map = new HashMap<>();
+        if (parameters == null) return map;
+
+        // Add quotes when converting from the map of string values, and do not use connector word.
+        // This is to maintain backwards compatibility.
+        boolean isQuoted = true;
+        parameters.forEach((k, v) -> map.put(k, new DQRuleParameterValue(v, isQuoted)));
+
+        return map;
+    }
+
+    public static Map<String, String> createParameterMap(Map<String, DQRuleParameterValue> parameters) {
+        Map<String, String> paramValuesAsStringsMap = new LinkedHashMap<>();
+        parameters.forEach((k, v) -> paramValuesAsStringsMap.put(k, v.getValue()));
+        return paramValuesAsStringsMap;
     }
 }

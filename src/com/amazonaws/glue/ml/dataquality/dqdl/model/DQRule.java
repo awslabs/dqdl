@@ -17,7 +17,6 @@ import lombok.Getter;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +29,7 @@ import static com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils.isBlank;
 public class DQRule implements Serializable, HasRuleTypeAndParameters {
     private final String ruleType;
     private final Map<String, String> parameters;
-    private final LinkedHashMap<String, DQRuleParameterValue> parameterValueMap;
+    private final Map<String, DQRuleParameterValue> parameterValueMap;
     private final Condition condition;
     private final Condition thresholdCondition;
     private final DQRuleLogicalOperator operator;
@@ -45,7 +44,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
                   final List<DQRule> nestedRules) {
         this.ruleType = ruleType;
         this.parameters = parameters;
-        this.parameterValueMap = createParameterValueMap(parameters);
+        this.parameterValueMap = DQRuleParameterValue.createParameterValueMap(parameters);
         this.condition = condition;
         this.thresholdCondition = thresholdCondition;
         this.operator = operator;
@@ -57,7 +56,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
                   final Condition condition) {
         this.ruleType = ruleType;
         this.parameters = parameters;
-        this.parameterValueMap = createParameterValueMap(parameters);
+        this.parameterValueMap = DQRuleParameterValue.createParameterValueMap(parameters);
         this.condition = condition;
         this.thresholdCondition = null;
         this.operator = DQRuleLogicalOperator.AND;
@@ -77,7 +76,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
                   final Condition thresholdCondition) {
         this.ruleType = ruleType;
         this.parameters = parameters;
-        this.parameterValueMap = createParameterValueMap(parameters);
+        this.parameterValueMap = DQRuleParameterValue.createParameterValueMap(parameters);
         this.condition = condition;
         this.thresholdCondition = thresholdCondition;
         this.operator = DQRuleLogicalOperator.AND;
@@ -89,15 +88,12 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
                                                      final LinkedHashMap<String, DQRuleParameterValue> parameters,
                                                      final Condition condition,
                                                      final Condition thresholdCondition) {
-        Map<String, String> paramValuesAsStringsMap = new HashMap<>();
-        parameters.forEach((k, v) -> paramValuesAsStringsMap.put(k, v.getValue()));
-
         DQRuleLogicalOperator operator = DQRuleLogicalOperator.AND;
         List<DQRule> nestedRules = new ArrayList<>();
 
         return new DQRule(
             ruleType,
-            paramValuesAsStringsMap,
+            DQRuleParameterValue.createParameterMap(parameters),
             parameters,
             condition,
             thresholdCondition,
@@ -138,17 +134,5 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
         }
 
         return sb.toString();
-    }
-
-    private static LinkedHashMap<String, DQRuleParameterValue> createParameterValueMap(Map<String, String> parameters) {
-        LinkedHashMap<String, DQRuleParameterValue> map = new LinkedHashMap<>();
-        if (parameters == null) return map;
-
-        // Add quotes when converting from the map of string values, and do not use connector word.
-        // This is to maintain backwards compatibility.
-        boolean isQuoted = true;
-        parameters.forEach((k, v) -> map.put(k, new DQRuleParameterValue(v, isQuoted)));
-
-        return map;
     }
 }

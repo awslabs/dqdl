@@ -32,7 +32,7 @@ NEGATIVE: '-';
 
 LINE_COMMENT: '#' .*? '\r'? '\n' -> skip; // Match "#" stuff '\n'
 
-IDENTIFIER: [a-zA-Z0-9]+;
+IDENTIFIER: [a-zA-Z0-9_.]+;
 
 WS: [ \t\n]+ -> skip;
 
