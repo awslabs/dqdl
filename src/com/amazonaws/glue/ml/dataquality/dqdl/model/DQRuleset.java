@@ -113,7 +113,9 @@ public class DQRuleset {
         }
 
         if (!analyzersStr.isEmpty()) {
-            if (!rulesStr.isEmpty()) sb.append(LINE_SEP).append(LINE_SEP);
+            if (!rulesStr.isEmpty()) {
+                sb.append(LINE_SEP).append(LINE_SEP);
+            }
             sb.append(analyzersStr);
         }
 

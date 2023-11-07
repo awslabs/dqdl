@@ -84,8 +84,7 @@ public class InvalidDQRulesetTest {
 
     private static Stream<Arguments> provideInvalidRulesetsWithAnalyzers() {
         return Stream.of(
-            Arguments.of("Rules = [ ] Analyzers = [ Completeness \"colA\" ]"),
-            Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ ]"),
+            Arguments.of("Rules = [ ] Analyzers = [ ]"),
             Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ IsComplete \"colA\" ]"),
             Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ Completeness \"colA\", ]"),
             Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ Completeness \"colA\", Foo ]"),

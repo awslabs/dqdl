@@ -79,6 +79,11 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     }
 
     public Either<List<String>, DQRuleset> getParsedRuleset() {
+        // Only add this error message if we did not walk the tree due to empty rules or analyzers sections.
+        if (errorMessages.isEmpty() && dqRules.isEmpty() && dqAnalyzers.isEmpty()) {
+            errorMessages.add("No rules or analyzers provided.");
+        }
+
         if (errorMessages.isEmpty() && errorListener.getErrorMessages().isEmpty()) {
             return Either.fromRight(new DQRuleset(metadata, primarySource, additionalSources, dqRules, dqAnalyzers));
         } else {
@@ -112,13 +117,6 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
             String value = pairContext.pairValue().getText().replaceAll("\"", "");
             metadata.put(key, value);
-        }
-    }
-
-    @Override
-    public void enterRules(DataQualityDefinitionLanguageParser.RulesContext ctx) {
-        if (ctx.dqRules() == null) {
-            errorMessages.add("No rules provided.");
         }
     }
 

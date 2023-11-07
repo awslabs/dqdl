@@ -116,7 +116,9 @@ rules:
 	rulesSectionStart EQUAL_TO LBRAC dqRules RBRAC
 	| rulesSectionStart EQUAL_TO LBRAC RBRAC; // empty array
 
-analyzers: analyzersSectionStart EQUAL_TO LBRAC dqAnalyzers RBRAC;
+analyzers:
+    analyzersSectionStart EQUAL_TO LBRAC dqAnalyzers RBRAC
+    | analyzersSectionStart EQUAL_TO LBRAC RBRAC; // empty array
 
 // This dictionary does not support nested dictionaries. Just strings and arrays.
 dictionary: LCURL pair (COMMA pair)* RCURL;

@@ -15,7 +15,10 @@ import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLParser;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -217,13 +220,40 @@ public class DQRulesetTest {
     }
 
     @Test
-    void test_rulesetWithAnalyzersAndEmptyRules() {
-        String dqdl = "Rules = [] Analyzers = [ RowCount ]";
-        try {
-            dqdlParser.parse(dqdl);
-        } catch (InvalidDataQualityRulesetException e) {
-            assertTrue(e.getMessage().contains("No rules provided"));
-        }
+    void test_rulesetWithAnalyzersAndEmptyOrMissingRules() {
+        String dqdl1 = "Analyzers = [ RowCount, Completeness of \"col-A\" ]";
+        String dqdl2 = "Rules = [] Analyzers = [ RowCount, Completeness of \"col-A\" ]";
+
+        Arrays.asList(dqdl1, dqdl2).forEach(dqdl -> {
+            DQRuleset ruleset = parseDQDL(dqdl);
+            List<DQRule> dqRules = ruleset.getRules();
+            List<DQAnalyzer> dqAnalyzers = ruleset.getAnalyzers();
+
+            assertEquals(0, dqRules.size());
+            assertEquals(2, dqAnalyzers.size());
+            assertEquals("RowCount", dqAnalyzers.get(0).getRuleType());
+            assertEquals(0, dqAnalyzers.get(0).getParameterValueMap().size());
+            assertEquals("Completeness", dqAnalyzers.get(1).getRuleType());
+            assertTrue(dqAnalyzers.get(1).getParameterValueMap().containsKey("TargetColumn"));
+            assertEquals("col-A", dqAnalyzers.get(1).getParameterValueMap().get("TargetColumn").getValue());
+        });
+    }
+
+    @Test
+    void test_rulesetWithEmptyAnalyzersAndEmptyRules() {
+        Arrays.asList(
+            "Rules = []",
+            "Analyzers = []",
+            "Rules = [] Analyzers = []"
+        ).forEach(ruleset -> {
+            try {
+                dqdlParser.parse(ruleset);
+                fail("Ruleset parsing should have failed");
+            } catch (InvalidDataQualityRulesetException e) {
+                System.out.println(e.getMessage());
+                assertTrue(e.getMessage().contains("No rules or analyzers provided"));
+            }
+        });
     }
 
     @Test
