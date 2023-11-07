@@ -81,11 +81,14 @@ public class DQRuleset {
                 "}";
         }
 
-        String rulesStr = "Rules = [" + LINE_SEP +
-            rules.stream()
-                .map(i -> "    " + i)
-                .collect(Collectors.joining("," + LINE_SEP)) +
-            LINE_SEP + "]";
+        String rulesStr = "";
+        if (!rules.isEmpty()) {
+            rulesStr = "Rules = [" + LINE_SEP +
+                rules.stream()
+                    .map(i -> "    " + i)
+                    .collect(Collectors.joining("," + LINE_SEP)) +
+                LINE_SEP + "]";
+        }
 
         String analyzersStr = "";
         if (!analyzers.isEmpty()) {
@@ -105,10 +108,13 @@ public class DQRuleset {
             sb.append(sourcesStr).append(LINE_SEP).append(LINE_SEP);
         }
 
-        sb.append(rulesStr);
+        if (!rulesStr.isEmpty()) {
+            sb.append(rulesStr);
+        }
 
         if (!analyzersStr.isEmpty()) {
-            sb.append(LINE_SEP).append(LINE_SEP).append(analyzersStr);
+            if (!rulesStr.isEmpty()) sb.append(LINE_SEP).append(LINE_SEP);
+            sb.append(analyzersStr);
         }
 
         return sb.toString();

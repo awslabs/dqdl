@@ -15,6 +15,8 @@ import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLParser;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -210,6 +212,72 @@ public class DQRulesetTest {
                 "]" + LINE_SEP + LINE_SEP +
                 "Analyzers = [" + LINE_SEP +
                 "    Completeness \"colA\"" + LINE_SEP +
+                "]";
+        assertEquals(dqdlFormatted, dqRuleset.toString());
+    }
+
+    @Test
+    void test_rulesetWithAnalyzersAndEmptyRules() {
+        String dqdl = "Rules = [] Analyzers = [ RowCount ]";
+        try {
+            dqdlParser.parse(dqdl);
+        } catch (InvalidDataQualityRulesetException e) {
+            assertTrue(e.getMessage().contains("No rules provided"));
+        }
+    }
+
+    @Test
+    void test_rulesetWithMetadataAndSourcesAndAnalyzersAndNoRules() {
+        String dqdl =
+                "Metadata = { \"Version\": \"1.0\" }" + LINE_SEP +
+                "DataSources = {" +
+                "    \"Primary\": \"orders-table\", " + LINE_SEP +
+                "    \"AdditionalDataSources\": [ \"ref-table\" ]" + LINE_SEP +
+                "}" + LINE_SEP +
+                "Analyzers = [ RowCount, Completeness \"colA\", Uniqueness of col_A ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals("orders-table", dqRuleset.getPrimarySourceName());
+        assertEquals(1, dqRuleset.getAdditionalDataSourcesNames().size());
+        assertEquals("ref-table", dqRuleset.getAdditionalDataSourcesNames().get(0));
+        assertEquals(0, dqRuleset.getRules().size());
+        assertEquals(3, dqRuleset.getAnalyzers().size());
+        assertEquals("RowCount", dqRuleset.getAnalyzers().get(0).getRuleType());
+        assertEquals("Completeness", dqRuleset.getAnalyzers().get(1).getRuleType());
+        assertEquals("Uniqueness", dqRuleset.getAnalyzers().get(2).getRuleType());
+
+        String dqdlFormatted =
+                "Metadata = {" + LINE_SEP +
+                "    \"Version\": \"1.0\"" + LINE_SEP +
+                "}" + LINE_SEP + LINE_SEP +
+                "DataSources = {" + LINE_SEP +
+                "    \"Primary\": \"orders-table\"," + LINE_SEP +
+                "    \"AdditionalDataSources\": [ \"ref-table\" ]" + LINE_SEP +
+                "}" + LINE_SEP + LINE_SEP +
+                "Analyzers = [" + LINE_SEP +
+                "    RowCount," + LINE_SEP +
+                "    Completeness \"colA\"," + LINE_SEP +
+                "    Uniqueness of col_A" + LINE_SEP +
+                "]";
+        assertEquals(dqdlFormatted, dqRuleset.toString());
+    }
+
+    @Test
+    void test_rulesetWithAnalyzersAndNoRules() {
+        String dqdl = "Analyzers = [ Completeness \"colA\", AllStatistics of AllColumns, Uniqueness of \"col_A\" ]";
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+
+        List<DQAnalyzer> analyzers = dqRuleset.getAnalyzers();
+        assertEquals(3, analyzers.size());
+        assertEquals("Completeness", analyzers.get(0).getRuleType());
+        assertEquals("AllStatistics", analyzers.get(1).getRuleType());
+        assertEquals("Uniqueness", analyzers.get(2).getRuleType());
+
+        String dqdlFormatted =
+                "Analyzers = [" + LINE_SEP +
+                "    Completeness \"colA\"," + LINE_SEP +
+                "    AllStatistics of AllColumns," + LINE_SEP +
+                "    Uniqueness of \"col_A\"" + LINE_SEP +
                 "]";
         assertEquals(dqdlFormatted, dqRuleset.toString());
     }
