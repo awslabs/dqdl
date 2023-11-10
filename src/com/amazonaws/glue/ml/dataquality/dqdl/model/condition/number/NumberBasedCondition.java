@@ -15,15 +15,20 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
 import com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
+@Slf4j
 public class NumberBasedCondition extends Condition {
     private final NumberBasedConditionOperator operator;
     private final List<NumericOperand> operands;
+
+    private static final DecimalFormat OP_FORMAT = new DecimalFormat("#.###");
 
     public NumberBasedCondition(final String conditionAsString,
                                 final NumberBasedConditionOperator operator,
@@ -39,28 +44,60 @@ public class NumberBasedCondition extends Condition {
         List<Double> operandsAsDouble = operands.stream()
             .map(operand -> evaluator.evaluate(dqRule, operand)).collect(Collectors.toList());
 
+
+        log.info(String.format("Evaluating condition for rule: %s", dqRule));
+        List<String> formatOps = operandsAsDouble.stream().map(OP_FORMAT::format).collect(Collectors.toList());
+        String formatMetric = OP_FORMAT.format(metric);
+
         switch (operator) {
             case BETWEEN:
                 if (operands.size() != 2) return false;
-                else return metric > operandsAsDouble.get(0) && metric < operandsAsDouble.get(1);
+                else {
+                    boolean result = metric > operandsAsDouble.get(0) && metric < operandsAsDouble.get(1);
+                    log.info("{} between {} and {}? {}", formatMetric, formatOps.get(0), formatOps.get(1), result);
+                    return result;
+                }
             case GREATER_THAN_EQUAL_TO:
                 if (operands.size() != 1) return false;
-                else return metric >= operandsAsDouble.get(0);
+                else {
+                    boolean result = metric >= operandsAsDouble.get(0);
+                    log.info("{} >= {}? {}", formatMetric, formatOps.get(0), result);
+                    return result;
+                }
             case GREATER_THAN:
                 if (operands.size() != 1) return false;
-                else return metric > operandsAsDouble.get(0);
+                else {
+                    boolean result = metric > operandsAsDouble.get(0);
+                    log.info("{} > {}? {}", formatMetric, formatOps.get(0), result);
+                    return result;
+                }
             case LESS_THAN_EQUAL_TO:
                 if (operands.size() != 1) return false;
-                else return metric <= operandsAsDouble.get(0);
+                else {
+                    boolean result = metric <= operandsAsDouble.get(0);
+                    log.info("{} <= {}? {}", formatMetric, formatOps.get(0), result);
+                    return result;
+                }
             case LESS_THAN:
                 if (operands.size() != 1) return false;
-                else return metric < operandsAsDouble.get(0);
+                else {
+                    boolean result = metric < operandsAsDouble.get(0);
+                    log.info("{} < {}? {}", formatMetric, formatOps.get(0), result);
+                    return result;
+                }
             case EQUALS:
                 if (operands.size() != 1) return false;
-                else return metric.equals(operandsAsDouble.get(0));
+                else {
+                    boolean result = metric.equals(operandsAsDouble.get(0));
+                    log.info("{} == {}? {}", formatMetric, formatOps.get(0), result);
+                    return result;
+                }
             case IN:
-                return operandsAsDouble.contains(metric);
+                boolean result = operandsAsDouble.contains(metric);
+                log.info("{} in {}? {}", formatMetric, formatOps, result);
+                return result;
             default:
+                log.error("Unknown operator");
                 return false;
         }
     }
