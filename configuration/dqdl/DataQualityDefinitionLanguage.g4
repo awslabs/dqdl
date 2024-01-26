@@ -99,7 +99,9 @@ condition:
 
 withThresholdCondition: 'with' 'threshold' numberBasedCondition;
 
-dqRule: ruleType parameterWithConnectorWord* condition? withThresholdCondition?;
+whereClause: 'where' quotedString;
+
+dqRule: ruleType parameterWithConnectorWord* condition? whereClause? withThresholdCondition?;
 dqAnalyzer: analyzerType parameterWithConnectorWord*;
 
 topLevelRule:

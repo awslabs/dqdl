@@ -34,8 +34,26 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
     private final Condition thresholdCondition;
     private final DQRuleLogicalOperator operator;
     private final List<DQRule> nestedRules;
+    private final String whereClause;
 
     // Adding this constructor so as to not break the Data Quality ETL package.
+    public DQRule(final String ruleType,
+                  final Map<String, String> parameters,
+                  final Condition condition,
+                  final Condition thresholdCondition,
+                  final DQRuleLogicalOperator operator,
+                  final List<DQRule> nestedRules,
+                  final String whereClause) {
+        this.ruleType = ruleType;
+        this.parameters = parameters;
+        this.parameterValueMap = DQRuleParameterValue.createParameterValueMap(parameters);
+        this.condition = condition;
+        this.thresholdCondition = thresholdCondition;
+        this.operator = operator;
+        this.nestedRules = nestedRules;
+        this.whereClause = whereClause;
+    }
+
     public DQRule(final String ruleType,
                   final Map<String, String> parameters,
                   final Condition condition,
@@ -49,6 +67,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
         this.thresholdCondition = thresholdCondition;
         this.operator = operator;
         this.nestedRules = nestedRules;
+        this.whereClause = null;
     }
 
     public DQRule(final String ruleType,
@@ -61,13 +80,14 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
         this.thresholdCondition = null;
         this.operator = DQRuleLogicalOperator.AND;
         this.nestedRules = new ArrayList<>();
+        this.whereClause = null;
     }
 
     // Can't overload the constructor above, due to type erasure
     public static DQRule createFromParameterValueMap(final String ruleType,
                                                      final LinkedHashMap<String, DQRuleParameterValue> parameters,
                                                      final Condition condition) {
-        return createFromParameterValueMap(ruleType, parameters, condition, null);
+        return createFromParameterValueMap(ruleType, parameters, condition, null, null);
     }
 
     public DQRule(final String ruleType,
@@ -81,13 +101,15 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
         this.thresholdCondition = thresholdCondition;
         this.operator = DQRuleLogicalOperator.AND;
         this.nestedRules = new ArrayList<>();
+        this.whereClause = null;
     }
 
     // Can't overload the constructor above, due to type erasure
     public static DQRule createFromParameterValueMap(final String ruleType,
                                                      final LinkedHashMap<String, DQRuleParameterValue> parameters,
                                                      final Condition condition,
-                                                     final Condition thresholdCondition) {
+                                                     final Condition thresholdCondition,
+                                                     final String whereClause) {
         DQRuleLogicalOperator operator = DQRuleLogicalOperator.AND;
         List<DQRule> nestedRules = new ArrayList<>();
 
@@ -98,7 +120,8 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
             condition,
             thresholdCondition,
             operator,
-            nestedRules
+            nestedRules,
+            whereClause
         );
     }
 
@@ -121,6 +144,10 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
             if (thresholdCondition != null) {
                 String formattedCondition = thresholdCondition.getFormattedCondition();
                 if (!isBlank(formattedCondition)) sb.append(" with threshold ").append(formattedCondition);
+            }
+
+            if (whereClause != null) {
+                if (!isBlank(whereClause)) sb.append(" where ").append("\"" + whereClause + "\"");
             }
 
             return sb.toString();

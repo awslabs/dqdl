@@ -44,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -303,7 +304,9 @@ class DQRuleTest {
         DQRuleLogicalOperator operator = DQRuleLogicalOperator.AND;
         List<DQRule> nestedRules = new ArrayList<>();
 
-        DQRule rule = new DQRule(ruleType, parameters, condition, thresholdCondition, operator, nestedRules);
+        String whereClause = null;
+
+        DQRule rule = new DQRule(ruleType, parameters, condition, thresholdCondition, operator, nestedRules, whereClause);
 
         assertEquals(ruleType, rule.getRuleType());
 
@@ -362,6 +365,87 @@ class DQRuleTest {
         assertNotSame(dqRuleset1, dqRuleset2);
         assertEquals(dqRuleset1, dqRuleset2);
         assertEquals(dqRuleset1.hashCode(), dqRuleset2.hashCode());
+    }
+
+    @Test
+    public void test_whereClause() throws InvalidDataQualityRulesetException {
+        String rule = "IsComplete \"colA\" where \"colB is NOT NULL\"";
+        String ruleset = String.format("Rules = [ %s ]", rule);
+
+        DQRuleset dqRuleset1 = parser.parse(ruleset);
+        DQRuleset dqRuleset2 = parser.parse(ruleset);
+
+        assertNotSame(dqRuleset1, dqRuleset2);
+        assertEquals(dqRuleset1, dqRuleset2);
+        assertEquals(dqRuleset1.hashCode(), dqRuleset2.hashCode());
+    }
+
+    @Test
+    void test_whereClauseRuleToStringFromRule() throws InvalidDataQualityRulesetException {
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("TargetColumn", "colA");
+        DQRule dqRule = new DQRule("IsComplete", parameters, new Condition(""), null,
+                DQRuleLogicalOperator.AND, null, "colB is NOT NULL");
+        String ruleString = "IsComplete \"colA\" where \"colB is NOT NULL\"";
+        assertEquals(dqRule.toString(), ruleString);
+        assertEquals(dqRule.getWhereClause(), "colB is NOT NULL");
+    }
+
+    @Test
+    void test_whereClauseRuleToStringFromRuleset() throws InvalidDataQualityRulesetException {
+        String ruleString = "IsComplete \"colA\" where \"colB is NOT NULL\"";
+        String ruleset = String.format("Rules = [ %s ]", ruleString);
+        DQRuleset dqRuleset = parser.parse(ruleset);
+        DQRule dqRule = dqRuleset.getRules().get(0);
+        assertEquals(dqRule.toString(), ruleString);
+        assertEquals(dqRule.getWhereClause(), "colB is NOT NULL");
+    }
+
+    @Test
+    void test_whereClauseNeedsQuotedSQLStatement() {
+        String rule = "IsComplete \"colA\" where \"\"";
+        String ruleset = String.format("Rules = [ %s ]", rule);
+        assertThrows(InvalidDataQualityRulesetException.class, () -> parser.parse(ruleset));
+    }
+
+    @Test
+    void test_whereClauseCannotBeEmpty() {
+        String rule = "IsComplete \"colA\" where \"\"";
+        String ruleset = String.format("Rules = [ %s ]", rule);
+        assertThrows(InvalidDataQualityRulesetException.class, () -> parser.parse(ruleset));
+    }
+
+    @Test
+    void test_constructorWithWhereClause() {
+        String ruleType = "IsComplete";
+        String columnKey = "TargetColumn";
+        String column = "colA";
+        String emptyCondition = "";
+        String whereClause = "\"colB is NOT NULL\"";
+
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put(columnKey, column);
+
+        Condition condition = new Condition(emptyCondition);
+        Condition thresholdCondition = new Condition(emptyCondition);
+
+        DQRuleLogicalOperator operator = DQRuleLogicalOperator.AND;
+        List<DQRule> nestedRules = new ArrayList<>();
+
+        DQRule rule = new DQRule(ruleType, parameters, condition, thresholdCondition, operator, nestedRules, whereClause);
+        assertEquals(ruleType, rule.getRuleType());
+
+        assertTrue(rule.getParameters().containsKey(columnKey));
+        assertEquals(column, rule.getParameters().get(columnKey));
+        assertTrue(rule.getParameterValueMap().containsKey(columnKey));
+        assertEquals(column, rule.getParameterValueMap().get(columnKey).getValue());
+        assertTrue(rule.getParameterValueMap().get(columnKey).getConnectorWord().isEmpty());
+        assertTrue(rule.getParameterValueMap().get(columnKey).isQuoted());
+        assertTrue(rule.getCondition().getConditionAsString().isEmpty());
+        assertTrue(rule.getThresholdCondition().getConditionAsString().isEmpty());
+        assertEquals(operator, rule.getOperator());
+        assertTrue(rule.getNestedRules().isEmpty());
+        assertEquals(rule.getWhereClause(), whereClause);
     }
 
     @Disabled

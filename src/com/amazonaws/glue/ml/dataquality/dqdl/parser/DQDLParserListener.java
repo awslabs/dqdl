@@ -181,7 +181,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                     }
                 }
 
-                dqRules.add(new DQRule("Composite", null, null, null, null, op, nestedRules));
+                dqRules.add(new DQRule("Composite", null, null, null, op, nestedRules));
             } else if (tlc.dqRule(0) != null) {
                 Either<String, DQRule> dqRuleEither = getDQRule(tlc.dqRule(0));
                 if (dqRuleEither.isLeft()) {
@@ -290,9 +290,20 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             }
         }
 
+        String whereClause = null;
+        if (dqRuleContext.whereClause() != null) {
+            DataQualityDefinitionLanguageParser.WhereClauseContext ctx = dqRuleContext.whereClause();
+            if (ctx.quotedString().getText().isEmpty() || ctx.quotedString().getText().equals("\"\"")) {
+                return Either.fromLeft(
+                    String.format("Empty where condition provided for rule type: %s", ruleType));
+            } else {
+                whereClause = removeQuotes(ctx.quotedString().getText());
+            }
+        }
+
         return Either.fromRight(
             DQRule.createFromParameterValueMap(
-                dqRuleType.getRuleTypeName(), parameterMap, condition, thresholdCondition)
+                dqRuleType.getRuleTypeName(), parameterMap, condition, thresholdCondition, whereClause)
         );
     }
 
