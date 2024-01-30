@@ -36,6 +36,17 @@ public class DurationBasedConditionTest {
             ),
             Arguments.of(
                 new DurationBasedCondition(
+                    "notbetween3hoursand4days",
+                    DurationBasedConditionOperator.NOT_BETWEEN,
+                    Arrays.asList(
+                        new Duration(3, DurationUnit.HOURS),
+                        new Duration(4, DurationUnit.DAYS)
+                    )
+                ),
+                "not between 3 hours and 4 days"
+            ),
+            Arguments.of(
+                new DurationBasedCondition(
                     ">256hours",
                     DurationBasedConditionOperator.GREATER_THAN,
                     Collections.singletonList(new Duration(256, DurationUnit.HOURS))
@@ -76,6 +87,14 @@ public class DurationBasedConditionTest {
             ),
             Arguments.of(
                 new DurationBasedCondition(
+                    "!=10days",
+                    DurationBasedConditionOperator.NOT_EQUALS,
+                    Collections.singletonList(new Duration(10, DurationUnit.DAYS))
+                ),
+                "!= 10 days"
+            ),
+            Arguments.of(
+                new DurationBasedCondition(
                     "in[3hours,4days,96hours,7days]",
                     DurationBasedConditionOperator.IN,
                     Arrays.asList(
@@ -86,6 +105,19 @@ public class DurationBasedConditionTest {
                     )
                 ),
                 "in [3 hours, 4 days, 96 hours, 7 days]"
+            ),
+            Arguments.of(
+                new DurationBasedCondition(
+                    "notin[3hours,4days,96hours,7days]",
+                    DurationBasedConditionOperator.NOT_IN,
+                    Arrays.asList(
+                        new Duration(3, DurationUnit.HOURS),
+                        new Duration(4, DurationUnit.DAYS),
+                        new Duration(96, DurationUnit.HOURS),
+                        new Duration(7, DurationUnit.DAYS)
+                    )
+                ),
+                "not in [3 hours, 4 days, 96 hours, 7 days]"
             )
         );
     }

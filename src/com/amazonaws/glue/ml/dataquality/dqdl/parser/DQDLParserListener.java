@@ -439,9 +439,10 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             Optional<NumericOperand> operand2 = parseNumericOperand(ctx.number(1), false);
 
             if (operand1.isPresent() && operand2.isPresent()) {
-                condition = new NumberBasedCondition(exprStr, NumberBasedConditionOperator.BETWEEN,
-                    Arrays.asList(operand1.get(), operand2.get())
-                );
+                NumberBasedConditionOperator op = (ctx.NOT() != null) ?
+                    NumberBasedConditionOperator.NOT_BETWEEN
+                    : NumberBasedConditionOperator.BETWEEN;
+                condition = new NumberBasedCondition(exprStr, op, Arrays.asList(operand1.get(), operand2.get()));
             }
         } else if (ctx.GREATER_THAN_EQUAL_TO() != null && ctx.number().size() == 1) {
             Optional<NumericOperand> operand = parseNumericOperand(ctx.number(0), false);
@@ -474,9 +475,11 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         } else if (ctx.EQUAL_TO() != null && ctx.number().size() == 1) {
             Optional<NumericOperand> operand = parseNumericOperand(ctx.number(0), false);
             if (operand.isPresent()) {
+                NumberBasedConditionOperator op = (ctx.NEGATION() != null) ?
+                    NumberBasedConditionOperator.NOT_EQUALS
+                    : NumberBasedConditionOperator.EQUALS;
                 condition = new NumberBasedCondition(
-                    exprStr, NumberBasedConditionOperator.EQUALS,
-                    Collections.singletonList(operand.get()));
+                    exprStr, op, Collections.singletonList(operand.get()));
             }
         } else if (ctx.IN() != null && ctx.numberArray() != null && ctx.numberArray().number().size() > 0) {
             List<Optional<NumericOperand>> numbers = ctx.numberArray().number()
@@ -485,8 +488,10 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                 .collect(Collectors.toList());
 
             if (numbers.stream().allMatch(Optional::isPresent)) {
-                condition = new NumberBasedCondition(
-                    exprStr, NumberBasedConditionOperator.IN,
+                NumberBasedConditionOperator op = (ctx.NOT() != null) ?
+                    NumberBasedConditionOperator.NOT_IN
+                    : NumberBasedConditionOperator.IN;
+                condition = new NumberBasedCondition(exprStr, op,
                     numbers.stream().map(Optional::get).collect(Collectors.toList()));
             }
         }
@@ -551,12 +556,18 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         Condition condition = null;
 
         if (ctx.EQUAL_TO() != null && ctx.quotedString() != null) {
-            condition = new StringBasedCondition(exprStr, StringBasedConditionOperator.EQUALS,
+            StringBasedConditionOperator op = (ctx.NEGATION() != null) ?
+                StringBasedConditionOperator.NOT_EQUALS
+                : StringBasedConditionOperator.EQUALS;
+            condition = new StringBasedCondition(exprStr, op,
                 Collections.singletonList(removeQuotes(ctx.quotedString().QUOTED_STRING().getText())));
         } else if (ctx.IN() != null &&
             ctx.quotedStringArray() != null &&
             ctx.quotedStringArray().quotedString().size() > 0) {
-            condition = new StringBasedCondition(exprStr, StringBasedConditionOperator.IN,
+            StringBasedConditionOperator op = (ctx.NOT() != null) ?
+                StringBasedConditionOperator.NOT_IN
+                : StringBasedConditionOperator.IN;
+            condition = new StringBasedCondition(exprStr, op,
                 ctx.quotedStringArray().quotedString().stream()
                     .map(s -> removeQuotes(removeEscapes(s.getText())))
                     .collect(Collectors.toList())
@@ -579,8 +590,11 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             Optional<DateExpression> lower = parseDateExpression(ctx.dateExpression(0));
             Optional<DateExpression> upper = parseDateExpression(ctx.dateExpression(1));
             if (lower.isPresent() && upper.isPresent()) {
+                DateBasedConditionOperator op = (ctx.NOT() != null) ?
+                    DateBasedConditionOperator.NOT_BETWEEN
+                    : DateBasedConditionOperator.BETWEEN;
                 condition = new DateBasedCondition(
-                    exprStr, DateBasedConditionOperator.BETWEEN, Arrays.asList(lower.get(), upper.get())
+                    exprStr, op, Arrays.asList(lower.get(), upper.get())
                 );
             }
         } else if (ctx.GREATER_THAN_EQUAL_TO() != null && ctx.dateExpression().size() == 1) {
@@ -614,8 +628,11 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         } else if (ctx.EQUAL_TO() != null && ctx.dateExpression().size() == 1) {
             Optional<DateExpression> operand = parseDateExpression(ctx.dateExpression(0));
             if (operand.isPresent()) {
+                DateBasedConditionOperator op = (ctx.NEGATION() != null) ?
+                    DateBasedConditionOperator.NOT_EQUALS
+                    : DateBasedConditionOperator.EQUALS;
                 condition = new DateBasedCondition(
-                    exprStr, DateBasedConditionOperator.EQUALS, Collections.singletonList(operand.get())
+                    exprStr, op, Collections.singletonList(operand.get())
                 );
             }
         } else if (ctx.IN() != null &&
@@ -626,8 +643,11 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                 .collect(Collectors.toList());
 
             if (expressions.stream().allMatch(Optional::isPresent)) {
+                DateBasedConditionOperator op = (ctx.NOT() != null) ?
+                    DateBasedConditionOperator.NOT_IN
+                    : DateBasedConditionOperator.IN;
                 condition = new DateBasedCondition(
-                    exprStr, DateBasedConditionOperator.IN,
+                    exprStr, op,
                     expressions.stream().map(Optional::get).collect(Collectors.toList())
                 );
             }
@@ -647,8 +667,11 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             Optional<Duration> lower = parseDuration(ctx.durationExpression(0));
             Optional<Duration> upper = parseDuration(ctx.durationExpression(1));
             if (lower.isPresent() && upper.isPresent()) {
+                DurationBasedConditionOperator op = (ctx.NOT() != null) ?
+                    DurationBasedConditionOperator.NOT_BETWEEN
+                    : DurationBasedConditionOperator.BETWEEN;
                 condition = new DurationBasedCondition(
-                    exprStr, DurationBasedConditionOperator.BETWEEN, Arrays.asList(lower.get(), upper.get())
+                    exprStr, op, Arrays.asList(lower.get(), upper.get())
                 );
             }
         } else if (ctx.GREATER_THAN_EQUAL_TO() != null && ctx.durationExpression().size() == 1) {
@@ -686,8 +709,11 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         } else if (ctx.EQUAL_TO() != null && ctx.durationExpression().size() == 1) {
             Optional<Duration> operand = parseDuration(ctx.durationExpression(0));
             if (operand.isPresent()) {
+                DurationBasedConditionOperator op = (ctx.NEGATION() != null) ?
+                    DurationBasedConditionOperator.NOT_EQUALS
+                    : DurationBasedConditionOperator.EQUALS;
                 condition = new DurationBasedCondition(
-                    exprStr, DurationBasedConditionOperator.EQUALS,
+                    exprStr, op,
                     Collections.singletonList(operand.get())
                 );
             }
@@ -700,8 +726,11 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                 .collect(Collectors.toList());
 
             if (durations.stream().allMatch(Optional::isPresent)) {
+                DurationBasedConditionOperator op = (ctx.NOT() != null) ?
+                    DurationBasedConditionOperator.NOT_IN
+                    : DurationBasedConditionOperator.IN;
                 condition = new DurationBasedCondition(
-                    exprStr, DurationBasedConditionOperator.IN,
+                    exprStr, op,
                     durations.stream().map(Optional::get).collect(Collectors.toList())
                 );
             }

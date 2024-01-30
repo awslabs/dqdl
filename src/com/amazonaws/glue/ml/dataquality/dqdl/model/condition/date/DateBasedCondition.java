@@ -42,6 +42,11 @@ public class DateBasedCondition extends Condition {
                     operands.get(0).getFormattedExpression(),
                     operands.get(1).getFormattedExpression()
                 );
+            case NOT_BETWEEN:
+                return String.format("not between %s and %s",
+                    operands.get(0).getFormattedExpression(),
+                    operands.get(1).getFormattedExpression()
+                );
             case GREATER_THAN:
                 return String.format("> %s", operands.get(0).getFormattedExpression());
             case GREATER_THAN_EQUAL_TO:
@@ -52,16 +57,27 @@ public class DateBasedCondition extends Condition {
                 return String.format("<= %s", operands.get(0).getFormattedExpression());
             case EQUALS:
                 return String.format("= %s", operands.get(0).getFormattedExpression());
+            case NOT_EQUALS:
+                return String.format("!= %s", operands.get(0).getFormattedExpression());
             case IN: {
-                List<String> formattedOperands = operands.stream()
-                    .map(DateExpression::getFormattedExpression)
-                    .collect(Collectors.toList());
+                List<String> formattedOperands = getFormattedOperands();
                 return String.format("in [%s]", String.join(",", formattedOperands));
+            }
+            case NOT_IN: {
+                List<String> formattedOperands = getFormattedOperands();
+                return String.format("not in [%s]", String.join(",", formattedOperands));
             }
             default:
                 break;
         }
 
         return "";
+    }
+
+    private List<String> getFormattedOperands() {
+        List<String> formattedOperands = operands.stream()
+            .map(DateExpression::getFormattedExpression)
+            .collect(Collectors.toList());
+        return formattedOperands;
     }
 }

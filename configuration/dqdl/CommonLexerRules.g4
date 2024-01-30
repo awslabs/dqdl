@@ -21,6 +21,8 @@ GREATER_THAN_EQUAL_TO: '>=';
 LESS_THAN: '<';
 LESS_THAN_EQUAL_TO: '<=';
 IN: 'in';
+NOT: 'not';
+NEGATION: '!';
 
 DIGIT: [0-9];
 DATE:

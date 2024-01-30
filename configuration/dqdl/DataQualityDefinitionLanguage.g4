@@ -50,39 +50,39 @@ matchesRegexCondition: 'matches' quotedString;
 
 numberArray: LBRAC number (COMMA number)* RBRAC;
 numberBasedCondition:
-    BETWEEN number AND number
+    NOT? BETWEEN number AND number
     | GREATER_THAN number
     | GREATER_THAN_EQUAL_TO number
     | LESS_THAN number
     | LESS_THAN_EQUAL_TO number
-    | EQUAL_TO number
-    | IN numberArray;
+    | NEGATION? EQUAL_TO number
+    | NOT? IN numberArray;
 
 quotedStringArray: LBRAC quotedString (COMMA quotedString)* RBRAC;
 stringBasedCondition:
-    EQUAL_TO quotedString
-    | IN quotedStringArray
+    NEGATION? EQUAL_TO quotedString
+    | NOT? IN quotedStringArray
     | matchesRegexCondition;
 
 dateExpressionArray: LBRAC dateExpression (COMMA dateExpression)* RBRAC;
 dateBasedCondition:
-	BETWEEN dateExpression AND dateExpression
+	NOT? BETWEEN dateExpression AND dateExpression
 	| GREATER_THAN dateExpression
 	| GREATER_THAN_EQUAL_TO dateExpression
 	| LESS_THAN dateExpression
 	| LESS_THAN_EQUAL_TO dateExpression
-	| EQUAL_TO dateExpression
-	| IN dateExpressionArray;
+	| NEGATION? EQUAL_TO dateExpression
+	| NOT? IN dateExpressionArray;
 
 durationExpressionArray: LBRAC durationExpression (COMMA durationExpression)* RBRAC;
 durationBasedCondition:
-    BETWEEN durationExpression AND durationExpression
+    NOT? BETWEEN durationExpression AND durationExpression
     | GREATER_THAN durationExpression
     | GREATER_THAN_EQUAL_TO durationExpression
     | LESS_THAN durationExpression
     | LESS_THAN_EQUAL_TO durationExpression
-    | EQUAL_TO durationExpression
-    | IN durationExpressionArray;
+    | NEGATION? EQUAL_TO durationExpression
+    | NOT? IN durationExpressionArray;
 
 ruleType: IDENTIFIER;
 analyzerType: IDENTIFIER;

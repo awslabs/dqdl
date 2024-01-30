@@ -37,6 +37,16 @@ public class DateBasedConditionTest {
             ),
             Arguments.of(
                 new DateBasedCondition(
+                    "notbetween\"2023-01-01\"and\"2023-12-31\"",
+                    DateBasedConditionOperator.NOT_BETWEEN,
+                    Arrays.asList(
+                        new DateExpression.StaticDate("2023-01-01"), new DateExpression.StaticDate("2023-12-31")
+                    )
+                ),
+                "not between \"2023-01-01\" and \"2023-12-31\""
+            ),
+            Arguments.of(
+                new DateBasedCondition(
                     "between(now()-4days)and(now()+72hours)",
                     DateBasedConditionOperator.BETWEEN,
                     Arrays.asList(
@@ -49,6 +59,21 @@ public class DateBasedConditionTest {
                     )
                 ),
                 "between (now() - 4 days) and (now() + 72 hours)"
+            ),
+            Arguments.of(
+                new DateBasedCondition(
+                    "notbetween(now()-4days)and(now()+72hours)",
+                    DateBasedConditionOperator.NOT_BETWEEN,
+                    Arrays.asList(
+                        new DateExpression.CurrentDateExpression(
+                            DateExpression.DateExpressionOperator.MINUS,new Duration(4, DurationUnit.DAYS)
+                        ),
+                        new DateExpression.CurrentDateExpression(
+                            DateExpression.DateExpressionOperator.PLUS, new Duration(72, DurationUnit.HOURS)
+                        )
+                    )
+                ),
+                "not between (now() - 4 days) and (now() + 72 hours)"
             ),
             Arguments.of(
                 new DateBasedCondition(
@@ -132,6 +157,14 @@ public class DateBasedConditionTest {
             ),
             Arguments.of(
                 new DateBasedCondition(
+                    "!=\"2023-01-01\"",
+                    DateBasedConditionOperator.NOT_EQUALS,
+                    Collections.singletonList(new DateExpression.StaticDate("2023-01-01"))
+                ),
+                "!= \"2023-01-01\""
+            ),
+            Arguments.of(
+                new DateBasedCondition(
                     ">=(now()-2days)",
                     DateBasedConditionOperator.EQUALS,
                     Collections.singletonList(
@@ -158,6 +191,23 @@ public class DateBasedConditionTest {
                     )
                 ),
                 "in [\"2023-01-01\",now(),(now() - 2 days),(now() + 72 hours)]"
+            ),
+            Arguments.of(
+                new DateBasedCondition(
+                    "notin[\"2023-01-01\",now(),(now()-2days),(now()+72hours)]",
+                    DateBasedConditionOperator.NOT_IN,
+                    Arrays.asList(
+                        new DateExpression.StaticDate("2023-01-01"),
+                        new DateExpression.CurrentDate(),
+                        new DateExpression.CurrentDateExpression(
+                            DateExpression.DateExpressionOperator.MINUS, new Duration(2, DurationUnit.DAYS)
+                        ),
+                        new DateExpression.CurrentDateExpression(
+                            DateExpression.DateExpressionOperator.PLUS, new Duration(72, DurationUnit.HOURS)
+                        )
+                    )
+                ),
+                "not in [\"2023-01-01\",now(),(now() - 2 days),(now() + 72 hours)]"
             )
         );
     }

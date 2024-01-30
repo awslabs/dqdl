@@ -41,17 +41,28 @@ public class StringBasedCondition extends Condition {
                 return String.format("matches %s", formatOperand(operands.get(0)));
             case EQUALS:
                 return String.format("= %s", formatOperand(operands.get(0)));
+            case NOT_EQUALS:
+                return String.format("!= %s", formatOperand(operands.get(0)));
             case IN: {
-                List<String> formattedOperands = operands.stream()
-                    .map(this::formatOperand)
-                    .collect(Collectors.toList());
+                List<String> formattedOperands = getFormattedOperands();
                 return String.format("in [%s]", String.join(",", formattedOperands));
+            }
+            case NOT_IN: {
+                List<String> formattedOperands = getFormattedOperands();
+                return String.format("not in [%s]", String.join(",", formattedOperands));
             }
             default:
                 break;
         }
 
         return "";
+    }
+
+    private List<String> getFormattedOperands() {
+        List<String> formattedOperands = operands.stream()
+            .map(this::formatOperand)
+            .collect(Collectors.toList());
+        return formattedOperands;
     }
 
     private String formatOperand(String operand) {

@@ -35,32 +35,66 @@ public class ConditionTest {
     private static Stream<Arguments> provideRulesWithNumberBasedConditions() {
         return Stream.of(
             Arguments.of("Completeness \"colA\" between 0.4 and 0.9", 0.5, true),
+            Arguments.of("Completeness \"colA\" between 0.4 and 0.9", 0.4, false),
             Arguments.of("Completeness \"colA\" between 0.4 and 0.9", 0.3, false),
+            Arguments.of("Completeness \"colA\" between 0.4 and 0.9", 0.9, false),
             Arguments.of("Completeness \"colA\" between 0.4 and 0.9", 0.91, false),
+            Arguments.of("Completeness \"colA\" not between 0.4 and 0.9", 0.5, false),
+            Arguments.of("Completeness \"colA\" not between 0.4 and 0.9", 0.4, true),
+            Arguments.of("Completeness \"colA\" not between 0.4 and 0.9", 0.3, true),
+            Arguments.of("Completeness \"colA\" not between 0.4 and 0.9", 0.9, true),
+            Arguments.of("Completeness \"colA\" not between 0.4 and 0.9", 0.91, true),
+            Arguments.of("Completeness \"colA\" not in [0.4, 0.9]", 0.91, true),
             Arguments.of("ColumnCorrelation \"colA\" \"colB\" between -0.2 and 1.0", 0.9, true),
             Arguments.of("ColumnCorrelation \"colA\" \"colB\" between -0.2 and 1.0", -0.19, true),
             Arguments.of("ColumnCorrelation \"colA\" \"colB\" between -0.2 and 1.0", -0.2001, false),
+            Arguments.of("ColumnCorrelation \"colA\" \"colB\" not between -0.2 and 1.0", -0.2, true),
+            Arguments.of("ColumnCorrelation \"colA\" \"colB\" not between -0.2 and 1.0", -0.19, false),
+            Arguments.of("ColumnCorrelation \"colA\" \"colB\" not between -0.2 and 1.0", -0.21, true),
+            Arguments.of("ColumnCorrelation \"colA\" \"colB\" not in [-0.2, 1.0]", -0.2001, true),
+            Arguments.of("ColumnLength \"colA\" in [1, 2, 3]", 4.0, false),
+            Arguments.of("ColumnLength \"colA\" not in [1, 2, 3]", 4.0, true),
+            Arguments.of("ColumnLength \"colA\" in [1, 2, 3, 4]", 4.0, true),
+            Arguments.of("ColumnLength \"colA\" not in [1, 2, 3, 4]", 4.0, false),
+            Arguments.of("ColumnValues \"colA\" in [1, 2, 3, 4]", 3.999999, true),
+            Arguments.of("ColumnValues \"colA\" in [1, 2, 3, 4]", 3.999, false),
             Arguments.of("Completeness \"colA\" >= 0.4", 0.4, true),
             Arguments.of("Completeness \"colA\" >= 0.4", 0.39, false),
             Arguments.of("Completeness \"colA\" >= 0.4", 1.0, true),
-            Arguments.of("Uniqueness \"colA\" > 0.4", 0.41, true),
-            Arguments.of("Uniqueness \"colA\" > 0.4", 0.4, false),
-            Arguments.of("Uniqueness \"colA\" > 0.4", -0.4, false),
-            Arguments.of("UniqueValueRatio \"colA\" < -0.4", 100.9, false),
-            Arguments.of("UniqueValueRatio \"colA\" < -0.4", -0.5, true),
-            Arguments.of("UniqueValueRatio \"colA\" < -0.4", -0.41, true),
+            Arguments.of("DatasetMatch \"reference\" \"colA\" not between 0.1 and 1.0", 1.0, true),
+            Arguments.of("DistinctValuesCount \"colA\" not between 0.1 and 1.0", 1.0, true),
             Arguments.of("Entropy \"colA\" <= 0.678", 0.679, false),
             Arguments.of("Entropy \"colA\" <= 0.678", 0.677, true),
             Arguments.of("Entropy \"colA\" <= 0.678", -0.1, true),
+            Arguments.of("Entropy \"colA\" != 0.678", 0.678, false),
+            Arguments.of("Mean \"colA\" != 10.0", 10.0, false),
+            Arguments.of("RowCount != 10.0", 10.0, false),
+            Arguments.of("Mean \"colA\" != 10.0", 10.0, false),
             Arguments.of("StandardDeviation \"colA\" = 10.0", 10.0, true),
             Arguments.of("StandardDeviation \"colA\" = -10000.0", -10000.0, true),
-            Arguments.of("StandardDeviation \"colA\" = 99.34", 99.35, false)
+            Arguments.of("StandardDeviation \"colA\" = 99.34", 99.35, false),
+            Arguments.of("StandardDeviation \"colA\" != 10.0", 10.0, false),
+            Arguments.of("StandardDeviation \"colA\" != -10000.0", -10000.0, false),
+            Arguments.of("StandardDeviation \"colA\" != 99.34", 99.35, true),
+            Arguments.of("Sum \"colA\" not in [5.0, 10.0]", 10.0, false),
+            Arguments.of("Uniqueness \"colA\" > 0.4", 0.41, true),
+            Arguments.of("Uniqueness \"colA\" > 0.4", 0.4, false),
+            Arguments.of("Uniqueness \"colA\" > 0.4", -0.4, false),
+            Arguments.of("Uniqueness \"colA\" != 0.4", -0.4, true),
+            Arguments.of("Uniqueness \"colA\" not between 0.1 and 0.5", 0.5, true),
+            Arguments.of("Uniqueness \"colA\" not in [0.1, 0.1, 0.5]", 0.3, true),
+            Arguments.of("UniqueValueRatio \"colA\" < -0.4", 100.9, false),
+            Arguments.of("UniqueValueRatio \"colA\" < -0.4", -0.5, true),
+            Arguments.of("UniqueValueRatio \"colA\" < -0.4", -0.41, true),
+            Arguments.of("UniqueValueRatio \"colA\" not between -0.5 and -0.4", -0.41, false),
+            Arguments.of("UniqueValueRatio \"colA\" not between -0.4 and -0.5", -0.41, true)
         );
     }
 
     private static Stream<Arguments> provideRulesWithNumberBasedThresholdConditions() {
         return Stream.of(
             Arguments.of("ColumnValues \"colA\" in [ \"A\", \"B\"] with threshold between 0.4 and 0.9", 0.5, true),
+            Arguments.of("ColumnValues \"colA\" in [ \"A\", \"B\"] with threshold not between 0.4 and 0.9", 0.5, false),
             Arguments.of("ColumnValues \"colA\" in [ \"A\", \"B\"] with threshold > 0.6", 0.59, false),
             Arguments.of("ColumnValues \"colA\" in [ \"A\", \"B\"] with threshold >= 0.5", 0.5, true),
             Arguments.of("ColumnValues \"colA\" in [ \"A\", \"B\"] with threshold < 0.333", 0.334, false),
@@ -72,6 +106,7 @@ public class ConditionTest {
             Arguments.of("ColumnValues \"colA\" matches \"[a-zA-Z]\" with threshold < 0.333", 0.332, true),
             Arguments.of("ColumnValues \"colA\" matches \"[a-zA-Z]\" with threshold <= 0.333", 0.3, true),
             Arguments.of("ColumnValues \"colA\" matches \"[a-zA-Z]\" with threshold = 0.2", 0.2, true),
+            Arguments.of("ColumnValues \"colA\" matches \"[a-zA-Z]\" with threshold != 0.2", 0.2, false),
             Arguments.of("ColumnValues \"Customer_ID\" in [1,2,3,4,5,6,7,8,9] with threshold > 0.98", 0.979, false)
         );
     }
@@ -80,29 +115,35 @@ public class ConditionTest {
         return Stream.of(
             // With static dates
             Arguments.of("ColumnValues \"colA\" in [ \"2022-01-01\", \"2022-12-31\" ]"),
+            Arguments.of("ColumnValues \"colA\" not in [ \"2022-01-01\", \"2022-12-31\" ]"),
             Arguments.of("ColumnValues \"colA\" >= \"2022-01-01\" ]"),
             Arguments.of("ColumnValues \"colA\" >  \"2022-01-01\" ]"),
             Arguments.of("ColumnValues \"colA\" <= \"2022-01-01\" ]"),
             Arguments.of("ColumnValues \"colA\" <  \"2022-01-01\" ]"),
             Arguments.of("ColumnValues \"colA\" between \"2022-01-01\" and \"2022-12-31\""),
+            Arguments.of("ColumnValues \"colA\" not between \"2022-01-01\" and \"2022-12-31\""),
             // With dynamic expressions
             Arguments.of("ColumnValues \"colA\" in [ (now() - 14 days), (now() - 7 days), \"2022-01-01\" ]"),
+            Arguments.of("ColumnValues \"colA\" not in [ (now() - 14 days), (now() - 7 days), \"2022-01-01\" ]"),
             Arguments.of("ColumnValues \"colA\" >= now() ]"),
             Arguments.of("ColumnValues \"colA\" >  (now() - 12 hours) ]"),
             Arguments.of("ColumnValues \"colA\" <= (now() + 3 days) ]"),
             Arguments.of("ColumnValues \"colA\" <  (now() + 72 hours) ]"),
-            Arguments.of("ColumnValues \"colA\" between (now() - 14 days) and now()")
+            Arguments.of("ColumnValues \"colA\" between (now() - 14 days) and now()"),
+            Arguments.of("ColumnValues \"colA\" not between (now() - 14 days) and now()")
         );
     }
 
     private static Stream<Arguments> provideRulesWithDurationBasedThresholdConditions() {
         return Stream.of(
             Arguments.of("DataFreshness \"colA\" in [ 3 hours, 12 hours, 1 days ]"),
+            Arguments.of("DataFreshness \"colA\" not in [ 3 hours, 12 hours, 1 days ]"),
             Arguments.of("DataFreshness \"colA\" >= 12 hours"),
             Arguments.of("DataFreshness \"colA\" >  2 days"),
             Arguments.of("DataFreshness \"colA\" <= 2 hours"),
             Arguments.of("DataFreshness \"colA\" <  6 hours"),
-            Arguments.of("DataFreshness \"colA\" between 6 hours and 12 hours")
+            Arguments.of("DataFreshness \"colA\" between 6 hours and 12 hours"),
+            Arguments.of("DataFreshness \"colA\" not between 6 hours and 12 hours")
         );
     }
 
