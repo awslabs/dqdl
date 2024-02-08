@@ -10,6 +10,7 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
  * Through the use of function call operands, we introduce the concept of dynamic rules in DQDL.
  */
 @Getter
+@EqualsAndHashCode(callSuper = true)
 public class FunctionCallOperand extends NumericOperand {
     private final String functionName;
     private final List<NumericOperand> operands;

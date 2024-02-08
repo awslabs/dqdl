@@ -10,6 +10,7 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 /*
@@ -19,6 +20,7 @@ import lombok.Getter;
  * The purpose of this operand is for combining with a dynamic function call operand to create dynamic rule thresholds.
  */
 @Getter
+@EqualsAndHashCode(callSuper = true)
 public class BinaryExpressionOperand extends NumericOperand {
     private final String operator;
     private final NumericOperand operand1;

@@ -11,12 +11,14 @@
 package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.io.Serializable;
 
 @AllArgsConstructor
 @Getter
+@EqualsAndHashCode
 public abstract class NumericOperand implements Serializable {
     private final String operand;
     private final boolean isParenthesized;

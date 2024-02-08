@@ -69,14 +69,24 @@ class DQRuleTest {
         }
     }
 
+    @ParameterizedTest
+    @MethodSource("provideRawRules")
+    void test_rulesEqualWhenRepresentationsEqual(String ruleStringRepr) {
+        try {
+            DQRule rule1 = parser.parse("Rules = [ " + ruleStringRepr + " ]").getRules().get(0);
+            DQRule rule2 = parser.parse("Rules = [ " + ruleStringRepr + " ]").getRules().get(0);
+
+            assertEquals(rule1, rule2);
+            assertTrue(rule1.equals(rule2));
+            assertEquals(rule1.hashCode(), rule2.hashCode());
+            assertNotSame(rule1, rule2);
+        } catch (InvalidDataQualityRulesetException e) {
+            fail(e.getMessage());
+        }
+    }
+
     private static Stream<Arguments> provideRawRules() {
         return Stream.of(
-            // Arguments.of("JobStatus = \"SUCCEEDED\""),
-            // Arguments.of("JobStatus in [\"SUCCEEDED\",\"READY\"]"),
-            // Arguments.of("JobDuration between 10 and 1000"),
-            // Arguments.of("JobDuration between -10 and 1000"),
-            // Arguments.of("FileCount between 10 and 100"),
-            // Arguments.of("FileCount between -10000 and -1000"),
             Arguments.of("IsPrimaryKey \"colA\""),
             Arguments.of("IsPrimaryKey \"colA\" \"colB\""),
             Arguments.of("IsPrimaryKey colA \"col B\""),
