@@ -197,6 +197,14 @@ public class ConditionTest {
 
             DateBasedCondition condition = (DateBasedCondition) dqRule.getCondition();
             assertTrue(dqRule.toString().contains(condition.getFormattedCondition()));
+
+            try {
+                condition.evaluate(0.0, dqRule, testEvaluator);
+                fail("Expected date condition to throw UnsupportedOperationException");
+            } catch (UnsupportedOperationException e) {
+                // pass
+            }
+
         } catch (InvalidDataQualityRulesetException e) {
             fail(e.getMessage());
         }

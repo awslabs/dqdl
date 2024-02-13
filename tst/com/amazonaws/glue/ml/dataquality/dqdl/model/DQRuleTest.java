@@ -496,6 +496,51 @@ class DQRuleTest {
         assertTrue(rule.getThresholdCondition().getConditionAsString().isEmpty());
     }
 
+    @Test
+    void test_modifyNestedRules() throws InvalidDataQualityRulesetException {
+        String rule1 = "IsComplete \"name\"";
+        String rule2 = "IsUnique \"name\"";
+        String rule3 = "IsPrimaryKey \"name\"";
+        String ruleset = String.format("Rules = [" +
+                "(%s) AND (%s)," +
+                "%s ]", rule1, rule2, rule3);
+        DQRuleset dqRuleset = parser.parse(ruleset);
+
+        DQRule composite = dqRuleset.getRules().get(0);
+
+        // Copy the list's elements into a new list, without copying the list itself
+        List<DQRule> nested = new ArrayList<>(composite.getNestedRules());
+        nested.add(dqRuleset.getRules().get(1)); // IsComplete AND IsUnique AND IsPrimaryKey
+
+        DQRule modified = composite.withNestedRules(nested);
+
+        // The original rule hasn't been modified
+        assertEquals(composite.toString(), "(IsComplete \"name\") AND (IsUnique \"name\")");
+
+        // The modified rule includes all subrules
+        assertEquals(modified.toString(), "(IsComplete \"name\") AND (IsUnique \"name\") AND (IsPrimaryKey \"name\")");
+        assertEquals(modified.getNestedRules().size(), 3);
+    }
+
+    @Test
+    void test_withCondition() throws InvalidDataQualityRulesetException {
+        DQRuleset ruleset = parser.parse("Rules = [RowCount > 20, RowCount > 10 + 10]");
+
+        DQRule simple = ruleset.getRules().get(0);
+        DQRule dynamic = ruleset.getRules().get(1);
+
+        Condition simplified = simple.getCondition();
+        assertEquals(simplified.getFormattedCondition(), "> 20");
+
+        DQRule modified = dynamic.withCondition(simplified);
+
+        // The original rule hasn't been modified
+        assertEquals(dynamic.toString(), "RowCount > 10 + 10");
+
+        // The modified rule uses the simplified condition
+        assertEquals(modified.toString(), "RowCount > 20");
+    }
+
     @Disabled
     void test_nullParametersAreCorrectlyHandled() {
         Map<String, String> parameters = null;

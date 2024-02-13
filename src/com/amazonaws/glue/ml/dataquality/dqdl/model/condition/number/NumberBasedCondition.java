@@ -39,6 +39,7 @@ public class NumberBasedCondition extends Condition {
         this.operands = operands;
     }
 
+    @Override
     public Boolean evaluate(Double metric, DQRule dqRule, OperandEvaluator evaluator) {
         if (operands == null) return false;
 

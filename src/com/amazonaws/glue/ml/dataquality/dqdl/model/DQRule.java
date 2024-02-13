@@ -11,7 +11,9 @@
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -26,6 +28,7 @@ import static com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils.isBlank;
 @AllArgsConstructor
 @Getter
 @EqualsAndHashCode
+@Builder(toBuilder = true, access = AccessLevel.PRIVATE)
 public class DQRule implements Serializable, HasRuleTypeAndParameters {
     private final String ruleType;
     private final Map<String, String> parameters;
@@ -125,6 +128,14 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
             whereClause,
             ruleType.isExcludedRowLevelInCompositeRules()
         );
+    }
+
+    public DQRule withNestedRules(final List<DQRule> nestedRules) {
+        return this.toBuilder().nestedRules(nestedRules).build();
+    }
+
+    public DQRule withCondition(final Condition condition) {
+        return this.toBuilder().condition(condition).build();
     }
 
     @Override
