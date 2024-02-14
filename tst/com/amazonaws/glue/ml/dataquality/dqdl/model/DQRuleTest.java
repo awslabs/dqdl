@@ -458,6 +458,32 @@ class DQRuleTest {
         assertEquals(rule.getWhereClause(), whereClause);
     }
 
+    @Test
+    void test_constructorWithParametersAndCondition() {
+        String ruleType = "IsComplete";
+        String columnKey = "TargetColumn";
+        String column = "colA";
+        String emptyCondition = "";
+
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put(columnKey, column);
+
+        Condition condition = new Condition(emptyCondition);
+        Condition thresholdCondition = new Condition(emptyCondition);
+
+        DQRule rule = new DQRule(ruleType, parameters, condition, thresholdCondition);
+        assertEquals(ruleType, rule.getRuleType());
+
+        assertTrue(rule.getParameters().containsKey(columnKey));
+        assertEquals(column, rule.getParameters().get(columnKey));
+        assertTrue(rule.getParameterValueMap().containsKey(columnKey));
+        assertEquals(column, rule.getParameterValueMap().get(columnKey).getValue());
+        assertTrue(rule.getParameterValueMap().get(columnKey).getConnectorWord().isEmpty());
+        assertTrue(rule.getParameterValueMap().get(columnKey).isQuoted());
+        assertTrue(rule.getCondition().getConditionAsString().isEmpty());
+        assertTrue(rule.getThresholdCondition().getConditionAsString().isEmpty());
+    }
+
     @Disabled
     void test_nullParametersAreCorrectlyHandled() {
         Map<String, String> parameters = null;

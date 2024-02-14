@@ -303,7 +303,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
         return Either.fromRight(
             DQRule.createFromParameterValueMap(
-                dqRuleType.getRuleTypeName(), parameterMap, condition, thresholdCondition, whereClause)
+                dqRuleType, parameterMap, condition, thresholdCondition, whereClause)
         );
     }
 

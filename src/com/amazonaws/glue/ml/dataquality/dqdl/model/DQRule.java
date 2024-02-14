@@ -35,6 +35,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
     private final DQRuleLogicalOperator operator;
     private final List<DQRule> nestedRules;
     private final String whereClause;
+    private Boolean isCompositeRuleEvaluationRowLevelSupported = true;
 
     // Adding this constructor so as to not break the Data Quality ETL package.
     public DQRule(final String ruleType,
@@ -84,7 +85,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
     }
 
     // Can't overload the constructor above, due to type erasure
-    public static DQRule createFromParameterValueMap(final String ruleType,
+    public static DQRule createFromParameterValueMap(final DQRuleType ruleType,
                                                      final LinkedHashMap<String, DQRuleParameterValue> parameters,
                                                      final Condition condition) {
         return createFromParameterValueMap(ruleType, parameters, condition, null, null);
@@ -105,7 +106,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
     }
 
     // Can't overload the constructor above, due to type erasure
-    public static DQRule createFromParameterValueMap(final String ruleType,
+    public static DQRule createFromParameterValueMap(final DQRuleType ruleType,
                                                      final LinkedHashMap<String, DQRuleParameterValue> parameters,
                                                      final Condition condition,
                                                      final Condition thresholdCondition,
@@ -114,14 +115,15 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
         List<DQRule> nestedRules = new ArrayList<>();
 
         return new DQRule(
-            ruleType,
+            ruleType.getRuleTypeName(),
             DQRuleParameterValue.createParameterMap(parameters),
             parameters,
             condition,
             thresholdCondition,
             operator,
             nestedRules,
-            whereClause
+            whereClause,
+            ruleType.isCompositeRuleEvaluationRowLevelSupported()
         );
     }
 

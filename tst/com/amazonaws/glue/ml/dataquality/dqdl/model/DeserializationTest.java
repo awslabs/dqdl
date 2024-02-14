@@ -76,6 +76,7 @@ public class DeserializationTest {
         String ruleTypeDesc = "This rule matches two datasets";
         String returnType = "STRING";
         boolean isThresholdSupported = true;
+        boolean isCompositeRuleEvaluationRowLevelSupported = false;
 
         // Parameter 1
         String param1Type = "String";
@@ -98,15 +99,18 @@ public class DeserializationTest {
                 "\"description\":\"%s\"," +
                 "\"parameters\": [ %s, %s ]," +
                 "\"return_type\": \"%s\"," +
-                "\"is_threshold_supported\": %s" +
+                "\"is_threshold_supported\": \"%s\"," +
+                "\"is_composite_rule_evaluation_row_level_supported\": %s" +
             "}",
-            ruleTypeName, ruleTypeDesc, param1Json, param2Json, returnType, isThresholdSupported);
+            ruleTypeName, ruleTypeDesc, param1Json, param2Json, returnType, isThresholdSupported,
+                isCompositeRuleEvaluationRowLevelSupported);
 
         DQRuleType ruleType = new ObjectMapper().readValue(json, DQRuleType.class);
         assertEquals(ruleTypeName, ruleType.getRuleTypeName());
         assertEquals(ruleTypeDesc, ruleType.getDescription());
         assertEquals(returnType, ruleType.getReturnType());
         assertEquals(isThresholdSupported, ruleType.isThresholdSupported());
+        assertEquals(isCompositeRuleEvaluationRowLevelSupported, ruleType.isCompositeRuleEvaluationRowLevelSupported());
 
         DQRuleParameter param1 = ruleType.getParameters().get(0);
         assertEquals(param1Type, param1.getType());
