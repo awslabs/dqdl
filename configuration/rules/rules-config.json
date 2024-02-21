@@ -38,7 +38,7 @@
         }
       ],
       "return_type": "NUMBER",
-      "is_composite_rule_evaluation_row_level_supported": false,
+      "is_excluded_at_row_level_in_composite_rules": true,
       "scope": "column"
     },
     {
@@ -66,7 +66,6 @@
       ],
       "return_type": "STRING",
       "is_threshold_supported": true,
-      "is_composite_rule_evaluation_row_level_supported": false,
       "scope": "column"
     },
     {
@@ -124,7 +123,7 @@
         }
       ],
       "return_type": "NUMBER",
-      "is_composite_rule_evaluation_row_level_supported": false,
+      "is_excluded_at_row_level_in_composite_rules": true,
       "scope": "column"
     },
     {
@@ -177,7 +176,7 @@
         }
       ],
       "return_type": "NUMBER",
-      "is_composite_rule_evaluation_row_level_supported": false,
+      "is_excluded_at_row_level_in_composite_rules": true,
       "scope": "column"
     },
     {
@@ -258,7 +257,6 @@
       ],
       "return_type": "STRING_ARRAY|NUMBER_ARRAY|DATE_ARRAY",
       "is_threshold_supported": true,
-      "is_composite_rule_evaluation_row_level_supported": false,
       "scope": "column"
     },
     {
@@ -286,7 +284,6 @@
       ],
       "return_type": "NUMBER|BOOLEAN",
       "is_threshold_supported": true,
-      "is_composite_rule_evaluation_row_level_supported": false,
       "scope": "table"
     },
     {
@@ -305,7 +302,7 @@
         }
       ],
       "return_type": "NUMBER",
-      "is_composite_rule_evaluation_row_level_supported": false,
+      "is_excluded_at_row_level_in_composite_rules": true,
       "scope": "table"
     },
     {
@@ -324,7 +321,7 @@
         }
       ],
       "return_type": "NUMBER",
-      "is_composite_rule_evaluation_row_level_supported": false,
+      "is_excluded_at_row_level_in_composite_rules": true,
       "scope": "table"
     },
     {
