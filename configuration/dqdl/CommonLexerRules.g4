@@ -13,6 +13,9 @@ RPAREN: ')';
 AND: 'and' | 'AND';
 OR: 'or' | 'OR';
 OF: 'of' | 'OF';
+NULL: 'null' | 'NULL';
+EMPTY: 'empty' | 'EMPTY';
+WHITESPACES_ONLY: 'whitespaces_only' | 'WHITESPACES_ONLY';
 
 BETWEEN: 'between';
 EQUAL_TO: '=';

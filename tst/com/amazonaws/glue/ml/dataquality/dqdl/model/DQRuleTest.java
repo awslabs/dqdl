@@ -16,6 +16,7 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedCond
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateExpression;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedCondition;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLParser;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -107,6 +108,7 @@ class DQRuleTest {
             Arguments.of("Completeness \"col_1\" between (0.9 * avg(last(10))) and (1.1 * avg(last(10)))"),
             Arguments.of("ColumnDataType \"col_1\" = \"String\""),
             Arguments.of("ColumnDataType \"col_1\" != \"String\""),
+            Arguments.of("ColumnDataType \"col_2\" = \"Integer\""),
             Arguments.of("ColumnDataType \"col_1\" = \"String\" with threshold between 0.4 and 0.8"),
             Arguments.of("ColumnDataType \"col_1\" in [\"Date\",\"String\"]"),
             Arguments.of("ColumnDataType \"col_1\" in [\"Date\",\"String\"] with threshold > 0.9"),
@@ -160,6 +162,19 @@ class DQRuleTest {
             Arguments.of("ColumnValues \"col-A\" in [\"A\",\"B\"] with threshold <= 0.4"),
             Arguments.of("ColumnValues \"col-A\" in [1,2,3] with threshold > 0.98"),
             Arguments.of("ColumnValues \"col-A\" = \"A\" with threshold > 0.98"),
+            Arguments.of("ColumnValues \"col-A\" = NULL"),
+            Arguments.of("ColumnValues \"col-A\" = EMPTY"),
+            Arguments.of("ColumnValues \"col-A\" = WHITESPACES_ONLY"),
+            Arguments.of("ColumnValues \"col-A\" != NULL"),
+            Arguments.of("ColumnValues \"col-A\" != EMPTY"),
+            Arguments.of("ColumnValues \"col-A\" != WHITESPACES_ONLY"),
+            Arguments.of("ColumnValues \"col-A\" in [\"a\",NULL]"),
+            Arguments.of("ColumnValues \"col-A\" in [\"a\",NULL]"),
+            Arguments.of("ColumnValues \"col-A\" not in [\"a\",NULL]"),
+            Arguments.of("ColumnValues \"col-A\" in [\"a\",NULL,EMPTY,WHITESPACES_ONLY]"),
+            Arguments.of("ColumnValues \"col-A\" in [NULL,EMPTY,WHITESPACES_ONLY]"),
+            Arguments.of("(ColumnValues \"col-A\" not in [NULL,EMPTY,WHITESPACES_ONLY]) OR (ColumnValues \"col-B\" != WHITESPACES_ONLY)"),
+            Arguments.of("(ColumnValues \"col-A\" in [NULL,EMPTY,WHITESPACES_ONLY]) AND (ColumnValues \"col-B\" != WHITESPACES_ONLY)"),
             Arguments.of("ColumnValues \"col-A\" <= 0.4 with threshold between 0.4 and 0.8"),
             Arguments.of("ColumnValues \"col-A\" <= 0.4 with threshold not between 0.4 and 0.8"),
             Arguments.of("ColumnValues \"col-A\" > 0.4 with threshold > 0.4"),
@@ -231,10 +246,9 @@ class DQRuleTest {
         assertEquals(1, dqRuleset.getRules().size());
         DQRule dqRule = dqRuleset.getRules().get(0);
         assertEquals(StringBasedCondition.class, dqRule.getCondition().getClass());
+        List<String> stringList = constructOperandsAsStringList(dqRule);
         assertEquals(
-            Collections.singletonList("ColumnValues in [ \"col-A\" ]"),
-            ((StringBasedCondition) dqRule.getCondition()).getOperands()
-        );
+            Collections.singletonList("ColumnValues in [ \"col-A\" ]"), stringList);
     }
 
     @Test
@@ -259,7 +273,8 @@ class DQRuleTest {
         assertEquals(1, dqRuleset.getRules().size());
         DQRule dqRule = dqRuleset.getRules().get(0);
         assertEquals(StringBasedCondition.class, dqRule.getCondition().getClass());
-        assertEquals(Arrays.asList("a\"b", "c", "d\"e"), ((StringBasedCondition) dqRule.getCondition()).getOperands());
+        List<String> stringList = constructOperandsAsStringList(dqRule);
+        assertEquals(Arrays.asList("a\"b", "c", "d\"e"), stringList);
     }
 
     @Test
@@ -268,7 +283,8 @@ class DQRuleTest {
         assertEquals(1, dqRuleset.getRules().size());
         DQRule dqRule = dqRuleset.getRules().get(0);
         assertEquals(StringBasedCondition.class, dqRule.getCondition().getClass());
-        assertEquals(Arrays.asList("a,,b", "c", "d,,,e"), ((StringBasedCondition) dqRule.getCondition()).getOperands());
+        List<String> stringList = constructOperandsAsStringList(dqRule);
+        assertEquals(Arrays.asList("a,,b", "c", "d,,,e"), stringList);
     }
 
     @Test
@@ -278,11 +294,20 @@ class DQRuleTest {
         assertEquals(1, dqRuleset.getRules().size());
         DQRule dqRule = dqRuleset.getRules().get(0);
         assertEquals(StringBasedCondition.class, dqRule.getCondition().getClass());
-        assertEquals(Arrays.asList("A", "B"), ((StringBasedCondition) dqRule.getCondition()).getOperands());
+        List<String> stringList = constructOperandsAsStringList(dqRule);
+        assertEquals(Arrays.asList("A", "B"), stringList);
         byte[] serialized = serialize(dqRule);
         DQRule deserialized = deserialize(serialized, DQRule.class);
         assertEquals(dqRule.toString(), deserialized.toString());
         assertEquals(StringBasedCondition.class, deserialized.getCondition().getClass());
+    }
+
+    private static List<String> constructOperandsAsStringList(DQRule dqRule) {
+        List<StringOperand> stringOperandsList = ((StringBasedCondition) dqRule.getCondition()).getOperands();
+        List<String> stringList = stringOperandsList.stream()
+            .map(StringOperand::getOperand)
+            .collect(Collectors.toList());
+        return stringList;
     }
 
     @Test

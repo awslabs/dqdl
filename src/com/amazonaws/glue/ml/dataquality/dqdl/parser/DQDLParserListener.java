@@ -28,14 +28,20 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.FunctionCal
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedConditionOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumericOperand;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.QuotedStringOperand;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.KeywordStringOperand;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Keyword;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedConditionOperator;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleset;
 import com.amazonaws.glue.ml.dataquality.dqdl.util.Either;
 import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageBaseListener;
 import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageParser;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -555,29 +561,69 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         String exprStr = ctx.getText();
         Condition condition = null;
 
-        if (ctx.EQUAL_TO() != null && ctx.quotedString() != null) {
+        if (ctx.EQUAL_TO() != null && ctx.stringValues() != null) {
             StringBasedConditionOperator op = (ctx.NEGATION() != null) ?
                 StringBasedConditionOperator.NOT_EQUALS
                 : StringBasedConditionOperator.EQUALS;
-            condition = new StringBasedCondition(exprStr, op,
-                Collections.singletonList(removeQuotes(ctx.quotedString().QUOTED_STRING().getText())));
+            Optional<StringOperand> operand = parseStringOperand(ctx, Optional.of(ctx.stringValues()), op);
+            if (operand.isPresent()) {
+                condition = new StringBasedCondition(exprStr, op, Collections.singletonList(operand.get()));
+            }
         } else if (ctx.IN() != null &&
-            ctx.quotedStringArray() != null &&
-            ctx.quotedStringArray().quotedString().size() > 0) {
+            ctx.stringValuesArray() != null &&
+            ctx.stringValuesArray().stringValues().size() > 0) {
             StringBasedConditionOperator op = (ctx.NOT() != null) ?
                 StringBasedConditionOperator.NOT_IN
                 : StringBasedConditionOperator.IN;
+            List<Optional<StringOperand>> operands = ctx.stringValuesArray().stringValues()
+                .stream()
+                .map(s -> parseStringOperand(ctx, Optional.of(s), op))
+                .collect(Collectors.toList());
+
             condition = new StringBasedCondition(exprStr, op,
-                ctx.quotedStringArray().quotedString().stream()
-                    .map(s -> removeQuotes(removeEscapes(s.getText())))
-                    .collect(Collectors.toList())
+                operands.stream().map(Optional::get).collect(Collectors.toList())
             );
         } else if (ctx.matchesRegexCondition() != null) {
-            condition = new StringBasedCondition(exprStr, StringBasedConditionOperator.MATCHES,
-                Collections.singletonList(removeQuotes(ctx.matchesRegexCondition().quotedString().getText())));
+            StringBasedConditionOperator op = StringBasedConditionOperator.MATCHES;
+            Optional<StringOperand> operand = parseStringOperand(ctx, Optional.ofNullable(ctx.stringValues()), op);
+            if (operand.isPresent()) {
+                condition = new StringBasedCondition(exprStr, op, Collections.singletonList(operand.get()));
+            }
         }
 
         return Optional.ofNullable(condition);
+    }
+
+    private Optional<StringOperand> parseStringOperand(
+        DataQualityDefinitionLanguageParser.StringBasedConditionContext ctx,
+        Optional<DataQualityDefinitionLanguageParser.StringValuesContext>
+        stringValuesContext, StringBasedConditionOperator op) {
+
+        switch (op) {
+            case NOT_EQUALS:
+            case EQUALS:
+                Keyword keyword = parseKeyword(stringValuesContext.get());
+                if (keyword == null) {
+                    return Optional.of(new QuotedStringOperand(
+                        removeQuotes(stringValuesContext.get().quotedString().getText())));
+                } else {
+                    return Optional.of(new KeywordStringOperand(keyword));
+                }
+            case NOT_IN:
+            case IN:
+                keyword = parseKeyword(stringValuesContext.get());
+                if (keyword == null) {
+                    return Optional.of(new QuotedStringOperand(
+                        removeQuotes(removeEscapes(stringValuesContext.get().quotedString().getText()))));
+                } else {
+                    return Optional.of(new KeywordStringOperand(keyword));
+                }
+            case MATCHES:
+                return Optional.of(new QuotedStringOperand(
+                        removeQuotes(ctx.matchesRegexCondition().quotedString().getText())));
+            default:
+                return Optional.empty();
+        }
     }
 
     private Optional<Condition> parseDateBasedCondition(
@@ -808,4 +854,33 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
         return dictionaryErrors;
     }
+
+    private Keyword parseKeyword(
+        DataQualityDefinitionLanguageParser.StringValuesContext stringValuesContext) {
+        Keyword keyword = null;
+        try {
+            String operand = stringValuesContext.getText().toUpperCase();
+            if (isValidEnumValue(operand)) {
+                Method method = stringValuesContext.getClass().getMethod(operand);
+                Object result = method.invoke(stringValuesContext);
+                if (result != null) {
+                    keyword = Keyword.valueOf(operand);
+                }
+            }
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchMethodException |
+                 InvocationTargetException e) {
+            errorMessages.add(e.getMessage());
+        }
+        return keyword;
+    }
+
+    private boolean isValidEnumValue(String value) {
+        try {
+            Enum.valueOf(Keyword.class, value);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
 }

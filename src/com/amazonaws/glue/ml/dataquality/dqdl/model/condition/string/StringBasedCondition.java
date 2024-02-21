@@ -22,11 +22,11 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true)
 public class StringBasedCondition extends Condition {
     private final StringBasedConditionOperator operator;
-    private final List<String> operands;
+    private final List<StringOperand> operands;
 
     public StringBasedCondition(final String conditionAsString,
                                 final StringBasedConditionOperator operator,
-                                final List<String> operands) {
+                                final List<StringOperand> operands) {
         super(conditionAsString);
         this.operator = operator;
         this.operands = operands;
@@ -38,11 +38,11 @@ public class StringBasedCondition extends Condition {
 
         switch (operator) {
             case MATCHES:
-                return String.format("matches %s", formatOperand(operands.get(0)));
+                return String.format("matches %s", operands.get(0).formatOperand());
             case EQUALS:
-                return String.format("= %s", formatOperand(operands.get(0)));
+                return String.format("= %s", operands.get(0).formatOperand());
             case NOT_EQUALS:
-                return String.format("!= %s", formatOperand(operands.get(0)));
+                return String.format("!= %s", operands.get(0).formatOperand());
             case IN: {
                 List<String> formattedOperands = getFormattedOperands();
                 return String.format("in [%s]", String.join(",", formattedOperands));
@@ -60,12 +60,8 @@ public class StringBasedCondition extends Condition {
 
     private List<String> getFormattedOperands() {
         List<String> formattedOperands = operands.stream()
-            .map(this::formatOperand)
+            .map(StringOperand::formatOperand)
             .collect(Collectors.toList());
         return formattedOperands;
-    }
-
-    private String formatOperand(String operand) {
-        return "\"" + operand + "\"";
     }
 }

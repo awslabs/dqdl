@@ -58,10 +58,11 @@ numberBasedCondition:
     | NEGATION? EQUAL_TO number
     | NOT? IN numberArray;
 
-quotedStringArray: LBRAC quotedString (COMMA quotedString)* RBRAC;
+stringValues : quotedString | NULL | EMPTY | WHITESPACES_ONLY;
+stringValuesArray: LBRAC stringValues (COMMA stringValues)* RBRAC;
 stringBasedCondition:
-    NEGATION? EQUAL_TO quotedString
-    | NOT? IN quotedStringArray
+    NEGATION? EQUAL_TO stringValues
+    | NOT? IN stringValuesArray
     | matchesRegexCondition;
 
 dateExpressionArray: LBRAC dateExpression (COMMA dateExpression)* RBRAC;
