@@ -38,7 +38,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
     private final DQRuleLogicalOperator operator;
     private final List<DQRule> nestedRules;
     private final String whereClause;
-    private Boolean isExcludedRowLevelInCompositeRules = false;
+    private Boolean isExcludedAtRowLevelInCompositeRules = false;
 
     // Adding this constructor so as to not break the Data Quality ETL package.
     public DQRule(final String ruleType,
@@ -126,7 +126,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
             operator,
             nestedRules,
             whereClause,
-            ruleType.isExcludedRowLevelInCompositeRules()
+            ruleType.isExcludedAtRowLevelInCompositeRules()
         );
     }
 

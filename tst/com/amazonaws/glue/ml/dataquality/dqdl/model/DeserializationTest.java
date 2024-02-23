@@ -76,7 +76,7 @@ public class DeserializationTest {
         String ruleTypeDesc = "This rule matches two datasets";
         String returnType = "STRING";
         boolean isThresholdSupported = true;
-        boolean isExcludedRowLevelInCompositeRules = true;
+        boolean isExcludedAtRowLevelInCompositeRules = true;
 
         // Parameter 1
         String param1Type = "String";
@@ -103,14 +103,14 @@ public class DeserializationTest {
                 "\"is_excluded_at_row_level_in_composite_rules\": %s" +
             "}",
             ruleTypeName, ruleTypeDesc, param1Json, param2Json, returnType, isThresholdSupported,
-                isExcludedRowLevelInCompositeRules);
+                isExcludedAtRowLevelInCompositeRules);
 
         DQRuleType ruleType = new ObjectMapper().readValue(json, DQRuleType.class);
         assertEquals(ruleTypeName, ruleType.getRuleTypeName());
         assertEquals(ruleTypeDesc, ruleType.getDescription());
         assertEquals(returnType, ruleType.getReturnType());
         assertEquals(isThresholdSupported, ruleType.isThresholdSupported());
-        assertEquals(isExcludedRowLevelInCompositeRules, ruleType.isExcludedRowLevelInCompositeRules());
+        assertEquals(isExcludedAtRowLevelInCompositeRules, ruleType.isExcludedAtRowLevelInCompositeRules());
 
         DQRuleParameter param1 = ruleType.getParameters().get(0);
         assertEquals(param1Type, param1.getType());
@@ -129,7 +129,7 @@ public class DeserializationTest {
         String ruleTypeDesc = "This rule matches two datasets";
         String returnType = "STRING";
         boolean isThresholdSupported = false;
-        boolean isExcludedRowLevelInCompositeRules = false;
+        boolean isExcludedAtRowLevelInCompositeRules = false;
 
         // Parameter 1
         String param1Type = "String";
@@ -159,7 +159,7 @@ public class DeserializationTest {
         assertEquals(ruleTypeDesc, ruleType.getDescription());
         assertEquals(returnType, ruleType.getReturnType());
         assertEquals(isThresholdSupported, ruleType.isThresholdSupported());
-        assertEquals(isExcludedRowLevelInCompositeRules, ruleType.isExcludedRowLevelInCompositeRules());
+        assertEquals(isExcludedAtRowLevelInCompositeRules, ruleType.isExcludedAtRowLevelInCompositeRules());
 
         DQRuleParameter param1 = ruleType.getParameters().get(0);
         assertEquals(param1Type, param1.getType());

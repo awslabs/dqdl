@@ -176,7 +176,6 @@
         }
       ],
       "return_type": "NUMBER",
-      "is_excluded_at_row_level_in_composite_rules": true,
       "scope": "column"
     },
     {
