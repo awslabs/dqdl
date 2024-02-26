@@ -154,13 +154,14 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
                 if (!isBlank(formattedCondition)) sb.append(" ").append(condition.getFormattedCondition());
             }
 
+            // where clause syntax should go before threshold
+            if (whereClause != null) {
+                if (!isBlank(whereClause)) sb.append(" where ").append("\"" + whereClause + "\"");
+            }
+
             if (thresholdCondition != null) {
                 String formattedCondition = thresholdCondition.getFormattedCondition();
                 if (!isBlank(formattedCondition)) sb.append(" with threshold ").append(formattedCondition);
-            }
-
-            if (whereClause != null) {
-                if (!isBlank(whereClause)) sb.append(" where ").append("\"" + whereClause + "\"");
             }
 
             return sb.toString();

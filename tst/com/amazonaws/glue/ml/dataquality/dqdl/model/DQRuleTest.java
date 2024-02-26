@@ -428,12 +428,33 @@ class DQRuleTest {
     }
 
     @Test
+    public void test_whereClauseWithThreshold() throws InvalidDataQualityRulesetException {
+        String rule = "ColumnValues \"colA\" in [10,20] where \"colB is NOT NULL\" with threshold > 0.5";
+        String ruleset = String.format("Rules = [ %s ]", rule);
+
+        DQRuleset dqRuleset1 = parser.parse(ruleset);
+
+        assertEquals(dqRuleset1.getRules().get(0).toString(), rule);
+    }
+
+    @Test
     void test_whereClauseRuleToStringFromRule() throws InvalidDataQualityRulesetException {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("TargetColumn", "colA");
         DQRule dqRule = new DQRule("IsComplete", parameters, new Condition(""), null,
                 DQRuleLogicalOperator.AND, null, "colB is NOT NULL");
         String ruleString = "IsComplete \"colA\" where \"colB is NOT NULL\"";
+        assertEquals(dqRule.toString(), ruleString);
+        assertEquals(dqRule.getWhereClause(), "colB is NOT NULL");
+    }
+
+    @Test
+    void test_whereClauseRuleToStringFromRuleWithThreshold() throws InvalidDataQualityRulesetException {
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("TargetColumn", "colA");
+        DQRule dqRule = new DQRule("ColumnValues", parameters, new Condition("in [10,20]"), new Condition("> 0.5"),
+                DQRuleLogicalOperator.AND, null, "colB is NOT NULL");
+        String ruleString = "ColumnValues \"colA\" in [10,20] where \"colB is NOT NULL\" with threshold > 0.5";
         assertEquals(dqRule.toString(), ruleString);
         assertEquals(dqRule.getWhereClause(), "colB is NOT NULL");
     }
