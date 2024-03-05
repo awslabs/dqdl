@@ -588,7 +588,9 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                 operands.stream().map(Optional::get).collect(Collectors.toList())
             );
         } else if (ctx.matchesRegexCondition() != null) {
-            StringBasedConditionOperator op = StringBasedConditionOperator.MATCHES;
+            StringBasedConditionOperator op = (ctx.NOT() != null) ?
+                StringBasedConditionOperator.NOT_MATCHES
+                : StringBasedConditionOperator.MATCHES;
             Optional<StringOperand> operand = parseStringOperand(ctx, Optional.ofNullable(ctx.stringValues()), op);
             if (operand.isPresent()) {
                 condition = new StringBasedCondition(exprStr, op, Collections.singletonList(operand.get()));
@@ -623,6 +625,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                     return Optional.of(new KeywordStringOperand(keyword));
                 }
             case MATCHES:
+            case NOT_MATCHES:
                 return Optional.of(new QuotedStringOperand(
                         removeQuotes(ctx.matchesRegexCondition().quotedString().getText())));
             default:

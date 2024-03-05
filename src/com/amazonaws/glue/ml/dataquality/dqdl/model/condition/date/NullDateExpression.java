@@ -1,5 +1,5 @@
 /*
- * NullNumericOperand.java
+ * NullDateExpression.java
  *
  * Copyright (c) 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *

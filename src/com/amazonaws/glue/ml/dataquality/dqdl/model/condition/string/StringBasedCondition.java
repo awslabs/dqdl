@@ -39,6 +39,8 @@ public class StringBasedCondition extends Condition {
         switch (operator) {
             case MATCHES:
                 return String.format("matches %s", operands.get(0).formatOperand());
+            case NOT_MATCHES:
+                return String.format("not matches %s", operands.get(0).formatOperand());
             case EQUALS:
                 return String.format("= %s", operands.get(0).formatOperand());
             case NOT_EQUALS:

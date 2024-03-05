@@ -65,7 +65,7 @@ stringValuesArray: LBRAC stringValues (COMMA stringValues)* RBRAC;
 stringBasedCondition:
     NEGATION? EQUAL_TO stringValues
     | NOT? IN stringValuesArray
-    | matchesRegexCondition;
+    | NOT? matchesRegexCondition;
 
 dateExpressionArray: LBRAC dateExpression (COMMA dateExpression)* RBRAC;
 dateBasedCondition:

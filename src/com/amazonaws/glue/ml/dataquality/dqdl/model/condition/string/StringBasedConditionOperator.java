@@ -15,5 +15,6 @@ public enum StringBasedConditionOperator {
     NOT_EQUALS,
     IN,
     NOT_IN,
-    MATCHES
+    MATCHES,
+    NOT_MATCHES
 }
