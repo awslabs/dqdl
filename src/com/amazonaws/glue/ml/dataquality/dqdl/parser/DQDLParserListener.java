@@ -18,6 +18,7 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedConditionOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateExpression;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.NullDateExpression;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.Duration;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationBasedConditionOperator;
@@ -25,6 +26,7 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationU
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.AtomicNumberOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.BinaryExpressionOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.FunctionCallOperand;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NullNumericOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedConditionOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumericOperand;
@@ -550,6 +552,8 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             return parseNumericOperand(numberContext.number(0), true);
         } else if (numberContext.atomicNumber() != null) {
             return Optional.of(new AtomicNumberOperand(numberContext.getText()));
+        } else if (numberContext.NULL() != null) {
+            return Optional.of(new NullNumericOperand(numberContext.getText()));
         }
 
         return Optional.empty();
@@ -797,6 +801,8 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             ));
         } else if (ctx.dateNow() != null) {
             return Optional.of(new DateExpression.CurrentDate());
+        } else if (ctx.NULL() != null) {
+            return Optional.of(new NullDateExpression());
         } else {
             return Optional.of(new DateExpression.StaticDate(removeQuotes(ctx.DATE().getText())));
         }

@@ -18,7 +18,8 @@ dateExpressionOp: ('-' | '+');
 dateExpression:
 	DATE
 	| dateNow
-	| LPAREN dateNow dateExpressionOp durationExpression RPAREN;
+	| LPAREN dateNow dateExpressionOp durationExpression RPAREN
+	| NULL;
 
 atomicNumber:
 	DIGIT
@@ -42,7 +43,8 @@ number:
     number numberOp number
     | functionCall
     | LPAREN number RPAREN
-    | atomicNumber;
+    | atomicNumber
+    | NULL;
 
 quotedString: QUOTED_STRING;
 
