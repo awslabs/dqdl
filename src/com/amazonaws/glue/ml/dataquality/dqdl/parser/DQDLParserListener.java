@@ -300,12 +300,16 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
         String whereClause = null;
         if (dqRuleContext.whereClause() != null) {
-            DataQualityDefinitionLanguageParser.WhereClauseContext ctx = dqRuleContext.whereClause();
-            if (ctx.quotedString().getText().isEmpty() || ctx.quotedString().getText().equals("\"\"")) {
-                return Either.fromLeft(
-                    String.format("Empty where condition provided for rule type: %s", ruleType));
+            if (dqRuleType.isWhereClauseSupported()) {
+                DataQualityDefinitionLanguageParser.WhereClauseContext ctx = dqRuleContext.whereClause();
+                if (ctx.quotedString().getText().isEmpty() || ctx.quotedString().getText().equals("\"\"")) {
+                    return Either.fromLeft(
+                            String.format("Empty where condition provided for rule type: %s", ruleType));
+                } else {
+                    whereClause = removeQuotes(ctx.quotedString().getText());
+                }
             } else {
-                whereClause = removeQuotes(ctx.quotedString().getText());
+                return Either.fromLeft(String.format("Where clause is not supported for rule type: %s", ruleType));
             }
         }
 

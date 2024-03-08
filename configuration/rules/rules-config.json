@@ -5,6 +5,7 @@
       "description": "Check the number of rows in the dataset",
       "parameters": [],
       "return_type": "NUMBER",
+      "is_where_clause_supported": true,
       "scope": "table"
     },
     {
@@ -39,6 +40,7 @@
       ],
       "return_type": "NUMBER",
       "is_excluded_at_row_level_in_composite_rules": true,
+      "is_where_clause_supported": true,
       "scope": "column"
     },
     {
@@ -52,6 +54,7 @@
         }
       ],
       "return_type": "BOOLEAN",
+      "is_where_clause_supported": true,
       "scope": "column"
     },
     {
@@ -66,6 +69,7 @@
       ],
       "return_type": "STRING",
       "is_threshold_supported": true,
+      "is_where_clause_supported": true,
       "scope": "column"
     },
     {
@@ -110,6 +114,7 @@
         }
       ],
       "return_type": "NUMBER",
+      "is_where_clause_supported": true,
       "scope": "column"
     },
     {
@@ -124,6 +129,7 @@
       ],
       "return_type": "NUMBER",
       "is_excluded_at_row_level_in_composite_rules": true,
+      "is_where_clause_supported": true,
       "scope": "column"
     },
     {
@@ -137,6 +143,7 @@
         }
       ],
       "return_type": "BOOLEAN",
+      "is_where_clause_supported": true,
       "scope": "column"
     },
     {
@@ -150,6 +157,7 @@
         }
       ],
       "return_type": "NUMBER",
+      "is_where_clause_supported": true,
       "scope": "column"
     },
     {
@@ -163,6 +171,7 @@
         }
       ],
       "return_type": "NUMBER",
+      "is_where_clause_supported": true,
       "scope": "column"
     },
     {
@@ -176,6 +185,7 @@
         }
       ],
       "return_type": "NUMBER",
+      "is_where_clause_supported": true,
       "scope": "column"
     },
     {
@@ -189,6 +199,7 @@
         }
       ],
       "return_type": "NUMBER",
+      "is_where_clause_supported": true,
       "scope": "column"
     },
     {
@@ -202,6 +213,7 @@
         }
       ],
       "return_type": "NUMBER",
+      "is_where_clause_supported": true,
       "scope": "column"
     },
     {
@@ -215,6 +227,7 @@
         }
       ],
       "return_type": "NUMBER",
+      "is_where_clause_supported": true,
       "scope": "column"
     },
     {
@@ -228,6 +241,7 @@
         }
       ],
       "return_type": "NUMBER",
+      "is_where_clause_supported": true,
       "scope": "column"
     },
     {
@@ -242,6 +256,7 @@
         }
       ],
       "return_type": "BOOLEAN",
+      "is_where_clause_supported": true,
       "scope": "column"
     },
     {
@@ -256,6 +271,7 @@
       ],
       "return_type": "STRING_ARRAY|NUMBER_ARRAY|DATE_ARRAY",
       "is_threshold_supported": true,
+      "is_where_clause_supported": true,
       "scope": "column"
     },
     {
@@ -269,6 +285,7 @@
         }
       ],
       "return_type": "DURATION_ARRAY",
+      "is_where_clause_supported": true,
       "scope": "column"
     },
     {

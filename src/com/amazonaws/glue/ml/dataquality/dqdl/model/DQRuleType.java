@@ -33,6 +33,7 @@ public class DQRuleType {
     private final String returnType;
     private final boolean isThresholdSupported;
     private final boolean isExcludedAtRowLevelInCompositeRules;
+    private final boolean isWhereClauseSupported;
     private final boolean isAnalyzerOnly;
     private final String scope;
     private final boolean isExperimental;
@@ -46,6 +47,8 @@ public class DQRuleType {
                       @JsonProperty(value = "is_threshold_supported") boolean isThresholdSupported,
                       @JsonProperty(value = "is_excluded_at_row_level_in_composite_rules")
                           boolean isExcludedAtRowLevelInCompositeRules,
+                      @JsonProperty(value = "is_where_clause_supported")
+                          boolean isWhereClauseSupported,
                       @JsonProperty(value = "is_analyzer_only") boolean isAnalyzerOnly,
                       @JsonProperty(value = "scope") String scope,
                       @JsonProperty(value = "experimental") boolean isExperimental) {
@@ -55,6 +58,7 @@ public class DQRuleType {
         this.returnType = returnType;
         this.isThresholdSupported = isThresholdSupported;
         this.isExcludedAtRowLevelInCompositeRules = isExcludedAtRowLevelInCompositeRules;
+        this.isWhereClauseSupported = isWhereClauseSupported;
         this.isAnalyzerOnly = isAnalyzerOnly;
         this.scope = scope;
         this.isExperimental = isExperimental;
