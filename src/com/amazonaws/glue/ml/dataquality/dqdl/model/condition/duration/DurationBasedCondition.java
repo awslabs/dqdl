@@ -11,6 +11,7 @@
 package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
+import com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -58,11 +59,11 @@ public class DurationBasedCondition extends Condition {
                 return String.format("!= %s", operands.get(0).getFormattedDuration());
             case IN: {
                 List<String> formattedOperands = getFormattedOperands();
-                return String.format("in [%s]", String.join(", ", formattedOperands));
+                return String.format("in [%s]", String.join(",", formattedOperands));
             }
             case NOT_IN: {
                 List<String> formattedOperands = getFormattedOperands();
-                return String.format("not in [%s]", String.join(", ", formattedOperands));
+                return String.format("not in [%s]", String.join(",", formattedOperands));
             }
             default:
                 break;
@@ -71,7 +72,25 @@ public class DurationBasedCondition extends Condition {
         return "";
     }
 
+    @Override
+    public String getSortedFormattedCondition() {
+        if (StringUtils.isBlank(conditionAsString)) return "";
+
+        switch (operator) {
+            case IN:
+                return String.format("in [%s]", String.join(",", getSortedFormattedOperands()));
+            case NOT_IN:
+                return String.format("not in [%s]", String.join(",", getSortedFormattedOperands()));
+            default:
+                return getFormattedCondition();
+        }
+    }
+
     private List<String> getFormattedOperands() {
         return operands.stream().map(Duration::getFormattedDuration).collect(Collectors.toList());
+    }
+
+    private List<String> getSortedFormattedOperands() {
+        return operands.stream().map(Duration::getFormattedDuration).sorted().collect(Collectors.toList());
     }
 }

@@ -60,10 +60,32 @@ public class StringBasedCondition extends Condition {
         return "";
     }
 
+    @Override
+    public String getSortedFormattedCondition() {
+        if (StringUtils.isBlank(conditionAsString)) return "";
+
+        switch (operator) {
+            case IN:
+                return String.format("in [%s]", String.join(",", getSortedFormattedOperands()));
+            case NOT_IN:
+                return String.format("not in [%s]", String.join(",", getSortedFormattedOperands()));
+            default:
+                return getFormattedCondition();
+        }
+    }
+
     private List<String> getFormattedOperands() {
         List<String> formattedOperands = operands.stream()
             .map(StringOperand::formatOperand)
             .collect(Collectors.toList());
+        return formattedOperands;
+    }
+
+    private List<String> getSortedFormattedOperands() {
+        List<String> formattedOperands = operands.stream()
+                .map(StringOperand::formatOperand)
+                .sorted()
+                .collect(Collectors.toList());
         return formattedOperands;
     }
 }

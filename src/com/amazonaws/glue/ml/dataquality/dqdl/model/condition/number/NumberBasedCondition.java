@@ -19,6 +19,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.DecimalFormat;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -158,10 +159,31 @@ public class NumberBasedCondition extends Condition {
         return "";
     }
 
+    @Override
+    public String getSortedFormattedCondition() {
+        if (StringUtils.isBlank(conditionAsString)) return "";
+
+        switch (operator) {
+            case IN:
+                return String.format("in [%s]", getSortedFormattedOperands());
+            case NOT_IN:
+                return String.format("not in [%s]", getSortedFormattedOperands());
+            default:
+                return getFormattedCondition();
+        }
+    }
+
     private String getFormattedOperands() {
         return operands.stream()
             .map(NumericOperand::toString)
             .collect(Collectors.joining(","));
+    }
+
+    private String getSortedFormattedOperands() {
+        return operands.stream()
+                .map(NumericOperand::toString)
+                .sorted(Comparator.comparingDouble(Double::parseDouble))
+                .collect(Collectors.joining(","));
     }
 
     protected boolean isOperandEqualToMetric(Double metric, Double operand) {

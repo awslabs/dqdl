@@ -30,6 +30,9 @@ public class Condition implements Serializable {
         return this.conditionAsString;
     }
 
+    public String getSortedFormattedCondition() {
+        return this.conditionAsString;
+    }
     public Boolean evaluate(Double metric, DQRule dqRule, OperandEvaluator evaluator) {
         throw new UnsupportedOperationException();
     }
