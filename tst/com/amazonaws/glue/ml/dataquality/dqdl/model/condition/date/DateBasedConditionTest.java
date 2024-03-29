@@ -12,6 +12,7 @@ package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.Duration;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationUnit;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.KeywordStringOperand;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -20,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.Stream;
 
+import static com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Keyword.NULL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DateBasedConditionTest {
@@ -253,6 +255,20 @@ public class DateBasedConditionTest {
                     ),
                     "not in [\"2023-01-01\",\"2022-01-01\",\"2021-01-01\",\"2020-01-01\"]",
                     "not in [\"2020-01-01\",\"2021-01-01\",\"2022-01-01\",\"2023-01-01\"]"
+            ),
+            Arguments.of(
+                    new DateBasedCondition(
+                            "in[\"2023-01-01\",\"2022-01-01\",\"2021-01-01\",NULL]",
+                            DateBasedConditionOperator.IN,
+                            Arrays.asList(
+                                    new DateExpression.StaticDate("2023-01-01"),
+                                    new DateExpression.StaticDate("2022-01-01"),
+                                    new DateExpression.StaticDate("2021-01-01"),
+                                    new NullDateExpression()
+                            )
+                    ),
+                    "in [\"2023-01-01\",\"2022-01-01\",\"2021-01-01\",NULL]",
+                    "in [\"2021-01-01\",\"2022-01-01\",\"2023-01-01\",NULL]"
             )
         );
     }

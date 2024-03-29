@@ -19,7 +19,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.DecimalFormat;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -182,7 +181,17 @@ public class NumberBasedCondition extends Condition {
     private String getSortedFormattedOperands() {
         return operands.stream()
                 .map(NumericOperand::toString)
-                .sorted(Comparator.comparingDouble(Double::parseDouble))
+                .sorted((s1, s2) -> {
+                    if (s1.equalsIgnoreCase("NULL") && s2.equalsIgnoreCase("NULL")) {
+                        return 0; // Treat both NULLs as equal
+                    } else if (s1.equalsIgnoreCase("NULL")) {
+                        return 1; // Treat NULL as greater than any other value
+                    } else if (s2.equalsIgnoreCase("NULL")) {
+                        return -1; // Treat NULL as greater than any other value
+                    } else {
+                        return Double.compare(Double.parseDouble(s1), Double.parseDouble(s2));
+                    }
+                })
                 .collect(Collectors.joining(","));
     }
 

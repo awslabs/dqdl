@@ -17,6 +17,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
+import static com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Keyword.EMPTY;
+import static com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Keyword.NULL;
+import static com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Keyword.WHITESPACES_ONLY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class StringBasedConditionTest {
@@ -50,6 +53,24 @@ public class StringBasedConditionTest {
                         ),
                         "not in [\"d\",\"a\",\"b\",\"c\"]",
                         "not in [\"a\",\"b\",\"c\",\"d\"]"
+                ),
+                // Test for Keyword values
+                Arguments.of(
+                        new StringBasedCondition(
+                                "in[\"z\",\"a\",WHITESPACES_ONLY,EMPTY,\"c\",NULL]",
+                                StringBasedConditionOperator.IN,
+                                Arrays.asList(
+                                        new QuotedStringOperand("z"),
+                                        new QuotedStringOperand("a"),
+                                        new KeywordStringOperand(WHITESPACES_ONLY),
+                                        new KeywordStringOperand(EMPTY),
+                                        new QuotedStringOperand("c"),
+                                        new KeywordStringOperand(NULL)
+                                )
+                        ),
+                        // verifying behavior that quoted strings will be sorted before keywords
+                        "in [\"z\",\"a\",WHITESPACES_ONLY,EMPTY,\"c\",NULL]",
+                        "in [\"a\",\"c\",\"z\",EMPTY,NULL,WHITESPACES_ONLY]"
                 )
         );
     }

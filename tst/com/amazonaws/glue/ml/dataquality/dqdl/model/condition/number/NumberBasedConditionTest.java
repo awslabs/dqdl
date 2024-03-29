@@ -63,6 +63,37 @@ public class NumberBasedConditionTest {
                         ),
                         "not in [15,10,20,5]",
                         "not in [5,10,15,20]"
+                ),
+                Arguments.of(
+                        new NumberBasedCondition(
+                                "in[15,10,NULL,20,5]",
+                                NumberBasedConditionOperator.IN,
+                                Arrays.asList(
+                                        new AtomicNumberOperand("15"),
+                                        new AtomicNumberOperand("10"),
+                                        new NullNumericOperand("NULL"),
+                                        new AtomicNumberOperand("20"),
+                                        new AtomicNumberOperand("5")
+                                )
+                        ),
+                        "in [15,10,NULL,20,5]",
+                        "in [5,10,15,20,NULL]"
+                ),
+                // We don't limit customers from adding multiple NULL keywords
+                Arguments.of(
+                        new NumberBasedCondition(
+                                "in[15,10,NULL,NULL,5]",
+                                NumberBasedConditionOperator.IN,
+                                Arrays.asList(
+                                        new AtomicNumberOperand("15"),
+                                        new AtomicNumberOperand("10"),
+                                        new NullNumericOperand("NULL"),
+                                        new NullNumericOperand("NULL"),
+                                        new AtomicNumberOperand("5")
+                                )
+                        ),
+                        "in [15,10,NULL,NULL,5]",
+                        "in [5,10,15,NULL,NULL]"
                 )
         );
     }
