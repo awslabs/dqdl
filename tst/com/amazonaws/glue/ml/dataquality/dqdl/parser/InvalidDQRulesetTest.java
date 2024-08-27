@@ -99,7 +99,9 @@ public class InvalidDQRulesetTest {
                 Arguments.of("Rules = [ FileFreshness > (now() 3 days) ]"),
                 Arguments.of("Rules = [ FileUniqueness \"PATH\" ]"),
                 Arguments.of("Rules = [ FileUniqueness ]"),
-                Arguments.of("Rules = [ FileSize ]")
+                Arguments.of("Rules = [ FileSize ]"),
+                Arguments.of("(RowCount > 0) OR (IsComplete \"colA\") AND (IsUnique \"colA\"))"),
+                Arguments.of("((RowCount > 0) AND IsComplete")
         );
     }
 

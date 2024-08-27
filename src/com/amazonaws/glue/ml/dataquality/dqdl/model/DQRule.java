@@ -159,7 +159,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
 
             // where clause syntax should go before threshold
             if (whereClause != null) {
-                if (!isBlank(whereClause)) sb.append(" where ").append("\"" + whereClause + "\"");
+                if (!isBlank(whereClause)) sb.append(" where ").append("\"").append(whereClause).append("\"");
             }
 
             if (thresholdCondition != null) {
@@ -178,17 +178,62 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
                 }
             }
 
-
             return sb.toString().trim();
         } else {
-            for (int i = 0; i < nestedRules.size(); i++) {
-                sb.append("(").append(nestedRules.get(i).toString()).append(")");
-                if (i != nestedRules.size() - 1) {
-                    sb.append(" ").append(operator.toString()).append(" ");
+            boolean canBeFlattened = usesSameOperator(operator);
+
+            if (canBeFlattened) {
+                List<DQRule> flattenedListOfRules = getNestedRulesAsFlattenedList();
+                for (int i = 0; i < flattenedListOfRules.size(); i++) {
+                    sb.append("(").append(flattenedListOfRules.get(i).toString()).append(")");
+                    if (i != flattenedListOfRules.size() - 1) {
+                        sb.append(" ").append(operator.toString()).append(" ");
+                    }
+                }
+            } else {
+                for (int i = 0; i < nestedRules.size(); i++) {
+                    sb.append("(").append(nestedRules.get(i).toString()).append(")");
+                    if (i != nestedRules.size() - 1) {
+                        sb.append(" ").append(operator.toString()).append(" ");
+                    }
                 }
             }
         }
 
         return sb.toString();
+    }
+
+    /*
+     * This function checks if the same operator is used across all the nested rules.
+     * Example: (RuleA) or (RuleB) or (RuleC) / (RuleA) and (RuleB) and (RuleC)
+     *
+     * If that is the case, in order to maintain backwards compatibility, we will update
+     * toString() method so that we do not add additional parentheses.
+     */
+    private boolean usesSameOperator(DQRuleLogicalOperator op) {
+        if (nestedRules.isEmpty()) return true;
+        if (operator != op) return false;
+
+        for (DQRule nestedRule : nestedRules) {
+            if (!nestedRule.usesSameOperator(op)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Package private, in order to make it accessible to the tests
+    List<DQRule> getNestedRulesAsFlattenedList() {
+        List<DQRule> ret = new ArrayList<>();
+        if (nestedRules.isEmpty()) {
+            ret.add(this);
+        } else {
+            for (DQRule nestedRule: nestedRules) {
+                List<DQRule> nestedRet = nestedRule.getNestedRulesAsFlattenedList();
+                ret.addAll(nestedRet);
+            }
+        }
+        return ret;
     }
 }

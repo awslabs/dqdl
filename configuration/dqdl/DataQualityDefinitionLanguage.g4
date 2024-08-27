@@ -110,9 +110,10 @@ dqRule: ruleType parameterWithConnectorWord* condition? whereClause? withThresho
 dqAnalyzer: analyzerType parameterWithConnectorWord*;
 
 topLevelRule:
-	dqRule
-	| '(' dqRule ')' (AND '(' dqRule ')')*
-	| '(' dqRule ')' (OR '(' dqRule ')')*;
+    LPAREN topLevelRule RPAREN
+    | topLevelRule AND topLevelRule
+    | topLevelRule OR topLevelRule
+    | dqRule;
 
 // Rules Definition
 dqRules: topLevelRule (COMMA topLevelRule)*;

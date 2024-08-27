@@ -243,7 +243,10 @@ class DQRuleTest {
             Arguments.of("FileSize > 5 with \"unit\" = \"B\""),
             Arguments.of("FileSize < 5 with \"unit\" = \"KB\""),
             Arguments.of("FileSize = 5 with \"unit\" = \"MB\""),
-            Arguments.of("FileSize >= 5 with \"unit\" = \"GB\"")
+            Arguments.of("FileSize >= 5 with \"unit\" = \"GB\""),
+            Arguments.of("(RowCount > 0) OR (IsComplete \"colA\") OR (IsUnique \"colA\")"),
+            Arguments.of("(RowCount > 0) OR ((IsComplete \"colA\") AND (IsUnique \"colA\"))"),
+            Arguments.of("((RowCount > 0) AND (IsComplete \"colB\")) OR ((IsComplete \"colA\") AND (IsUnique \"colA\"))")
         );
     }
 
@@ -717,6 +720,91 @@ class DQRuleTest {
 
         // The modified rule uses the simplified condition
         assertEquals(modified.toString(), "RowCount > 20");
+    }
+
+    @Test
+    void test_withCompositeRuleThatReachesMaxDepth() {
+        Map<String, String> ruleIdToRuleMap = getStringStringMap();
+
+        /*
+                AND
+            Rule1   OR
+                Rule2   AND
+                    Rule3   OR
+                        Rule4   AND
+                            Rule5   Rule6       <----- Depth = 5 which is OK
+         */
+        String compositeRule = "(Rule1) AND ((Rule2) OR ((Rule3) AND ((Rule4) OR ((Rule5) AND (Rule6)))))"; // Template
+        int ruleCount = 6;
+
+        for (int i = 1; i <= ruleCount; i++) {
+            String ruleId = String.format("Rule%s", i);
+            compositeRule = compositeRule.replace(ruleId, ruleIdToRuleMap.get(ruleId));
+        }
+
+        String rulesetString = String.format("Rules = [ %s ]", compositeRule);
+
+        try {
+            DQRuleset ruleset = parser.parse(rulesetString);
+            assertEquals(1, ruleset.getRules().size());
+
+            DQRule actualCompositeRule = ruleset.getRules().get(0);
+            List<DQRule> nestedRules = actualCompositeRule.getNestedRulesAsFlattenedList();
+
+            assertEquals(compositeRule, actualCompositeRule.toString());
+            assertEquals(6, nestedRules.size());
+
+            List<String> nestedRulesAsStrings = nestedRules.stream().map(DQRule::toString).collect(Collectors.toList());
+
+            for (int i = 1; i <= ruleCount; i++) {
+                String ruleId = String.format("Rule%s", i);
+                assertTrue(nestedRulesAsStrings.contains(ruleIdToRuleMap.get(ruleId)));
+            }
+        } catch (InvalidDataQualityRulesetException e) {
+            fail("This rule that reaches max depth should have been successfully parsed");
+        }
+    }
+
+    @Test
+    void test_withCompositeRuleThatBreachesMaxDepth() {
+        Map<String, String> ruleIdToRuleMap = getStringStringMap();
+        /*
+                AND
+            Rule1   OR
+                Rule2   AND
+                    Rule3   OR
+                        Rule4   AND
+                            Rule5   OR
+                                Rule6   Rule 7      <----- Depth = 6 which is not OK
+         */
+        String compositeRule = "(Rule1) AND ((Rule2) OR ((Rule3) OR ((Rule4) OR ((Rule5) AND ((Rule6) OR (Rule7))))))";
+        int ruleCount = 7;
+
+        for (int i = 1; i <= ruleCount; i++) {
+            String ruleId = String.format("Rule%s", i);
+            compositeRule = compositeRule.replace(ruleId, ruleIdToRuleMap.get(ruleId));
+        }
+
+        String rulesetString = String.format("Rules = [ %s ]", compositeRule);
+
+        try {
+            parser.parse(rulesetString);
+            fail("This rule that breaches max depth should have failed to parse");
+        } catch (InvalidDataQualityRulesetException e) {
+            assertTrue(e.getMessage().contains("Maximum nested expression depth"));
+        }
+    }
+
+    private static Map<String, String> getStringStringMap() {
+        Map<String, String> ruleIdToRuleMap = new HashMap<>();
+        ruleIdToRuleMap.put("Rule1", "RowCount > 1");
+        ruleIdToRuleMap.put("Rule2", "Completeness of \"colA\" between 0.4 and 1.0");
+        ruleIdToRuleMap.put("Rule3", "CustomSql \"select count(*) from primary\" = 10");
+        ruleIdToRuleMap.put("Rule4", "ReferentialIntegrity of \"primary.colA\" and \"ref.colA\" = 0.9");
+        ruleIdToRuleMap.put("Rule5", "IsUnique \"id\"");
+        ruleIdToRuleMap.put("Rule6", "ColumnNamesMatchPattern \"[a-zA-Z]*\"");
+        ruleIdToRuleMap.put("Rule7", "SchemaMatch \"ref\" between 0.8 and 0.9");
+        return ruleIdToRuleMap;
     }
 
     @Disabled
