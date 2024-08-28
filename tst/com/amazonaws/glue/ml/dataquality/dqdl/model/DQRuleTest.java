@@ -229,8 +229,33 @@ class DQRuleTest {
             Arguments.of("DetectAnomalies \"RowCount\""),
             Arguments.of("DetectAnomalies of RowCount"),
             Arguments.of("DetectAnomalies of Completeness of \"colA\""),
-            Arguments.of("DetectAnomalies of ColumnCorrelation of \"colA\" and \"colB\"")
+            Arguments.of("DetectAnomalies of ColumnCorrelation of \"colA\" and \"colB\""),
+            Arguments.of("Checksum \"MD5\" \"S3://PATH\" in [\"hashList\"]"),
+            Arguments.of("Checksum \"SHA\" in [\"hashList\",\"hashList\"]")
         );
+    }
+
+    @Test
+    void test_fileBasedRulesParsing() {
+        String checksumRules = "Rules = [ " +
+                "Checksum \"MD5\" \"s3://sampom-bucket/\" in [\"68e656b251e67e8358bef8483ab0d51c6619f3e7a1a9f0e75838d41ff368f728\", \"test\"], " +
+                "Checksum \"SHA256\" in [\"68e656b251e67e8358bef8483ab0d51c6619f3e7a1a9f0e75838d41ff368f728\"] " +
+                "]";
+        try {
+            DQRuleset dqRuleset = parser.parse(checksumRules);
+            List<DQRule> ruleList = dqRuleset.getRules();
+            assertEquals(2, ruleList.size());
+
+            DQRule rule0 = ruleList.get(0);
+            assertEquals("Checksum", rule0.getRuleType());
+            assertEquals(2, rule0.getParameters().size());
+
+            DQRule rule1 = ruleList.get(1);
+            assertEquals("Checksum", rule1.getRuleType());
+            assertEquals(1, rule1.getParameters().size());
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
     }
 
     @Test

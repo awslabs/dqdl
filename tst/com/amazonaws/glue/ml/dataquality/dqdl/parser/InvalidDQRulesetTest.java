@@ -84,7 +84,11 @@ public class InvalidDQRulesetTest {
             Arguments.of("Rules = [ DetectAnomalies ]"),
             Arguments.of("Rules = [ DetectAnomalies \"col-A\"  where \"col-A > 100\"]"),
             Arguments.of("Rules = [ AllStatistics \"id\" > 0 ]"),
-            Arguments.of("Rules = [ AllStatistics \"id\" ]")
+            Arguments.of("Rules = [ Checksum ]"),
+            Arguments.of("Rules = [ Checksum in [] ]"),
+            Arguments.of("Rules = [ Checksum SHA SHA SHA ]"),
+            Arguments.of("Rules = [ Checksum SHA SHA SHA in [] ]"),
+            Arguments.of("Rules = [ Checksum s3Path ]")
         );
     }
 

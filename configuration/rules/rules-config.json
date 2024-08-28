@@ -423,6 +423,41 @@
       "return_type": "NUMBER",
       "scope": "column",
       "experimental": true
+    },
+    {
+      "rule_type_name": "Checksum",
+      "description": "Takes an input file or directory, desired algorithm, and list of expected key(s). Compares generated checksum(s) with input.",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "Algorithm",
+          "description": "Desired Algorithm for the Checksum."
+        },
+        {
+          "type": "String",
+          "name": "Checksums",
+          "description": "List of checksums to validate against."
+        }
+      ],
+      "return_type": "STRING",
+      "is_threshold_supported": false,
+      "is_where_clause_supported": false,
+      "scope": "file"
+    },
+    {
+      "rule_type_name": "Checksum",
+      "description": "Takes a desired algorithm, and list of expected key(s). Compares generated checksum(s) with Dataframe input.",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "Algorithm",
+          "description": "Desired Algorithm for the Checksum."
+        }
+      ],
+      "return_type": "STRING",
+      "is_threshold_supported": false,
+      "is_where_clause_supported": false,
+      "scope": "file"
     }
   ]
 }
