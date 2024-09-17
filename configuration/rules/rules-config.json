@@ -406,8 +406,7 @@
         }
       ],
       "return_type": "BOOLEAN",
-      "scope": "column",
-      "experimental": true
+      "scope": "column"
     },
     {
       "rule_type_name": "AllStatistics",
@@ -421,32 +420,32 @@
         }
       ],
       "return_type": "NUMBER",
-      "scope": "column",
-      "experimental": true
+      "scope": "column"
     },
     {
-      "rule_type_name": "Checksum",
-      "description": "Takes an input file or directory, desired algorithm, and list of expected key(s). Compares generated checksum(s) with input.",
+      "rule_type_name": "FileMatch",
+      "description": "Match Files/Directories against Files/Directories or against an optional list of checksum values.",
       "parameters": [
         {
           "type": "String",
-          "name": "Algorithm",
-          "description": "Desired Algorithm for the Checksum."
+          "name": "Algorithm or DataPath",
+          "description": "Desired Algorithm for the Checksum or File/Directory"
         },
         {
           "type": "String",
-          "name": "Checksums",
-          "description": "List of checksums to validate against."
+          "name": "CompareDataPath",
+          "description": "File/Directory for comparison"
         }
       ],
-      "return_type": "STRING",
+      "return_type": "STRING|BOOLEAN",
       "is_threshold_supported": false,
       "is_where_clause_supported": false,
-      "scope": "file"
+      "scope": "file",
+      "experimental": true
     },
     {
-      "rule_type_name": "Checksum",
-      "description": "Takes a desired algorithm, and list of expected key(s). Compares generated checksum(s) with Dataframe input.",
+      "rule_type_name": "FileMatch",
+      "description": "Match Files/Directories inferred from DataFrames against a list of checksum values.",
       "parameters": [
         {
           "type": "String",
@@ -457,7 +456,24 @@
       "return_type": "STRING",
       "is_threshold_supported": false,
       "is_where_clause_supported": false,
-      "scope": "file"
+      "scope": "file",
+      "experimental": true
+    },
+    {
+      "rule_type_name": "FileUniqueness",
+      "description": "Checks the contents of a folder and the uniqueness of each file within.",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "DataPath",
+          "description": "Data path for FileUniqueness."
+        }
+      ],
+      "return_type": "NUMBER",
+      "is_threshold_supported": false,
+      "is_where_clause_supported": false,
+      "scope": "file",
+      "experimental": true
     }
   ]
 }

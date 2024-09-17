@@ -230,29 +230,41 @@ class DQRuleTest {
             Arguments.of("DetectAnomalies of RowCount"),
             Arguments.of("DetectAnomalies of Completeness of \"colA\""),
             Arguments.of("DetectAnomalies of ColumnCorrelation of \"colA\" and \"colB\""),
-            Arguments.of("Checksum \"MD5\" \"S3://PATH\" in [\"hashList\"]"),
-            Arguments.of("Checksum \"SHA\" in [\"hashList\",\"hashList\"]")
+            Arguments.of("FileMatch \"MD5\" \"S3://PATH\" in [\"hashList\"]"),
+            Arguments.of("FileMatch \"SHA\" in [\"hashList\",\"hashList\"]"),
+            Arguments.of("FileMatch \"S3://PATH1\" \"S3://PATH2\""),
+            Arguments.of("FileUniqueness \"S3://PATH1\" >= 0.9")
         );
     }
 
     @Test
     void test_fileBasedRulesParsing() {
-        String checksumRules = "Rules = [ " +
-                "Checksum \"MD5\" \"s3://sampom-bucket/\" in [\"68e656b251e67e8358bef8483ab0d51c6619f3e7a1a9f0e75838d41ff368f728\", \"test\"], " +
-                "Checksum \"SHA256\" in [\"68e656b251e67e8358bef8483ab0d51c6619f3e7a1a9f0e75838d41ff368f728\"] " +
+        String fileRules = "Rules = [ " +
+                "FileMatch \"MD5\" \"s3://sampom-bucket/\" in [\"68e656b251e67e8358bef8483ab0d51c6619f3e7a1a9f0e75838d41ff368f728\", \"test\"], " +
+                "FileMatch \"SHA256\" in [\"68e656b251e67e8358bef8483ab0d51c6619f3e7a1a9f0e75838d41ff368f728\"], " +
+                "FileMatch \"S3://PATH1\" \"S3://PATH2\"," +
+                "FileUniqueness \"S3://PATH1\" >= 0.9" +
                 "]";
         try {
-            DQRuleset dqRuleset = parser.parse(checksumRules);
+            DQRuleset dqRuleset = parser.parse(fileRules);
             List<DQRule> ruleList = dqRuleset.getRules();
-            assertEquals(2, ruleList.size());
+            assertEquals(4, ruleList.size());
 
             DQRule rule0 = ruleList.get(0);
-            assertEquals("Checksum", rule0.getRuleType());
+            assertEquals("FileMatch", rule0.getRuleType());
             assertEquals(2, rule0.getParameters().size());
 
             DQRule rule1 = ruleList.get(1);
-            assertEquals("Checksum", rule1.getRuleType());
+            assertEquals("FileMatch", rule1.getRuleType());
             assertEquals(1, rule1.getParameters().size());
+
+            DQRule rule2 = ruleList.get(2);
+            assertEquals("FileMatch", rule2.getRuleType());
+            assertEquals(2, rule2.getParameters().size());
+
+            DQRule rule3 = ruleList.get(3);
+            assertEquals("FileUniqueness", rule3.getRuleType());
+            assertEquals(1, rule3.getParameters().size());
         } catch (Exception e) {
             fail(e.getMessage());
         }

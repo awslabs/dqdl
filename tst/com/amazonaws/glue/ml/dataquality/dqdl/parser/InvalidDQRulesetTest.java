@@ -84,11 +84,13 @@ public class InvalidDQRulesetTest {
             Arguments.of("Rules = [ DetectAnomalies ]"),
             Arguments.of("Rules = [ DetectAnomalies \"col-A\"  where \"col-A > 100\"]"),
             Arguments.of("Rules = [ AllStatistics \"id\" > 0 ]"),
-            Arguments.of("Rules = [ Checksum ]"),
-            Arguments.of("Rules = [ Checksum in [] ]"),
-            Arguments.of("Rules = [ Checksum SHA SHA SHA ]"),
-            Arguments.of("Rules = [ Checksum SHA SHA SHA in [] ]"),
-            Arguments.of("Rules = [ Checksum s3Path ]")
+            Arguments.of("Rules = [ FileMatch ]"),
+            Arguments.of("Rules = [ FileMatch in [] ]"),
+            Arguments.of("Rules = [ FileMatch SHA SHA SHA ]"),
+            Arguments.of("Rules = [ FileMatch SHA SHA SHA in [] ]"),
+            Arguments.of("Rules = [ FileMatch s3Path ]"),
+            Arguments.of("Rules = [ FileMatch S3://PATH1 ]"),
+            Arguments.of("Rules = [ FileUniqueness S3://PATH1 S3://PATH1 ]")
         );
     }
 
