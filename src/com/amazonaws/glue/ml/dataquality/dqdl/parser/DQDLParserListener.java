@@ -52,6 +52,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -273,28 +274,75 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             }
         }
 
-        Condition thresholdCondition = null;
-        if (dqRuleContext.withThresholdCondition() != null) {
-            if (dqRuleType.isThresholdSupported()) {
-                DataQualityDefinitionLanguageParser.NumberBasedConditionContext ctx =
-                    dqRuleContext.withThresholdCondition().numberBasedCondition();
+        Condition thresholdCondition = null, hashAlgoCondition = null;
+        Boolean dataFrameCondition = null;
+        List<DataQualityDefinitionLanguageParser.WithConditionContext> conditionContexts =
+            dqRuleContext.withCondition() != null
+                    ? dqRuleContext.withCondition().stream().filter(Objects::nonNull).collect(Collectors.toList())
+                    : Collections.emptyList();
 
-                if (ctx == null) {
-                    return Either.fromLeft(
-                        String.format("Empty threshold condition provided for rule type: %s", ruleType));
-                } else {
-                    Optional<Condition> possibleCond =
-                        parseNumberBasedCondition(dqRuleContext.withThresholdCondition().numberBasedCondition());
-                    if (possibleCond.isPresent()) {
-                        thresholdCondition = possibleCond.get();
-                    } else {
+        for (DataQualityDefinitionLanguageParser.WithConditionContext conditionContext : conditionContexts) {
+            if (conditionContext.withThresholdCondition() != null) {
+                if (dqRuleType.isThresholdSupported()) {
+                    DataQualityDefinitionLanguageParser.NumberBasedConditionContext ctx =
+                            conditionContext.withThresholdCondition().numberBasedCondition();
+
+                    if (ctx == null) {
                         return Either.fromLeft(
-                            String.format("Unable to parse threshold condition provided for rule type: %s", ruleType));
+                                String.format("Empty threshold condition provided for rule type: %s", ruleType));
+                    } else {
+                        Optional<Condition> possibleCond =
+                                parseNumberBasedCondition(conditionContext
+                                        .withThresholdCondition().numberBasedCondition());
+                        if (possibleCond.isPresent()) {
+                            thresholdCondition = possibleCond.get();
+                        } else {
+                            return Either.fromLeft(
+                                    String.format("Unable to parse threshold condition " +
+                                            "provided for rule type: %s", ruleType));
+                        }
                     }
-                }
 
-            } else {
-                return Either.fromLeft(String.format("Threshold condition not supported for rule type: %s", ruleType));
+                } else {
+                    return Either.fromLeft(String.format("Threshold condition not supported " +
+                            "for rule type: %s", ruleType));
+                }
+            }
+
+            if (conditionContext.withHashAlgorithmCondition() != null) {
+                if (dqRuleType.isHashAlgoSupported()) {
+                    DataQualityDefinitionLanguageParser.StringBasedConditionContext ctx =
+                            conditionContext.withHashAlgorithmCondition().stringBasedCondition();
+
+                    if (ctx == null) {
+                        return Either.fromLeft(
+                                String.format("Empty algorithm condition provided for rule type: %s", ruleType));
+                    } else {
+                        Optional<Condition> possibleCond =
+                                parseStringBasedCondition(conditionContext
+                                        .withHashAlgorithmCondition().stringBasedCondition());
+                        if (possibleCond.isPresent()) {
+                            hashAlgoCondition = possibleCond.get();
+                        } else {
+                            return Either.fromLeft(
+                                    String.format("Unable to parse algorithm condition provided for rule type: %s",
+                                            ruleType));
+                        }
+                    }
+                } else {
+                    return Either.fromLeft(String.format("Algorithm condition " +
+                            "not supported for rule type: %s", ruleType));
+                }
+            }
+
+            if (conditionContext.withDataFrameCondition() != null) {
+                //all hashAlgo rules also support inferring from dataframes
+                if (dqRuleType.isHashAlgoSupported()) {
+                    dataFrameCondition = true;
+                } else {
+                    return Either.fromLeft(String.format("DataFrame condition not supported " +
+                            "for rule type: %s", ruleType));
+                }
             }
         }
 
@@ -315,7 +363,8 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
         return Either.fromRight(
             DQRule.createFromParameterValueMap(
-                dqRuleType, parameterMap, condition, thresholdCondition, whereClause)
+                dqRuleType, parameterMap, condition, thresholdCondition, hashAlgoCondition,
+                    whereClause, dataFrameCondition)
         );
     }
 

@@ -35,10 +35,12 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
     private final Map<String, DQRuleParameterValue> parameterValueMap;
     private final Condition condition;
     private final Condition thresholdCondition;
+    private Condition hashAlgoCondition;
     private final DQRuleLogicalOperator operator;
     private final List<DQRule> nestedRules;
     private final String whereClause;
     private Boolean isExcludedAtRowLevelInCompositeRules = false;
+    private Boolean dataFrameCondition;
 
     // Adding this constructor so as to not break the Data Quality ETL package.
     public DQRule(final String ruleType,
@@ -91,7 +93,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
     public static DQRule createFromParameterValueMap(final DQRuleType ruleType,
                                                      final LinkedHashMap<String, DQRuleParameterValue> parameters,
                                                      final Condition condition) {
-        return createFromParameterValueMap(ruleType, parameters, condition, null, null);
+        return createFromParameterValueMap(ruleType, parameters, condition, null, null, null, null);
     }
 
     public DQRule(final String ruleType,
@@ -113,7 +115,9 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
                                                      final LinkedHashMap<String, DQRuleParameterValue> parameters,
                                                      final Condition condition,
                                                      final Condition thresholdCondition,
-                                                     final String whereClause) {
+                                                     final Condition hashAlgoCondition,
+                                                     final String whereClause,
+                                                     final Boolean dataFrameCondition) {
         DQRuleLogicalOperator operator = DQRuleLogicalOperator.AND;
         List<DQRule> nestedRules = new ArrayList<>();
 
@@ -123,10 +127,12 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
             parameters,
             condition,
             thresholdCondition,
+            hashAlgoCondition,
             operator,
             nestedRules,
             whereClause,
-            ruleType.isExcludedAtRowLevelInCompositeRules()
+            ruleType.isExcludedAtRowLevelInCompositeRules(),
+            dataFrameCondition
         );
     }
 
@@ -164,7 +170,16 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
                 if (!isBlank(formattedCondition)) sb.append(" with threshold ").append(formattedCondition);
             }
 
-            return sb.toString();
+            if (hashAlgoCondition != null) {
+                String formattedCondition = hashAlgoCondition.getFormattedCondition();
+                if (!isBlank(formattedCondition)) sb.append(" with hashAlgorithm ").append(formattedCondition);
+            }
+
+            if (dataFrameCondition != null) {
+                if (dataFrameCondition) sb.append(" with dataFrame ");
+            }
+
+            return sb.toString().trim();
         } else {
             for (int i = 0; i < nestedRules.size(); i++) {
                 sb.append("(").append(nestedRules.get(i).toString()).append(")");

@@ -230,44 +230,69 @@ class DQRuleTest {
             Arguments.of("DetectAnomalies of RowCount"),
             Arguments.of("DetectAnomalies of Completeness of \"colA\""),
             Arguments.of("DetectAnomalies of ColumnCorrelation of \"colA\" and \"colB\""),
-            Arguments.of("FileMatch \"MD5\" \"S3://PATH\" in [\"hashList\"]"),
-            Arguments.of("FileMatch \"SHA\" in [\"hashList\",\"hashList\"]"),
+            Arguments.of("FileMatch \"S3://PATH\" in [\"hashList\"]"),
+            Arguments.of("FileMatch \"S3://PATH\" in [\"hashList\",\"hashList\"]"),
+            Arguments.of("FileMatch in [\"hashList\",\"hashList\"]"),
+            Arguments.of("FileMatch \"S3://PATH\" in [\"hashList\",\"hashList\"] with hashAlgorithm = \"MD5\""),
             Arguments.of("FileMatch \"S3://PATH1\" \"S3://PATH2\""),
             Arguments.of("FileUniqueness \"S3://PATH1\" >= 0.9")
         );
     }
 
     @Test
-    void test_fileBasedRulesParsing() {
+    void test_checksumRuleParsing() throws Exception {
         String fileRules = "Rules = [ " +
-                "FileMatch \"MD5\" \"s3://sampom-bucket/\" in [\"68e656b251e67e8358bef8483ab0d51c6619f3e7a1a9f0e75838d41ff368f728\", \"test\"], " +
-                "FileMatch \"SHA256\" in [\"68e656b251e67e8358bef8483ab0d51c6619f3e7a1a9f0e75838d41ff368f728\"], " +
-                "FileMatch \"S3://PATH1\" \"S3://PATH2\"," +
-                "FileUniqueness \"S3://PATH1\" >= 0.9" +
+                "FileMatch in [\"exampleHash\"] with hashAlgorithm = \"MD5\" with dataFrame ," +
+                "FileMatch \"s3://sampom-bucket2/\" in [\"exampleHash2\"] with hashAlgorithm = \"SHA-256\" ," +
+                "FileMatch \"s3://sampom-bucket3/\" in [\"exampleHash3\"] ," +
+                "FileMatch in [\"exampleHash4\"] with dataFrame" +
                 "]";
-        try {
-            DQRuleset dqRuleset = parser.parse(fileRules);
-            List<DQRule> ruleList = dqRuleset.getRules();
-            assertEquals(4, ruleList.size());
+        DQRuleset dqRuleset = parser.parse(fileRules);
+        List<DQRule> ruleList = dqRuleset.getRules();
 
-            DQRule rule0 = ruleList.get(0);
-            assertEquals("FileMatch", rule0.getRuleType());
-            assertEquals(2, rule0.getParameters().size());
+        DQRule rule0 = ruleList.get(0);
+        assertEquals("FileMatch", rule0.getRuleType());
+        assertEquals("exampleHash", ((StringBasedCondition) rule0.getCondition()).getOperands().get(0).getOperand());
+        assertEquals("MD5", ((StringBasedCondition) rule0.getHashAlgoCondition()).getOperands().get(0).getOperand());
+        assertEquals(true, rule0.getDataFrameCondition());
 
-            DQRule rule1 = ruleList.get(1);
-            assertEquals("FileMatch", rule1.getRuleType());
-            assertEquals(1, rule1.getParameters().size());
+        DQRule rule1 = ruleList.get(1);
+        assertEquals("FileMatch", rule1.getRuleType());
+        assertEquals("s3://sampom-bucket2/", rule1.getParameters().get("DataPath"));
+        assertEquals("exampleHash2", ((StringBasedCondition) rule1.getCondition()).getOperands().get(0).getOperand());
+        assertEquals("SHA-256", ((StringBasedCondition) rule1.getHashAlgoCondition()).getOperands().get(0).getOperand());
+        assertEquals(null, rule1.getDataFrameCondition());
 
-            DQRule rule2 = ruleList.get(2);
-            assertEquals("FileMatch", rule2.getRuleType());
-            assertEquals(2, rule2.getParameters().size());
+        DQRule rule2 = ruleList.get(2);
+        assertEquals("FileMatch", rule2.getRuleType());
+        assertEquals("s3://sampom-bucket3/", rule2.getParameters().get("DataPath"));
+        assertEquals("exampleHash3", ((StringBasedCondition) rule2.getCondition()).getOperands().get(0).getOperand());
+        assertEquals(null, rule2.getDataFrameCondition());
 
-            DQRule rule3 = ruleList.get(3);
-            assertEquals("FileUniqueness", rule3.getRuleType());
-            assertEquals(1, rule3.getParameters().size());
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
+        DQRule rule3 = ruleList.get(3);
+        assertEquals("FileMatch", rule3.getRuleType());
+        assertEquals("exampleHash4", ((StringBasedCondition) rule3.getCondition()).getOperands().get(0).getOperand());
+        assertEquals(true, rule3.getDataFrameCondition());
+    }
+
+    @Test
+    void test_fileMatchRuleParsing() throws Exception {
+        String fileRules = "Rules = [ " +
+                "FileMatch \"s3://sampom-bucket1/\" \"s3://sampom-bucket2/\"," +
+                "FileMatch \"s3://sampom-bucket1/file1.json\" \"s3://sampom-bucket2/file2.json\"" +
+                "]";
+        DQRuleset dqRuleset = parser.parse(fileRules);
+        List<DQRule> ruleList = dqRuleset.getRules();
+
+        DQRule rule0 = ruleList.get(0);
+        assertEquals("FileMatch", rule0.getRuleType());
+        assertEquals("s3://sampom-bucket1/", rule0.getParameters().get("DataPath"));
+        assertEquals("s3://sampom-bucket2/", rule0.getParameters().get("CompareDataPath"));
+
+        DQRule rule1 = ruleList.get(1);
+        assertEquals("FileMatch", rule0.getRuleType());
+        assertEquals("s3://sampom-bucket1/file1.json", rule1.getParameters().get("DataPath"));
+        assertEquals("s3://sampom-bucket2/file2.json", rule1.getParameters().get("CompareDataPath"));
     }
 
     @Test

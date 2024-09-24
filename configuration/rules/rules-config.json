@@ -424,22 +424,23 @@
     },
     {
       "rule_type_name": "FileMatch",
-      "description": "Match Files/Directories against Files/Directories or against an optional list of checksum values.",
+      "description": "Match Files/Directories against Files/Directories.",
       "parameters": [
         {
           "type": "String",
-          "name": "Algorithm or DataPath",
-          "description": "Desired Algorithm for the Checksum or File/Directory"
+          "name": "DataPath",
+          "description": "File/Directory for comparison"
         },
         {
           "type": "String",
           "name": "CompareDataPath",
-          "description": "File/Directory for comparison"
+          "description": "Other File/Directory for comparison"
         }
       ],
-      "return_type": "STRING|BOOLEAN",
+      "return_type": "BOOLEAN",
       "is_threshold_supported": false,
       "is_where_clause_supported": false,
+      "is_hash_algo_supported": true,
       "scope": "file",
       "experimental": true
     },
@@ -449,13 +450,25 @@
       "parameters": [
         {
           "type": "String",
-          "name": "Algorithm",
-          "description": "Desired Algorithm for the Checksum."
+          "name": "DataPath",
+          "description": "File/Directory for comparison"
         }
       ],
       "return_type": "STRING",
       "is_threshold_supported": false,
       "is_where_clause_supported": false,
+      "is_hash_algo_supported": true,
+      "scope": "file",
+      "experimental": true
+    },
+    {
+      "rule_type_name": "FileMatch",
+      "description": "Match Files/Directories inferred from DataFrames against a list of checksum values.",
+      "parameters": [],
+      "return_type": "STRING",
+      "is_threshold_supported": false,
+      "is_where_clause_supported": false,
+      "is_hash_algo_supported": true,
       "scope": "file",
       "experimental": true
     },
@@ -472,6 +485,7 @@
       "return_type": "NUMBER",
       "is_threshold_supported": false,
       "is_where_clause_supported": false,
+      "is_hash_algo_supported": true,
       "scope": "file",
       "experimental": true
     }

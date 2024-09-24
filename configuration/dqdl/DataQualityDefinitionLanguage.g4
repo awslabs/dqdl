@@ -101,10 +101,13 @@ condition:
 	| durationBasedCondition;
 
 withThresholdCondition: 'with' 'threshold' numberBasedCondition;
+withHashAlgorithmCondition: 'with' 'hashAlgorithm' stringBasedCondition;
+withDataFrameCondition: 'with' 'dataFrame';
+withCondition: withThresholdCondition | withHashAlgorithmCondition | withDataFrameCondition;
 
 whereClause: 'where' quotedString;
 
-dqRule: ruleType parameterWithConnectorWord* condition? whereClause? withThresholdCondition?;
+dqRule: ruleType parameterWithConnectorWord* condition? whereClause? withCondition? withCondition?;
 dqAnalyzer: analyzerType parameterWithConnectorWord*;
 
 topLevelRule:
