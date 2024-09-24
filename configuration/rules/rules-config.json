@@ -479,7 +479,7 @@
         {
           "type": "String",
           "name": "DataPath",
-          "description": "Data path for FileUniqueness."
+          "description": "Data Path for FileUniqueness."
         }
       ],
       "return_type": "NUMBER",

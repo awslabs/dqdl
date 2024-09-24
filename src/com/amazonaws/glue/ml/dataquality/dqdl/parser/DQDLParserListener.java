@@ -281,6 +281,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                     ? dqRuleContext.withCondition().stream().filter(Objects::nonNull).collect(Collectors.toList())
                     : Collections.emptyList();
 
+        //TODO - reduce complexity
         for (DataQualityDefinitionLanguageParser.WithConditionContext conditionContext : conditionContexts) {
             if (conditionContext.withThresholdCondition() != null) {
                 if (dqRuleType.isThresholdSupported()) {
