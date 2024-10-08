@@ -66,6 +66,7 @@ stringBasedCondition:
     NEGATION? EQUAL_TO stringValues
     | NOT? IN stringValuesArray
     | NOT? matchesRegexCondition;
+tagValues: quotedString | IDENTIFIER;
 
 dateExpressionArray: LBRAC dateExpression (COMMA dateExpression)* RBRAC;
 dateBasedCondition:
@@ -93,6 +94,7 @@ parameter: QUOTED_STRING
            | IDENTIFIER;
 connectorWord: OF | AND;
 parameterWithConnectorWord: connectorWord? parameter;
+tagWithCondition: 'with' tagValues stringBasedCondition;
 
 condition:
     numberBasedCondition
@@ -101,13 +103,10 @@ condition:
 	| durationBasedCondition;
 
 withThresholdCondition: 'with' 'threshold' numberBasedCondition;
-withHashAlgorithmCondition: 'with' 'hashAlgorithm' stringBasedCondition;
-withDataFrameCondition: 'with' 'dataFrame';
-withCondition: withThresholdCondition | withHashAlgorithmCondition | withDataFrameCondition;
 
 whereClause: 'where' quotedString;
 
-dqRule: ruleType parameterWithConnectorWord* condition? whereClause? withCondition? withCondition?;
+dqRule: ruleType parameterWithConnectorWord* condition? whereClause? withThresholdCondition? tagWithCondition*;
 dqAnalyzer: analyzerType parameterWithConnectorWord*;
 
 topLevelRule:

@@ -10,10 +10,14 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.parser;
 
+import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageBaseListener;
+import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageParser;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQAnalyzer;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleLogicalOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleParameterValue;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleType;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleset;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedConditionOperator;
@@ -30,17 +34,14 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NullNumeric
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedConditionOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumericOperand;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.QuotedStringOperand;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.KeywordStringOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Keyword;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.KeywordStringOperand;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.QuotedStringOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedConditionOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringOperand;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleset;
 import com.amazonaws.glue.ml.dataquality.dqdl.util.Either;
-import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageBaseListener;
-import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageParser;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -52,7 +53,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -274,76 +274,29 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             }
         }
 
-        Condition thresholdCondition = null, hashAlgoCondition = null;
-        Boolean dataFrameCondition = null;
-        List<DataQualityDefinitionLanguageParser.WithConditionContext> conditionContexts =
-            dqRuleContext.withCondition() != null
-                    ? dqRuleContext.withCondition().stream().filter(Objects::nonNull).collect(Collectors.toList())
-                    : Collections.emptyList();
+        Condition thresholdCondition = null;
+        if (dqRuleContext.withThresholdCondition() != null) {
+            if (dqRuleType.isThresholdSupported()) {
+                DataQualityDefinitionLanguageParser.NumberBasedConditionContext ctx =
+                        dqRuleContext.withThresholdCondition().numberBasedCondition();
 
-        //TODO - reduce complexity
-        for (DataQualityDefinitionLanguageParser.WithConditionContext conditionContext : conditionContexts) {
-            if (conditionContext.withThresholdCondition() != null) {
-                if (dqRuleType.isThresholdSupported()) {
-                    DataQualityDefinitionLanguageParser.NumberBasedConditionContext ctx =
-                            conditionContext.withThresholdCondition().numberBasedCondition();
-
-                    if (ctx == null) {
-                        return Either.fromLeft(
-                                String.format("Empty threshold condition provided for rule type: %s", ruleType));
+                if (ctx == null) {
+                    return Either.fromLeft(
+                            String.format("Empty threshold condition provided for rule type: %s", ruleType));
+                } else {
+                    Optional<Condition> possibleCond =
+                            parseNumberBasedCondition(dqRuleContext.withThresholdCondition().numberBasedCondition());
+                    if (possibleCond.isPresent()) {
+                        thresholdCondition = possibleCond.get();
                     } else {
-                        Optional<Condition> possibleCond =
-                                parseNumberBasedCondition(conditionContext
-                                        .withThresholdCondition().numberBasedCondition());
-                        if (possibleCond.isPresent()) {
-                            thresholdCondition = possibleCond.get();
-                        } else {
-                            return Either.fromLeft(
-                                    String.format("Unable to parse threshold condition " +
-                                            "provided for rule type: %s", ruleType));
-                        }
-                    }
-
-                } else {
-                    return Either.fromLeft(String.format("Threshold condition not supported " +
-                            "for rule type: %s", ruleType));
-                }
-            }
-
-            if (conditionContext.withHashAlgorithmCondition() != null) {
-                if (dqRuleType.isHashAlgoSupported()) {
-                    DataQualityDefinitionLanguageParser.StringBasedConditionContext ctx =
-                            conditionContext.withHashAlgorithmCondition().stringBasedCondition();
-
-                    if (ctx == null) {
                         return Either.fromLeft(
-                                String.format("Empty algorithm condition provided for rule type: %s", ruleType));
-                    } else {
-                        Optional<Condition> possibleCond =
-                                parseStringBasedCondition(conditionContext
-                                        .withHashAlgorithmCondition().stringBasedCondition());
-                        if (possibleCond.isPresent()) {
-                            hashAlgoCondition = possibleCond.get();
-                        } else {
-                            return Either.fromLeft(
-                                    String.format("Unable to parse algorithm condition provided for rule type: %s",
-                                            ruleType));
-                        }
+                                String.format("Unable to parse threshold condition provided for rule type: %s",
+                                        ruleType));
                     }
-                } else {
-                    return Either.fromLeft(String.format("Algorithm condition " +
-                            "not supported for rule type: %s", ruleType));
                 }
-            }
 
-            if (conditionContext.withDataFrameCondition() != null) {
-                //all hashAlgo rules also support inferring from dataframes
-                if (dqRuleType.isHashAlgoSupported()) {
-                    dataFrameCondition = true;
-                } else {
-                    return Either.fromLeft(String.format("DataFrame condition not supported " +
-                            "for rule type: %s", ruleType));
-                }
+            } else {
+                return Either.fromLeft(String.format("Threshold condition not supported for rule type: %s", ruleType));
             }
         }
 
@@ -362,11 +315,40 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             }
         }
 
+        Map<String, String> tags = new HashMap<>();
+        List<DataQualityDefinitionLanguageParser.TagWithConditionContext> tagContexts =
+                dqRuleContext.tagWithCondition();
+        if (tagContexts != null && !tagContexts.isEmpty()) {
+            for (DataQualityDefinitionLanguageParser.TagWithConditionContext tagContext : tagContexts) {
+                if (!isTagValid(tagContext.stringBasedCondition())) {
+                    return Either.fromLeft("Only EQUAL_TO condition is supported for tags.");
+                }
+                String tagKey = getKeyFromTag(tagContext.tagValues());
+                Optional<Condition> valueCondition = parseStringBasedCondition(tagContext.stringBasedCondition());
+                if (valueCondition.isPresent()) {
+                    StringBasedCondition stringCondition = (StringBasedCondition) valueCondition.get();
+                    String tagValue = stringCondition.getOperands().get(0).getOperand();
+                    tags.put(tagKey, tagValue);
+                } else {
+                    return Either.fromLeft(String.format("Error while parsing tag: %s", tagKey));
+                }
+            }
+        }
+
         return Either.fromRight(
-            DQRule.createFromParameterValueMap(
-                dqRuleType, parameterMap, condition, thresholdCondition, hashAlgoCondition,
-                    whereClause, dataFrameCondition)
+                DQRule.createFromParameterValueMap(
+                        dqRuleType, parameterMap, condition, thresholdCondition, whereClause, tags)
         );
+    }
+
+    private boolean isTagValid(DataQualityDefinitionLanguageParser.StringBasedConditionContext ctx) {
+        return ctx.EQUAL_TO() != null;
+    }
+
+    private String getKeyFromTag(DataQualityDefinitionLanguageParser.TagValuesContext tagValuesContext) {
+        Optional<String> identifierKey = Optional.ofNullable(tagValuesContext.IDENTIFIER()).map(ParseTree::getText);
+        Optional<String> stringKey = Optional.ofNullable(tagValuesContext.quotedString()).map(ParseTree::getText);
+        return removeQuotes(identifierKey.orElseGet(stringKey::get));
     }
 
     private Either<String, DQAnalyzer> getDQAnalyzer(
