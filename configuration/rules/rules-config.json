@@ -440,7 +440,6 @@
       "return_type": "BOOLEAN",
       "is_threshold_supported": false,
       "is_where_clause_supported": false,
-      "is_hash_algo_supported": true,
       "scope": "file",
       "experimental": true
     },
@@ -457,7 +456,6 @@
       "return_type": "STRING",
       "is_threshold_supported": false,
       "is_where_clause_supported": false,
-      "is_hash_algo_supported": true,
       "scope": "file",
       "experimental": true
     },
@@ -468,7 +466,6 @@
       "return_type": "STRING",
       "is_threshold_supported": false,
       "is_where_clause_supported": false,
-      "is_hash_algo_supported": true,
       "scope": "file",
       "experimental": true
     },
@@ -485,7 +482,32 @@
       "return_type": "NUMBER",
       "is_threshold_supported": false,
       "is_where_clause_supported": false,
-      "is_hash_algo_supported": true,
+      "scope": "file",
+      "experimental": true
+    },
+    {
+      "rule_type_name": "FileFreshness",
+      "description": "Checks the age of a filepath against a specified date.",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "DataPath",
+          "description": "Data Path for FileFreshness."
+        }
+      ],
+      "return_type": "DATE",
+      "is_threshold_supported": true,
+      "is_where_clause_supported": false,
+      "scope": "file",
+      "experimental": true
+    },
+    {
+      "rule_type_name": "FileFreshness",
+      "description": "Checks the age of an inferred file against a specified date.",
+      "parameters": [],
+      "return_type": "DATE",
+      "is_threshold_supported": true,
+      "is_where_clause_supported": false,
       "scope": "file",
       "experimental": true
     }

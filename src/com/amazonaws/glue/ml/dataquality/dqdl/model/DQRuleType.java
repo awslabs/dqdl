@@ -32,7 +32,6 @@ public class DQRuleType {
     private final List<DQRuleParameter> parameters;
     private final String returnType;
     private final boolean isThresholdSupported;
-    private final boolean isHashAlgoSupported;
     private final boolean isExcludedAtRowLevelInCompositeRules;
     private final boolean isWhereClauseSupported;
     private final boolean isAnalyzerOnly;
@@ -46,7 +45,6 @@ public class DQRuleType {
                       @JsonProperty(value = "return_type") String returnType,
                       // boolean defaults to false if not present
                       @JsonProperty(value = "is_threshold_supported") boolean isThresholdSupported,
-                      @JsonProperty(value = "is_hash_algo_supported") boolean isHashAlgoSupported,
                       @JsonProperty(value = "is_excluded_at_row_level_in_composite_rules")
                           boolean isExcludedAtRowLevelInCompositeRules,
                       @JsonProperty(value = "is_where_clause_supported")
@@ -59,7 +57,6 @@ public class DQRuleType {
         this.parameters = parameters;
         this.returnType = returnType;
         this.isThresholdSupported = isThresholdSupported;
-        this.isHashAlgoSupported = isHashAlgoSupported;
         this.isExcludedAtRowLevelInCompositeRules = isExcludedAtRowLevelInCompositeRules;
         this.isWhereClauseSupported = isWhereClauseSupported;
         this.isAnalyzerOnly = isAnalyzerOnly;

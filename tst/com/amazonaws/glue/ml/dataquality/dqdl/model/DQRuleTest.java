@@ -235,8 +235,50 @@ class DQRuleTest {
             Arguments.of("FileMatch \"S3://PATH1\" \"S3://PATH2\" with \"randomTagThing\" = \"@sampom\""),
             Arguments.of("FileMatch \"S3://PATH1\" in [\"a\"] with \"tag1\" = \"sampom\" with \"tag2\" = \"pomsam\""),
             Arguments.of("FileMatch \"S3://PATH1\" \"S3://PATH2\""),
-            Arguments.of("FileUniqueness \"S3://PATH1\" >= 0.9")
+            Arguments.of("FileUniqueness \"S3://PATH1\" >= 0.9"),
+            Arguments.of("FileFreshness \"S3://PATH\" between \"2023-02-07\" and \"2024-07-15\""),
+            Arguments.of("FileFreshness \"S3://PATH\" > (now() - 3 days)")
         );
+    }
+
+    @Test
+    void test_fileFileFreshnessParsing() throws Exception {
+        String fileRules = "Rules = [ " +
+                "FileFreshness \"S3://path\" between \"2023-02-07\" and \"2024-07-15\", " +
+                "FileFreshness \"S3://path\" > (now() - 3 days), " +
+                "FileFreshness \"S3://path\" < (now() - 4 days), " +
+                "FileFreshness between \"2023-02-07\" and \"2024-07-15\" " +
+                "]";
+        DQRuleset dqRuleset = parser.parse(fileRules);
+        List<DQRule> ruleList = dqRuleset.getRules();
+        DQRule rule0 = ruleList.get(0);
+
+        DateBasedCondition c0 = (DateBasedCondition) rule0.getCondition();
+        assertEquals("FileFreshness", rule0.getRuleType());
+        assertEquals("S3://path", rule0.getParameters().get("DataPath"));
+        assertEquals("2023-02-07", removeQuotes(c0.getOperands().get(0).getFormattedExpression()));
+        assertEquals("2024-07-15", removeQuotes(c0.getOperands().get(1).getFormattedExpression()));
+
+        DQRule rule1 = ruleList.get(1);
+        DateBasedCondition c1 = (DateBasedCondition) rule1.getCondition();
+        assertEquals("FileFreshness", rule1.getRuleType());
+        assertEquals("S3://path", rule1.getParameters().get("DataPath"));
+        assertEquals("GREATER_THAN", c1.getOperator().toString());
+        assertEquals("(now() - 3 days)", c1.getOperands().get(0).getFormattedExpression());
+
+        DQRule rule2 = ruleList.get(2);
+        DateBasedCondition c2 = (DateBasedCondition) rule2.getCondition();
+        assertEquals("FileFreshness", rule2.getRuleType());
+        assertEquals("S3://path", rule2.getParameters().get("DataPath"));
+        assertEquals("LESS_THAN", c2.getOperator().toString());
+        assertEquals("(now() - 4 days)", c2.getOperands().get(0).getFormattedExpression());
+
+        DQRule rule3 = ruleList.get(3);
+        DateBasedCondition c3 = (DateBasedCondition) rule3.getCondition();
+        assertEquals("FileFreshness", rule3.getRuleType());
+        assertFalse(rule3.getParameters().containsKey("DataPath"));
+        assertEquals("2023-02-07", removeQuotes(c3.getOperands().get(0).getFormattedExpression()));
+        assertEquals("2024-07-15", removeQuotes(c3.getOperands().get(1).getFormattedExpression()));
     }
 
     @Test
@@ -704,5 +746,13 @@ class DQRuleTest {
         ObjectInputStream objectStream = new ObjectInputStream(stream);
         Object o = objectStream.readObject();
         return cls.cast(o);
+    }
+
+    private String removeQuotes(String quotedString) {
+        if (quotedString.startsWith("\"") && quotedString.endsWith("\"")) {
+            quotedString = quotedString.substring(1);
+            quotedString = quotedString.substring(0, quotedString.length() - 1);
+        }
+        return quotedString;
     }
 }
