@@ -79,7 +79,7 @@ public class DateExpressionTest {
         DateExpression.DateExpressionOperator operator =
             DateExpression.DateExpressionOperator.PLUS;
 
-        LocalDateTime currentDate = LocalDateTime.now();
+        LocalDateTime currentDate = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
         DateExpression.CurrentDateExpression currentDateExpression =
             new DateExpression.CurrentDateExpression(operator, duration);
 

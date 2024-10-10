@@ -14,6 +14,7 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.Duration;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationUnit;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -55,6 +56,7 @@ public abstract class DateExpression implements Serializable {
         PLUS
     }
 
+    @Getter
     @AllArgsConstructor
     public static class CurrentDateExpression extends DateExpression {
         private final DateExpressionOperator operator;
@@ -78,7 +80,7 @@ public abstract class DateExpression implements Serializable {
                 ? duration.getAmount() * 24
                 : duration.getAmount();
 
-            LocalDateTime dt = LocalDateTime.now();
+            LocalDateTime dt = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
             switch (operator) {
                 case MINUS:
                     return dt.minusHours(hours);
