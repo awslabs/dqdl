@@ -237,7 +237,9 @@ class DQRuleTest {
             Arguments.of("FileMatch \"S3://PATH1\" \"S3://PATH2\""),
             Arguments.of("FileUniqueness \"S3://PATH1\" >= 0.9"),
             Arguments.of("FileFreshness \"S3://PATH\" between \"2023-02-07\" and \"2024-07-15\""),
-            Arguments.of("FileFreshness \"S3://PATH\" > (now() - 3 days)")
+            Arguments.of("FileFreshness \"S3://PATH\" > (now() - 3 days)"),
+            Arguments.of("FileUniqueness \"S3://PATH\" > 0.9"),
+            Arguments.of("FileUniqueness > 0.5")
         );
     }
 

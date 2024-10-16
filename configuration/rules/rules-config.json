@@ -486,6 +486,16 @@
       "experimental": true
     },
     {
+      "rule_type_name": "FileUniqueness",
+      "description": "Checks the contents of an inferred folder and the uniqueness of each file within.",
+      "parameters": [],
+      "return_type": "NUMBER",
+      "is_threshold_supported": false,
+      "is_where_clause_supported": false,
+      "scope": "file",
+      "experimental": true
+    },
+    {
       "rule_type_name": "FileFreshness",
       "description": "Checks the age of a filepath against a specified date.",
       "parameters": [

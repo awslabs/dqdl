@@ -93,10 +93,12 @@ public class InvalidDQRulesetTest {
                 Arguments.of("FileMatch \"S3://PATH\" \"S3://PATH\" in [\"hashList\",\"hashList\"] with hashAlgorithm = \"MD5\""),
                 Arguments.of("Rules = [ FileMatch S3://PATH1 ]"),
                 Arguments.of("Rules = [ FileUniqueness S3://PATH1 S3://PATH1 ]"),
-                Arguments.of("FileFreshness between \"2024-07-15\""),
-                Arguments.of("FileFreshness \"S3://PATH\" between and \"2024-07-15\""),
-                Arguments.of("FileFreshness \"S3://PATH\" \"S3://PATH\""),
-                Arguments.of("FileFreshness > (now() 3 days)")
+                Arguments.of("Rules = [ FileFreshness between \"2024-07-15\" ]"),
+                Arguments.of("Rules = [ FileFreshness \"S3://PATH\" between and \"2024-07-15\" ]"),
+                Arguments.of("Rules = [ FileFreshness \"S3://PATH\" \"S3://PATH\" ]"),
+                Arguments.of("Rules = [ FileFreshness > (now() 3 days) ]"),
+                Arguments.of("Rules = [ FileUniqueness \"PATH\" ]"),
+                Arguments.of("Rules = [ FileUniqueness ]")
         );
     }
 
