@@ -239,7 +239,11 @@ class DQRuleTest {
             Arguments.of("FileFreshness \"S3://PATH\" between \"2023-02-07\" and \"2024-07-15\""),
             Arguments.of("FileFreshness \"S3://PATH\" > (now() - 3 days)"),
             Arguments.of("FileUniqueness \"S3://PATH\" > 0.9"),
-            Arguments.of("FileUniqueness > 0.5")
+            Arguments.of("FileUniqueness > 0.5"),
+            Arguments.of("FileSize > 5 with \"unit\" = \"B\""),
+            Arguments.of("FileSize < 5 with \"unit\" = \"KB\""),
+            Arguments.of("FileSize = 5 with \"unit\" = \"MB\""),
+            Arguments.of("FileSize >= 5 with \"unit\" = \"GB\"")
         );
     }
 

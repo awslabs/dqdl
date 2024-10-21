@@ -98,7 +98,8 @@ public class InvalidDQRulesetTest {
                 Arguments.of("Rules = [ FileFreshness \"S3://PATH\" \"S3://PATH\" ]"),
                 Arguments.of("Rules = [ FileFreshness > (now() 3 days) ]"),
                 Arguments.of("Rules = [ FileUniqueness \"PATH\" ]"),
-                Arguments.of("Rules = [ FileUniqueness ]")
+                Arguments.of("Rules = [ FileUniqueness ]"),
+                Arguments.of("Rules = [ FileSize ]")
         );
     }
 
