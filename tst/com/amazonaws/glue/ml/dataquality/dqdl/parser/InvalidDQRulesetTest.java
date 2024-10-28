@@ -100,6 +100,9 @@ public class InvalidDQRulesetTest {
                 Arguments.of("Rules = [ FileUniqueness \"PATH\" ]"),
                 Arguments.of("Rules = [ FileUniqueness ]"),
                 Arguments.of("Rules = [ FileSize ]"),
+                Arguments.of("Rules = [ FileSize > 1 SAM]"),
+                Arguments.of("Rules = [ FileSize 1 GB]"),
+                Arguments.of("Rules = [ FileSize <= 1 ZB ]"),
                 Arguments.of("(RowCount > 0) OR (IsComplete \"colA\") AND (IsUnique \"colA\"))"),
                 Arguments.of("((RowCount > 0) AND IsComplete")
         );

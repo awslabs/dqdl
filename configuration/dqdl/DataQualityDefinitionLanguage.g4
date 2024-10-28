@@ -14,6 +14,15 @@ durationUnit: 'days' | 'hours';
 
 durationExpression: (DIGIT | INT) durationUnit;
 
+sizeUnit:
+    'B'
+    | 'KB'
+    | 'MB'
+    | 'GB'
+    | 'TB';
+
+sizeExpression: (DIGIT | INT) sizeUnit;
+
 dateExpressionOp: ('-' | '+');
 dateExpression:
 	DATE
@@ -88,6 +97,16 @@ durationBasedCondition:
     | NEGATION? EQUAL_TO durationExpression
     | NOT? IN durationExpressionArray;
 
+sizeExpressionArray: LBRAC sizeExpression (COMMA sizeExpression)* RBRAC;
+sizeBasedCondition:
+    NOT? BETWEEN sizeExpression AND sizeExpression
+    | GREATER_THAN sizeExpression
+    | GREATER_THAN_EQUAL_TO sizeExpression
+    | LESS_THAN sizeExpression
+    | LESS_THAN_EQUAL_TO sizeExpression
+    | NEGATION? EQUAL_TO sizeExpression
+    | NOT? IN sizeExpressionArray;
+
 ruleType: IDENTIFIER;
 analyzerType: IDENTIFIER;
 parameter: QUOTED_STRING
@@ -100,7 +119,8 @@ condition:
     numberBasedCondition
 	| stringBasedCondition
 	| dateBasedCondition
-	| durationBasedCondition;
+	| durationBasedCondition
+	| sizeBasedCondition;
 
 withThresholdCondition: 'with' 'threshold' numberBasedCondition;
 

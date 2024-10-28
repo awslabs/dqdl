@@ -15,6 +15,8 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateExpression;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedCondition;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.size.Size;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.size.SizeBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLParser;
@@ -240,14 +242,45 @@ class DQRuleTest {
             Arguments.of("FileFreshness \"S3://PATH\" > (now() - 3 days)"),
             Arguments.of("FileUniqueness \"S3://PATH\" > 0.9"),
             Arguments.of("FileUniqueness > 0.5"),
-            Arguments.of("FileSize > 5 with \"unit\" = \"B\""),
-            Arguments.of("FileSize < 5 with \"unit\" = \"KB\""),
-            Arguments.of("FileSize = 5 with \"unit\" = \"MB\""),
-            Arguments.of("FileSize >= 5 with \"unit\" = \"GB\""),
+            Arguments.of("FileSize between 1 B and 1 GB"),
+            Arguments.of("FileSize not between 50 GB and 1 TB"),
+            Arguments.of("FileSize > 5 B"),
+            Arguments.of("FileSize >= 5 KB"),
+            Arguments.of("FileSize < 5 MB"),
+            Arguments.of("FileSize <= 5 GB"),
+            Arguments.of("FileSize = 5 TB"),
+            Arguments.of("FileSize != 5 B"),
+            Arguments.of("FileSize in [5 B]"),
+            Arguments.of("FileSize not in [500 KB,150 GB]"),
             Arguments.of("(RowCount > 0) OR (IsComplete \"colA\") OR (IsUnique \"colA\")"),
             Arguments.of("(RowCount > 0) OR ((IsComplete \"colA\") AND (IsUnique \"colA\"))"),
             Arguments.of("((RowCount > 0) AND (IsComplete \"colB\")) OR ((IsComplete \"colA\") AND (IsUnique \"colA\"))")
         );
+    }
+
+    @Test
+    void test_sizeConditionParsing() throws Exception {
+        List<String> unitList = Arrays.asList("B", "KB", "MB", "GB", "TB");
+        for (String unit : unitList) {
+            String rule = String.format("Rules = [ FileSize = 2 %s ]", unit);
+            DQRule parsedRule = parser.parse(rule).getRules().get(0);
+            assertEquals("FileSize", parsedRule.getRuleType());
+            SizeBasedCondition c = (SizeBasedCondition) parsedRule.getCondition();
+            assertEquals(unit, c.getOperands().get(0).getUnit().name());
+        }
+
+        String defaultByte = "Rules = [ FileSize > 2, FileSize in [3,4,5,6] ]";
+        List<DQRule> rules = parser.parse(defaultByte).getRules();
+        DQRule parsedRuleNoUnit0 = rules.get(0);
+        DQRule parsedRuleNoUnit1 = rules.get(1);
+        assertEquals("FileSize", parsedRuleNoUnit0.getRuleType());
+        assertEquals("FileSize", parsedRuleNoUnit1.getRuleType());
+        SizeBasedCondition c0 = (SizeBasedCondition) parsedRuleNoUnit0.getCondition();
+        SizeBasedCondition c1 = (SizeBasedCondition) parsedRuleNoUnit1.getCondition();
+        assertEquals("B", c0.getOperands().get(0).getUnit().name());
+        for (Size unit : c1.getOperands()) {
+            assertEquals("B", unit.getUnit().name());
+        }
     }
 
     @Test

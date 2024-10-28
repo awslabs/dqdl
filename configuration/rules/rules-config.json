@@ -531,7 +531,7 @@
           "description": "Data Path for FileSize."
         }
       ],
-      "return_type": "NUMBER",
+      "return_type": "SIZE",
       "is_threshold_supported": true,
       "is_where_clause_supported": false,
       "scope": "file",
@@ -541,7 +541,7 @@
       "rule_type_name": "FileSize",
       "description": "Checks the size of an inferred file.",
       "parameters": [],
-      "return_type": "NUMBER",
+      "return_type": "SIZE",
       "is_threshold_supported": true,
       "is_where_clause_supported": false,
       "scope": "file",

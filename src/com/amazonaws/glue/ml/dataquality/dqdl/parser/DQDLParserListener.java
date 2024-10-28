@@ -34,6 +34,10 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NullNumeric
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumberBasedConditionOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.NumericOperand;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.size.Size;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.size.SizeBasedCondition;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.size.SizeBasedConditionOperator;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.size.SizeUnit;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Keyword;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.KeywordStringOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.QuotedStringOperand;
@@ -486,11 +490,54 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                 }
                 break;
             }
+            case "SIZE":
+            case "SIZE_ARRAY": {
+                DataQualityDefinitionLanguageParser.ConditionContext cx = dqRuleContext.condition();
+                if (cx == null || (cx.sizeBasedCondition() == null && cx.numberBasedCondition() == null)) {
+                    return Either.fromLeft(
+                            String.format("Unexpected condition for rule of type %s with size return type",
+                                    ruleType.getRuleTypeName()));
+                } else if (cx.sizeBasedCondition() != null) {
+                    Optional<Condition> possibleCond =
+                            parseSizeBasedCondition(dqRuleContext.condition().sizeBasedCondition());
+
+                    if (possibleCond.isPresent()) {
+                        response = Either.fromRight(possibleCond.get());
+                    }
+                } else if (cx.numberBasedCondition() != null) {
+                    Optional<SizeBasedCondition> possibleCond =
+                            convertNumberToSizeCondition(
+                                    parseNumberBasedCondition(dqRuleContext.condition().numberBasedCondition()));
+
+                    if (possibleCond.isPresent()) {
+                        response = Either.fromRight(possibleCond.get());
+                    }
+                }
+                break;
+            }
             default:
                 break;
         }
 
         return response;
+    }
+
+    private Optional<SizeBasedCondition> convertNumberToSizeCondition(Optional<Condition> in) {
+        if (!in.isPresent() || !(in.get() instanceof NumberBasedCondition)) {
+            return Optional.empty();
+        }
+        NumberBasedCondition input = (NumberBasedCondition) in.get();
+        final String conditionAsString = input.getConditionAsString();
+        final SizeBasedConditionOperator operator = SizeBasedConditionOperator.valueOf(input.getOperator().name());
+        final List<Size> operands = input.getOperands().stream()
+                .filter(x -> x instanceof AtomicNumberOperand)
+                .filter(x -> Double.parseDouble(x.getOperand()) % 1 == 0) // filter only integer
+                .map(x -> new Size(Integer.parseInt(x.getOperand()), SizeUnit.B))
+                .collect(Collectors.toList());
+        if (operands.size() != input.getOperands().size()) {
+            return Optional.empty();
+        }
+        return Optional.of(new SizeBasedCondition(conditionAsString, operator, operands));
     }
 
     private Optional<Condition> parseNumberBasedCondition(
@@ -849,6 +896,89 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         return Optional.ofNullable(condition);
     }
 
+    private Optional<Condition> parseSizeBasedCondition(
+            DataQualityDefinitionLanguageParser.SizeBasedConditionContext ctx
+    ) {
+
+        String exprStr = ctx.getText();
+        Condition condition = null;
+
+        if (ctx.BETWEEN() != null && ctx.sizeExpression().size() == 2) {
+            Optional<Size> lower = parseSize(ctx.sizeExpression(0));
+            Optional<Size> upper = parseSize(ctx.sizeExpression(1));
+            if (lower.isPresent() && upper.isPresent()) {
+                SizeBasedConditionOperator op = (ctx.NOT() != null) ?
+                        SizeBasedConditionOperator.NOT_BETWEEN
+                        : SizeBasedConditionOperator.BETWEEN;
+                condition = new SizeBasedCondition(
+                        exprStr, op, Arrays.asList(lower.get(), upper.get())
+                );
+            }
+        } else if (ctx.GREATER_THAN_EQUAL_TO() != null && ctx.sizeExpression().size() == 1) {
+            Optional<Size> operand = parseSize(ctx.sizeExpression(0));
+            if (operand.isPresent()) {
+                condition = new SizeBasedCondition(
+                        exprStr, SizeBasedConditionOperator.GREATER_THAN_EQUAL_TO,
+                        Collections.singletonList(operand.get())
+                );
+            }
+        } else if (ctx.GREATER_THAN() != null && ctx.sizeExpression().size() == 1) {
+            Optional<Size> operand = parseSize(ctx.sizeExpression(0));
+            if (operand.isPresent()) {
+                condition = new SizeBasedCondition(
+                        exprStr, SizeBasedConditionOperator.GREATER_THAN,
+                        Collections.singletonList(operand.get())
+                );
+            }
+        } else if (ctx.LESS_THAN() != null && ctx.sizeExpression().size() == 1) {
+            Optional<Size> operand = parseSize(ctx.sizeExpression(0));
+            if (operand.isPresent()) {
+                condition = new SizeBasedCondition(
+                        exprStr, SizeBasedConditionOperator.LESS_THAN,
+                        Collections.singletonList(operand.get())
+                );
+            }
+        } else if (ctx.LESS_THAN_EQUAL_TO() != null && ctx.sizeExpression().size() == 1) {
+            Optional<Size> operand = parseSize(ctx.sizeExpression(0));
+            if (operand.isPresent()) {
+                condition = new SizeBasedCondition(
+                        exprStr, SizeBasedConditionOperator.LESS_THAN_EQUAL_TO,
+                        Collections.singletonList(operand.get())
+                );
+            }
+        } else if (ctx.EQUAL_TO() != null && ctx.sizeExpression().size() == 1) {
+            Optional<Size> operand = parseSize(ctx.sizeExpression(0));
+            if (operand.isPresent()) {
+                SizeBasedConditionOperator op = (ctx.NEGATION() != null) ?
+                        SizeBasedConditionOperator.NOT_EQUALS
+                        : SizeBasedConditionOperator.EQUALS;
+                condition = new SizeBasedCondition(
+                        exprStr, op,
+                        Collections.singletonList(operand.get())
+                );
+            }
+        } else if (ctx.IN() != null &&
+                ctx.sizeExpressionArray() != null &&
+                ctx.sizeExpressionArray().sizeExpression().size() > 0) {
+
+            List<Optional<Size>> sizes = ctx.sizeExpressionArray().sizeExpression().stream()
+                    .map(this::parseSize)
+                    .collect(Collectors.toList());
+
+            if (sizes.stream().allMatch(Optional::isPresent)) {
+                SizeBasedConditionOperator op = (ctx.NOT() != null) ?
+                        SizeBasedConditionOperator.NOT_IN
+                        : SizeBasedConditionOperator.IN;
+                condition = new SizeBasedCondition(
+                        exprStr, op,
+                        sizes.stream().map(Optional::get).collect(Collectors.toList())
+                );
+            }
+        }
+
+        return Optional.ofNullable(condition);
+    }
+
     private Optional<DateExpression> parseDateExpression(
         DataQualityDefinitionLanguageParser.DateExpressionContext ctx) {
         if (ctx.durationExpression() != null) {
@@ -876,6 +1006,17 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         } else {
             DurationUnit unit = DurationUnit.valueOf(ctx.durationUnit().getText().toUpperCase());
             return Optional.of(new Duration(amount, unit));
+        }
+    }
+
+    private Optional<Size> parseSize(
+            DataQualityDefinitionLanguageParser.SizeExpressionContext ctx) {
+        int amount = Integer.parseInt(ctx.INT() != null ? ctx.INT().getText() : ctx.DIGIT().getText());
+        if (ctx.sizeUnit().exception != null) {
+            return Optional.empty();
+        } else {
+            SizeUnit unit = SizeUnit.valueOf(ctx.sizeUnit().getText().toUpperCase());
+            return Optional.of(new Size(amount, unit));
         }
     }
 
