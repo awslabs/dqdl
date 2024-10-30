@@ -113,7 +113,7 @@ parameter: QUOTED_STRING
            | IDENTIFIER;
 connectorWord: OF | AND;
 parameterWithConnectorWord: connectorWord? parameter;
-tagWithCondition: 'with' tagValues stringBasedCondition;
+tagWithCondition: 'with' tagValues (stringBasedCondition | numberBasedCondition);
 
 condition:
     numberBasedCondition
@@ -122,11 +122,9 @@ condition:
 	| durationBasedCondition
 	| sizeBasedCondition;
 
-withThresholdCondition: 'with' 'threshold' numberBasedCondition;
-
 whereClause: 'where' quotedString;
 
-dqRule: ruleType parameterWithConnectorWord* condition? whereClause? withThresholdCondition? tagWithCondition*;
+dqRule: ruleType parameterWithConnectorWord* condition? whereClause? tagWithCondition*;
 dqAnalyzer: analyzerType parameterWithConnectorWord*;
 
 topLevelRule:
