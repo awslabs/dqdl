@@ -18,6 +18,7 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleLogicalOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleParameterValue;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleType;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleset;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.DQVariable;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedConditionOperator;
@@ -44,6 +45,7 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.QuotedStrin
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedConditionOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringOperand;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.variable.VariableReferenceOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.util.Either;
 import org.antlr.v4.runtime.misc.Pair;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -71,6 +73,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     private List<String> additionalSources;
     private final List<DQRule> dqRules = new ArrayList<>();
     private final List<DQAnalyzer> dqAnalyzers = new ArrayList<>();
+    private final Map<String, DQVariable> dqVariables = new HashMap<>();
 
     private static final String METADATA_VERSION_KEY = "Version";
     private static final Set<String> ALLOWED_METADATA_KEYS;
@@ -249,6 +252,50 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
     }
 
+    @Override
+    public void enterVariableDeclaration(DataQualityDefinitionLanguageParser.VariableDeclarationContext ctx) {
+        if (!errorMessages.isEmpty()) {
+            return;
+        }
+
+        String variableName = ctx.IDENTIFIER().getText();
+
+        if (variableName.startsWith(".") || variableName.startsWith("_")) {
+            errorMessages.add(String.format("Variable name '%s' cannot start with '.' or '_'", variableName));
+            return;
+        }
+
+        if (dqVariables.containsKey(variableName)) {
+            errorMessages.add("Variable '" + variableName + "' is already defined");
+            return;
+        }
+
+        DQVariable variable = null;
+        DataQualityDefinitionLanguageParser.ExpressionContext expr = ctx.expression();
+        if (expr == null) {
+            errorMessages.add(String.format("Missing value for variable '%s'", variableName));
+            return;
+        }
+
+        if (expr.stringValuesArray() != null) {
+            List<String> values = expr.stringValuesArray().stringValues().stream()
+                    .map(sv -> {
+                        if (sv.quotedString() != null) {
+                            return removeQuotes(sv.quotedString().getText());
+                        }
+                        return sv.getText();
+                    })
+                    .collect(Collectors.toList());
+            variable = new DQVariable(variableName, DQVariable.VariableType.STRING_ARRAY, values);
+        }
+
+        if (variable != null) {
+            dqVariables.put(variableName, variable);
+        } else {
+            errorMessages.add(String.format("Failed to parse variable '%s'", variableName));
+        }
+    }
+
     private Either<String, DQRule> getDQRule(
         DataQualityDefinitionLanguageParser.DqRuleContext dqRuleContext) {
         String ruleType = dqRuleContext.ruleType().getText();
@@ -352,8 +399,8 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
 
         return Either.fromRight(
-                DQRule.createFromParameterValueMap(
-                        dqRuleType, parameterMap, condition, thresholdCondition, whereClause, tags)
+                DQRule.createFromParameterValueMapWithVariables(
+                        dqRuleType, parameterMap, condition, thresholdCondition, whereClause, tags, dqVariables)
         );
     }
 
@@ -689,28 +736,48 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         String exprStr = ctx.getText();
         Condition condition = null;
 
-        if (ctx.EQUAL_TO() != null && ctx.stringValues() != null) {
+        if (ctx.EQUAL_TO() != null) {
             StringBasedConditionOperator op = (ctx.NEGATION() != null) ?
-                StringBasedConditionOperator.NOT_EQUALS
-                : StringBasedConditionOperator.EQUALS;
-            Optional<StringOperand> operand = parseStringOperand(ctx, Optional.of(ctx.stringValues()), op);
-            if (operand.isPresent()) {
-                condition = new StringBasedCondition(exprStr, op, Collections.singletonList(operand.get()));
-            }
-        } else if (ctx.IN() != null &&
-            ctx.stringValuesArray() != null &&
-            ctx.stringValuesArray().stringValues().size() > 0) {
-            StringBasedConditionOperator op = (ctx.NOT() != null) ?
-                StringBasedConditionOperator.NOT_IN
-                : StringBasedConditionOperator.IN;
-            List<Optional<StringOperand>> operands = ctx.stringValuesArray().stringValues()
-                .stream()
-                .map(s -> parseStringOperand(ctx, Optional.of(s), op))
-                .collect(Collectors.toList());
+                    StringBasedConditionOperator.NOT_EQUALS
+                    : StringBasedConditionOperator.EQUALS;
 
-            condition = new StringBasedCondition(exprStr, op,
-                operands.stream().map(Optional::get).collect(Collectors.toList())
-            );
+            StringOperand operand;
+            if (ctx.variableDereference() != null) {
+                operand = new VariableReferenceOperand(ctx.variableDereference().IDENTIFIER().getText());
+            } else if (ctx.stringValues() != null) {
+                Optional<StringOperand> parsedOperand = parseStringOperand(ctx, Optional.of(ctx.stringValues()), op);
+                if (!parsedOperand.isPresent()) {
+                    return Optional.empty();
+                }
+                operand = parsedOperand.get();
+            } else {
+                return Optional.empty();
+            }
+
+            condition = new StringBasedCondition(exprStr, op, Collections.singletonList(operand));
+        } else if (ctx.IN() != null) {
+            StringBasedConditionOperator op = (ctx.NOT() != null) ?
+                    StringBasedConditionOperator.NOT_IN
+                    : StringBasedConditionOperator.IN;
+
+            List<StringOperand> operands;
+            if (ctx.variableDereference() != null) {
+                operands = Collections.singletonList(
+                        new VariableReferenceOperand(ctx.variableDereference().IDENTIFIER().getText()));
+            } else if (ctx.stringValuesArray() != null && ctx.stringValuesArray().stringValues().size() > 0) {
+                operands = ctx.stringValuesArray().stringValues()
+                        .stream()
+                        .map(s -> parseStringOperand(ctx, Optional.of(s), op))
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .collect(Collectors.toList());
+            } else {
+                return Optional.empty();
+            }
+
+            if (!operands.isEmpty()) {
+                condition = new StringBasedCondition(exprStr, op, operands);
+            }
         } else if (ctx.matchesRegexCondition() != null) {
             StringBasedConditionOperator op = (ctx.NOT() != null) ?
                 StringBasedConditionOperator.NOT_MATCHES

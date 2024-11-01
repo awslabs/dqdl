@@ -107,7 +107,32 @@ public class InvalidDQRulesetTest {
                 Arguments.of("Rules = [ FileSize 1 GB]"),
                 Arguments.of("Rules = [ FileSize <= 1 ZB ]"),
                 Arguments.of("(RowCount > 0) OR (IsComplete \"colA\") AND (IsUnique \"colA\"))"),
-                Arguments.of("((RowCount > 0) AND IsComplete")
+                Arguments.of("((RowCount > 0) AND IsComplete"),
+                Arguments.of("variable > 1"),
+                Arguments.of("Rules = [ RowCount > $min_count ]"),
+                Arguments.of("max_size = 1 ZB\nRules = [ FileSize <= $max_size ]"),
+                Arguments.of("min_count = 100\nRules = [ RowCount > $min_count ]"),
+                Arguments.of("min count = 100\nRules = [ RowCount > 100 ]"),
+                Arguments.of("min count = \nRules = [ RowCount > 100 ]"),
+                Arguments.of("Rules = [\"Active\", \"Pending\", \"Closed\"]\n" +
+                        "Rules = [ RowCount > 100 ]"),
+                Arguments.of("Rules = [\"Active\", \"Pending\", \"Closed\"]\n" +
+                        "Rules = [ RowCount > 100 ]"),
+                Arguments.of("allowed_counts = [5, 10, 15, 20]\n" +
+                        "Rules = [ ColumnValues \"product_code\" not in $allowed_counts ]"),
+                Arguments.of(".allowed_counts = [5, 10, 15, 20]\n" +
+                        "Rules = [ ColumnValues \"product_code\" not in $.allowed_counts ]"),
+                Arguments.of("allowed_counts = [5, 10, 15, 20]\n" +
+                        "Rules = [ ColumnValues \"product_code\" not in random$allowed_counts ]"),
+                Arguments.of("phone_pattern = '^\\\\d{3}-\\\\d{3}-\\\\d{4}$'\n" +
+                        "Rules = [ ColumnValues \"colA\" matches $phone_pattern ]"),
+                Arguments.of("allowed_statuses = [\"Active\", \"Pending\", \"Closed\"]\n" +
+                        "Rules = [ ColumnValues \"colA\" in allowed_statuses ]"),
+                Arguments.of("allowed_statuses = [\"Active\", \"Pending\", \"Closed\"]\n" +
+                        "allowed_statuses = [\"Active\", \"Pending\", \"Closed\"]\n" +
+                        "Rules = [ ColumnValues \"colA\" in $allowed_statuses ]"),
+                Arguments.of("max$value = 1000\nRules = [ RowCount > 1000 ]"),
+                Arguments.of("base = 10\nfactor = 5\nRules = [ RowCount > $base * $factor ]")
         );
     }
 

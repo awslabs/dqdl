@@ -453,6 +453,109 @@ public class DQRulesetTest {
     }
 
     @Test
+    public void testStringVariableResolvedCorrectly() {
+        String dqdlWithVariable =
+                "locationVariable = [\"YYZ14\", \"b\", \"c\"]\n" +
+                        "Rules = [ ColumnValues \"Location-id\" in $locationVariable ]";
+        String dqdlWithoutVariable = "Rules = [ ColumnValues \"Location-id\" in [\"YYZ14\", \"b\", \"c\"] ]";
+        String ruleWithVariable = "ColumnValues \"Location-id\" in $locationVariable";
+        String ruleWithoutVariable = "ColumnValues \"Location-id\" in [\"YYZ14\",\"b\",\"c\"]";
+        String rulesWithVariable = "Rules = [\n    ColumnValues \"Location-id\" in $locationVariable\n]";
+        String rulesWithoutVariable = "Rules = [\n    ColumnValues \"Location-id\" in [\"YYZ14\",\"b\",\"c\"]\n]";
+
+        DQRuleset dqRulesetWithVariable = parseDQDL(dqdlWithVariable);
+        DQRuleset dqRulesetWithoutVariable = parseDQDL(dqdlWithoutVariable);
+        assertEquals(rulesWithVariable, dqRulesetWithVariable.toString());
+        assertEquals(rulesWithoutVariable, dqRulesetWithoutVariable.toString());
+        assertEquals(dqRulesetWithoutVariable.getRules().size(), dqRulesetWithVariable.getRules().size());
+        assertEquals(ruleWithVariable,
+                dqRulesetWithVariable.getRules().get(0).toString());
+        assertEquals(ruleWithoutVariable,
+                dqRulesetWithoutVariable.getRules().get(0).toString());
+    }
+
+    @Test
+    public void testStringArrayVariable() {
+        String dqdl =
+                "str_arr = [\"a\", \"b\", \"c\"]\n" +
+                        "Rules = [ ColumnValues \"order-id\" in $str_arr ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("ColumnValues \"order-id\" in $str_arr",
+                dqRuleset.getRules().get(0).toString());
+    }
+
+    @Test
+    public void testMultipleRulesWithStringArrayVariable() {
+        String dqdl =
+                "codes = [\"A1\", \"B2\", \"C3\"]\n" +
+                        "statuses = [\"active\", \"pending\", \"inactive\"]\n" +
+                        "Rules = [\n" +
+                        "    ColumnValues \"product_code\" in $codes,\n" +
+                        "    ColumnValues \"status\" in $statuses\n" +
+                        "]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(2, dqRuleset.getRules().size());
+        assertEquals("ColumnValues \"product_code\" in $codes",
+                dqRuleset.getRules().get(0).toString());
+        assertEquals("ColumnValues \"status\" in $statuses",
+                dqRuleset.getRules().get(1).toString());
+    }
+
+    @Test
+    public void testStringArrayVariableWithNotIn() {
+        String dqdl =
+                "invalid_codes = [\"X1\", \"Y2\", \"Z3\"]\n" +
+                        "Rules = [ ColumnValues \"product_code\" not in $invalid_codes ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("ColumnValues \"product_code\" not in $invalid_codes",
+                dqRuleset.getRules().get(0).toString());
+    }
+
+    @Test
+    public void testUnusedVariable() {
+        String dqdl =
+                "invalid_codes = [\"X1\", \"Y2\", \"Z3\"]\n" +
+                        "Rules = [ ColumnValues \"product_code\" not in [\"A1\", \"B2\", \"C3\"] ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("ColumnValues \"product_code\" not in [\"A1\",\"B2\",\"C3\"]",
+                dqRuleset.getRules().get(0).toString());
+    }
+
+    @Test
+    public void testMultipleVariableDefinitionsOnlyOneUsed() {
+        String dqdl =
+                "invalid_codes = [\"X1\", \"Y2\", \"Z3\"]\n" +
+                "invalid_codes1 = [\"X1\", \"Y2\", \"Z3\"]\n" +
+                        "Rules = [ ColumnValues \"product_code\" not in [\"A1\", \"B2\", \"C3\"] ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("ColumnValues \"product_code\" not in [\"A1\",\"B2\",\"C3\"]",
+                dqRuleset.getRules().get(0).toString());
+    }
+
+    @Test
+    public void testVariableDefinitionMissing() {
+        String dqdl =
+                "invalid_codes = [\"X1\", \"Y2\", \"Z3\"]\n" +
+                        "invalid_codes1 = [\"X1\", \"Y2\", \"Z3\"]\n" +
+                        "Rules = [ ColumnValues \"product_code\" not in $invalid_codes2 ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("ColumnValues \"product_code\" not in $invalid_codes2",
+                dqRuleset.getRules().get(0).toString());
+    }
+
+
+    @Test
     void test_multipleRules() {
         String dqdl =
             "Rules = [" +

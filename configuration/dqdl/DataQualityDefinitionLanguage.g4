@@ -69,11 +69,20 @@ numberBasedCondition:
     | NEGATION? EQUAL_TO number
     | NOT? IN numberArray;
 
-stringValues : quotedString | NULL | EMPTY | WHITESPACES_ONLY;
+variableDereference: '$' IDENTIFIER;
+
+stringValues:
+    quotedString
+    | variableDereference
+    | NULL
+    | EMPTY
+    | WHITESPACES_ONLY;
+
 stringValuesArray: LBRAC stringValues (COMMA stringValues)* RBRAC;
 stringBasedCondition:
     NEGATION? EQUAL_TO stringValues
     | NOT? IN stringValuesArray
+    | NOT? IN variableDereference
     | NOT? matchesRegexCondition;
 tagValues: quotedString | IDENTIFIER;
 
@@ -127,6 +136,12 @@ whereClause: 'where' quotedString;
 dqRule: ruleType parameterWithConnectorWord* condition? whereClause? tagWithCondition*;
 dqAnalyzer: analyzerType parameterWithConnectorWord*;
 
+// Variable Declarations
+expression: stringValuesArray;
+variableDeclaration:
+    IDENTIFIER EQUAL_TO expression;
+variableDeclarations: variableDeclaration*;
+
 topLevelRule:
     LPAREN topLevelRule RPAREN
     | topLevelRule AND topLevelRule
@@ -156,4 +171,4 @@ metadata: metadataSectionStart EQUAL_TO dictionary;
 dataSources: dataSourcesSectionStart EQUAL_TO dictionary;
 rulesOrAnalyzers: rules | analyzers | rules analyzers;
 
-document: metadata? dataSources? rulesOrAnalyzers;
+document: metadata? dataSources? variableDeclarations? rulesOrAnalyzers;

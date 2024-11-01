@@ -19,10 +19,12 @@ import lombok.Getter;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLVariableResolver.resolveVariablesInCondition;
 import static com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils.isBlank;
 
 @AllArgsConstructor
@@ -92,7 +94,8 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
     public static DQRule createFromParameterValueMap(final DQRuleType ruleType,
                                                      final LinkedHashMap<String, DQRuleParameterValue> parameters,
                                                      final Condition condition) {
-        return createFromParameterValueMap(ruleType, parameters, condition, null, null, null);
+        return createFromParameterValueMap(ruleType, parameters, condition,
+                null, null, null);
     }
 
     public DQRule(final String ruleType,
@@ -130,6 +133,47 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
             whereClause,
             ruleType.isExcludedAtRowLevelInCompositeRules(),
             tags
+        );
+    }
+
+    // Add a new method for creating with variable resolution
+    public static DQRule createFromParameterValueMapWithVariables(final DQRuleType ruleType,
+                                                                  final LinkedHashMap<String, DQRuleParameterValue>
+                                                                          parameters,
+                                                                  final Condition condition,
+                                                                  final Condition thresholdCondition,
+                                                                  final String whereClause,
+                                                                  final Map<String, String> tags,
+                                                                  final Map<String, DQVariable> variables) {
+        // Create the unresolved rule first
+        DQRule unresolvedRule = createFromParameterValueMap(ruleType, parameters, condition,
+                thresholdCondition, whereClause, tags);
+
+        // If there are no variables to resolve, return the unresolved rule
+        if (variables == null || variables.isEmpty()) {
+            return unresolvedRule;
+        }
+
+        Map<String, DQVariable> usedVars = new HashMap<>();
+
+        // Resolve variables in conditions
+        Condition resolvedCondition = condition != null
+                ? resolveVariablesInCondition(condition, variables, usedVars) : null;
+        Condition resolvedThresholdCondition = thresholdCondition != null
+                ? resolveVariablesInCondition(thresholdCondition, variables, usedVars) : null;
+
+        // Create the resolved rule
+        return new DQRule(
+                ruleType.getRuleTypeName(),
+                DQRuleParameterValue.createParameterMap(parameters),
+                parameters,
+                resolvedCondition,
+                resolvedThresholdCondition,
+                DQRuleLogicalOperator.AND,
+                new ArrayList<>(),
+                whereClause,
+                ruleType.isExcludedAtRowLevelInCompositeRules(),
+                tags
         );
     }
 
