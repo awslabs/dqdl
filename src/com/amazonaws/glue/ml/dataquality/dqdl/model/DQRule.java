@@ -223,8 +223,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
         return true;
     }
 
-    // Package private, in order to make it accessible to the tests
-    List<DQRule> getNestedRulesAsFlattenedList() {
+    public List<DQRule> getNestedRulesAsFlattenedList() {
         List<DQRule> ret = new ArrayList<>();
         if (nestedRules.isEmpty()) {
             ret.add(this);
