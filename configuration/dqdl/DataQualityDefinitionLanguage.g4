@@ -10,7 +10,7 @@ analyzersSectionStart: 'Analyzers';
 // Expressions
 dateNow: 'now()';
 
-durationUnit: 'days' | 'hours';
+durationUnit: 'days' | 'hours' | 'minutes';
 
 durationExpression: (DIGIT | INT) durationUnit;
 

@@ -11,13 +11,13 @@
 package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.Duration;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationUnit;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @EqualsAndHashCode
 public abstract class DateExpression implements Serializable {
@@ -47,7 +47,7 @@ public abstract class DateExpression implements Serializable {
 
         @Override
         public LocalDateTime getEvaluatedExpression() {
-            return LocalDateTime.now();
+            return LocalDateTime.now(ZoneOffset.UTC);
         }
     }
 
@@ -76,16 +76,37 @@ public abstract class DateExpression implements Serializable {
 
         @Override
         public LocalDateTime getEvaluatedExpression() {
-            int hours = duration.getUnit().equals(DurationUnit.DAYS)
-                ? duration.getAmount() * 24
-                : duration.getAmount();
+            switch (duration.getUnit()) {
+                case MINUTES:
+                    return evaluateMinutes(
+                            operator,
+                            duration.getAmount(),
+                            LocalDateTime.now(ZoneOffset.UTC)
+                    );
+                case HOURS:
+                    return evaluateMinutes(
+                            operator,
+                            duration.getAmount() * 60,
+                            LocalDateTime.now(ZoneOffset.UTC).withMinute(0)
+                    );
+                case DAYS:
+                    return evaluateMinutes(
+                            operator,
+                            duration.getAmount() * 60 * 24,
+                            LocalDateTime.now(ZoneOffset.UTC).withMinute(0)
+                    );
+                default:
+                    throw new RuntimeException("Unsupported duration unit: " + duration.getUnit());
+            }
+        }
 
-            LocalDateTime dt = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
+        private LocalDateTime evaluateMinutes(DateExpressionOperator operator, int minutes, LocalDateTime dt) {
+            dt = dt.withSecond(0).withNano(0);
             switch (operator) {
                 case MINUS:
-                    return dt.minusHours(hours);
+                    return dt.minusMinutes(minutes);
                 case PLUS:
-                    return dt.plusHours(hours);
+                    return dt.plusMinutes(minutes);
                 default:
                     return dt;
             }

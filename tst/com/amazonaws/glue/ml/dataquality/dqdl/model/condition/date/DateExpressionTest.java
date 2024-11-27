@@ -15,6 +15,7 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration.DurationU
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,7 +45,7 @@ public class DateExpressionTest {
     @Test
     public void test_currentDateEvaluatedExpression() {
         DateExpression.CurrentDate currentDate = new DateExpression.CurrentDate();
-        LocalDateTime dt = LocalDateTime.now();
+        LocalDateTime dt = LocalDateTime.now(ZoneOffset.UTC);
         assertEquals(
             dt.toString().substring(0, 10),
             currentDate.getEvaluatedExpression().toString().substring(0, 10)
@@ -71,6 +72,26 @@ public class DateExpressionTest {
     }
 
     @Test
+    public void test_currentDateExpressionEvaluatedExpressionForMinutes() {
+        DurationUnit unit = DurationUnit.MINUTES;
+        int amount = 24;
+        Duration duration = new Duration(amount, unit);
+
+        DateExpression.DateExpressionOperator operator =
+                DateExpression.DateExpressionOperator.PLUS;
+
+        LocalDateTime currentDate = LocalDateTime.now(ZoneOffset.UTC).withSecond(0).withNano(0);
+        DateExpression.CurrentDateExpression currentDateExpression =
+                new DateExpression.CurrentDateExpression(operator, duration);
+
+        long minutesDiff = ChronoUnit.MINUTES.between(
+                currentDate, currentDateExpression.getEvaluatedExpression()
+        );
+
+        assertEquals(amount, minutesDiff);
+    }
+
+    @Test
     public void test_currentDateExpressionEvaluatedExpressionForHours() {
         DurationUnit unit = DurationUnit.HOURS;
         int amount = 24;
@@ -79,7 +100,7 @@ public class DateExpressionTest {
         DateExpression.DateExpressionOperator operator =
             DateExpression.DateExpressionOperator.PLUS;
 
-        LocalDateTime currentDate = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime currentDate = LocalDateTime.now(ZoneOffset.UTC).withMinute(0).withSecond(0).withNano(0);
         DateExpression.CurrentDateExpression currentDateExpression =
             new DateExpression.CurrentDateExpression(operator, duration);
 
@@ -88,6 +109,12 @@ public class DateExpressionTest {
         );
 
         assertEquals(amount, hoursDiff);
+
+        long minutesDiff = ChronoUnit.MINUTES.between(
+            currentDate, currentDateExpression.getEvaluatedExpression()
+        );
+
+        assertEquals(amount * 60, minutesDiff);
     }
 
     @Test
@@ -99,7 +126,7 @@ public class DateExpressionTest {
         DateExpression.DateExpressionOperator operator =
             DateExpression.DateExpressionOperator.MINUS;
 
-        LocalDateTime currentDate = LocalDateTime.now();
+        LocalDateTime currentDate = LocalDateTime.now(ZoneOffset.UTC);
         DateExpression.CurrentDateExpression currentDateExpression =
             new DateExpression.CurrentDateExpression(operator, duration);
 
@@ -108,5 +135,11 @@ public class DateExpressionTest {
         );
 
         assertTrue(amount * 24 + hoursDiff <= 1);
+
+        long minutesDiff = ChronoUnit.MINUTES.between(
+            currentDate, currentDateExpression.getEvaluatedExpression()
+        );
+
+        assertTrue(amount * 24 * 60 + minutesDiff <= 1);
     }
 }

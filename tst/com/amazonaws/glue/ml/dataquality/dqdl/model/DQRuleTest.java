@@ -254,7 +254,10 @@ class DQRuleTest {
             Arguments.of("FileSize not in [500 KB,150 GB]"),
             Arguments.of("(RowCount > 0) OR (IsComplete \"colA\") OR (IsUnique \"colA\")"),
             Arguments.of("(RowCount > 0) OR ((IsComplete \"colA\") AND (IsUnique \"colA\"))"),
-            Arguments.of("((RowCount > 0) AND (IsComplete \"colB\")) OR ((IsComplete \"colA\") AND (IsUnique \"colA\"))")
+            Arguments.of("((RowCount > 0) AND (IsComplete \"colB\")) OR ((IsComplete \"colA\") AND (IsUnique \"colA\"))"),
+            Arguments.of("FileFreshness \"S3://PATH\" > (now() - 30 minutes)"),
+            Arguments.of("FileFreshness \"S3://PATH\" > (now() + 45 minutes)"),
+            Arguments.of("ColumnValues \"col-A\" < (now() + 4 minutes)")
         );
     }
 
@@ -289,7 +292,10 @@ class DQRuleTest {
                 "FileFreshness \"S3://path\" between \"2023-02-07\" and \"2024-07-15\", " +
                 "FileFreshness \"S3://path\" > (now() - 3 days), " +
                 "FileFreshness \"S3://path\" < (now() - 4 days), " +
-                "FileFreshness between \"2023-02-07\" and \"2024-07-15\" " +
+                "FileFreshness between \"2023-02-07\" and \"2024-07-15\", " +
+                "FileFreshness > (now() + 35 minutes), " +
+                "FileFreshness <= (now() - 35 minutes), " +
+                "FileFreshness = (now() + 70 minutes) " +
                 "]";
         DQRuleset dqRuleset = parser.parse(fileRules);
         List<DQRule> ruleList = dqRuleset.getRules();
@@ -321,6 +327,18 @@ class DQRuleTest {
         assertFalse(rule3.getParameters().containsKey("DataPath"));
         assertEquals("2023-02-07", removeQuotes(c3.getOperands().get(0).getFormattedExpression()));
         assertEquals("2024-07-15", removeQuotes(c3.getOperands().get(1).getFormattedExpression()));
+
+        DQRule rule4 = ruleList.get(4);
+        DateBasedCondition c4 = (DateBasedCondition) rule4.getCondition();
+        assertEquals("(now() + 35 minutes)", c4.getOperands().get(0).getFormattedExpression());
+
+        DQRule rule5 = ruleList.get(5);
+        DateBasedCondition c5 = (DateBasedCondition) rule5.getCondition();
+        assertEquals("(now() - 35 minutes)", c5.getOperands().get(0).getFormattedExpression());
+
+        DQRule rule6 = ruleList.get(6);
+        DateBasedCondition c6 = (DateBasedCondition) rule6.getCondition();
+        assertEquals("(now() + 70 minutes)", c6.getOperands().get(0).getFormattedExpression());
     }
 
     @Test
