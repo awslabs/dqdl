@@ -23,11 +23,14 @@ sizeUnit:
 
 sizeExpression: (DIGIT | INT) sizeUnit;
 
+timeExpression: TIME | MIL_TIME;
+
 dateExpressionOp: ('-' | '+');
 dateExpression:
 	DATE
 	| dateNow
 	| LPAREN dateNow dateExpressionOp durationExpression RPAREN
+	| timeExpression
 	| NULL;
 
 atomicNumber:

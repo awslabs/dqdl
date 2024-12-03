@@ -32,9 +32,12 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -142,6 +145,12 @@ class DQRuleTest {
             Arguments.of("ColumnValues \"order-id\" not in [1,2,3,4]"),
             Arguments.of("ColumnValues \"order-id\" in [\"1\",\"2\",\"3\",\"4\"]"),
             Arguments.of("ColumnValues \"order-id\" not in [\"1\",\"2\",\"3\",\"4\"]"),
+            Arguments.of("ColumnValues \"col-A\" < (now() + 4 minutes)"),
+            Arguments.of("ColumnValues \"col-A\" < (now() - 25 minutes)"),
+            Arguments.of("ColumnValues \"col-A\" > \"9:30 AM\""),
+            Arguments.of("ColumnValues \"col-A\" > \"9:30 PM\""),
+            Arguments.of("ColumnValues \"col-A\" > \"19:30\""),
+            Arguments.of("ColumnValues \"col-A\" between \"9:00 AM\" and \"21:50\""),
             Arguments.of("Sum \"col_A-B.C\" > 100.0"),
             Arguments.of("Sum \"col_A-B.C\" > -100.0"),
             Arguments.of("Sum \"col_A-B.C\" > -100.0 where \"col-A > 100\""),
@@ -206,8 +215,10 @@ class DQRuleTest {
             Arguments.of("ColumnValues \"col-A\" = 1 with threshold > 0.98"),
             Arguments.of("ColumnValues \"col-A\" = \"2022-01-01\" with threshold > 0.98"),
             Arguments.of("DataFreshness \"col-A\" <= 3 days"),
-            Arguments.of("DataFreshness \"col-A\" > 30 hours"),
+            Arguments.of("DataFreshness \"col-A\" > 3 minutes"),
+            Arguments.of("DataFreshness \"col-A\" > 90 minutes"),
             Arguments.of("DataFreshness \"col-A\" between 2 days and 4 days"),
+            Arguments.of("DataFreshness \"col-A\" between 2 minutes and 4 minutes"),
             Arguments.of("DataFreshness \"col-A\" <= 3 days where \"col-A > 100\""),
             Arguments.of("ReferentialIntegrity \"col-A\" \"reference.col-A1\" between 0.4 and 0.6"),
             Arguments.of("ReferentialIntegrity \"col-A\" \"reference.col-A1\" > 0.98"),
@@ -257,8 +268,37 @@ class DQRuleTest {
             Arguments.of("((RowCount > 0) AND (IsComplete \"colB\")) OR ((IsComplete \"colA\") AND (IsUnique \"colA\"))"),
             Arguments.of("FileFreshness \"S3://PATH\" > (now() - 30 minutes)"),
             Arguments.of("FileFreshness \"S3://PATH\" > (now() + 45 minutes)"),
-            Arguments.of("ColumnValues \"col-A\" < (now() + 4 minutes)")
+            Arguments.of("FileFreshness \"S3://PATH\" > \"9:30 AM\""),
+            Arguments.of("FileFreshness \"S3://PATH\" > \"9:30 PM\""),
+            Arguments.of("FileFreshness \"S3://PATH\" > \"09:30\""),
+            Arguments.of("FileFreshness \"S3://PATH\" > \"13:30\""),
+            Arguments.of("FileFreshness \"S3://PATH\" > \"21:45\""),
+            Arguments.of("FileFreshness \"S3://PATH\" between \"9:30 AM\" and \"9:30 PM\""),
+            Arguments.of("FileFreshness \"S3://PATH\" between \"9:30 AM\" and \"9:30 AM\""),
+            Arguments.of("FileFreshness \"S3://PATH\" between \"09:30\" and \"21:45\""),
+            Arguments.of("FileFreshness \"S3://PATH\" between (now() - 2 hours) and \"21:45\""),
+            Arguments.of("FileFreshness \"S3://PATH\" between (now() + 5 minutes) and \"21:45\""),
+            Arguments.of("FileFreshness \"S3://PATH\" between \"2024-01-01\" and \"21:45\""),
+            Arguments.of("FileFreshness \"S3://PATH\" between \"2024-01-01\" and (now() + 10 minutes)")
         );
+    }
+
+    @Test
+    void test_AMPM_Parsing() throws Exception {
+        String rule = "Rules = [ FileFreshness \"S3://PATH\" between \"9:15 AM\" and \"21:45\" ]";
+        DQRule parsedRule = parser.parse(rule).getRules().get(0);
+        DateBasedCondition c1 = (DateBasedCondition) parsedRule.getCondition();
+        DateExpression d1 = c1.getOperands().get(0);
+        DateExpression d2 = c1.getOperands().get(1);
+        Date today = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String todayStr = sdf.format(today);
+        assertEquals("FileFreshness", parsedRule.getRuleType());
+        assertEquals("between \"9:15 AM\" and \"21:45\"", c1.getFormattedCondition());
+        assertEquals("\"9:15 AM\"" ,d1.getFormattedExpression());
+        assertEquals("\"21:45\"" ,d2.getFormattedExpression());
+        assertEquals(todayStr + "T09:15", d1.getEvaluatedExpression().toString());
+        assertEquals(todayStr + "T21:45", d2.getEvaluatedExpression().toString());
     }
 
     @Test

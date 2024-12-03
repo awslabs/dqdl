@@ -51,6 +51,22 @@ public abstract class DateExpression implements Serializable {
         }
     }
 
+    @AllArgsConstructor
+    public static class StaticDateTime extends DateExpression {
+        private final LocalDateTime dateTime;
+        private final String dateTimeString;
+
+        @Override
+        public String getFormattedExpression() {
+            return "\"" + dateTimeString + "\"";
+        }
+
+        @Override
+        public LocalDateTime getEvaluatedExpression() {
+            return dateTime;
+        }
+    }
+
     public enum DateExpressionOperator {
         MINUS,
         PLUS

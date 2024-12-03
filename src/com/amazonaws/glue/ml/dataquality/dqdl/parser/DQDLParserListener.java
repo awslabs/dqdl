@@ -52,6 +52,11 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -81,6 +86,9 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     private static final String PRIMARY_SOURCE_KEY = "Primary";
     private static final String ADDITIONAL_SOURCES_KEY = "AdditionalDataSources";
     private static final Set<String> ALLOWED_SOURCES_KEYS;
+
+    private static final String MILITARY_TIME_FORMAT = "HH:mm";
+    private static final String AMPM_TIME_FORMAT = "h:mm a";
 
     private static final int COMPOSITE_RULE_MAX_NESTING_DEPTH = 5;
 
@@ -1080,8 +1088,28 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             return Optional.of(new DateExpression.CurrentDate());
         } else if (ctx.NULL() != null) {
             return Optional.of(new NullDateExpression());
+        } else if (ctx.timeExpression() != null) {
+            final String time = removeQuotes(ctx.timeExpression().MIL_TIME() != null
+                    ? ctx.timeExpression().MIL_TIME().getText()
+                    : ctx.timeExpression().TIME().getText());
+            final String pattern = ctx.timeExpression().MIL_TIME() != null
+                    ? MILITARY_TIME_FORMAT
+                    : AMPM_TIME_FORMAT;
+            return parseTime(time, pattern);
         } else {
             return Optional.of(new DateExpression.StaticDate(removeQuotes(ctx.DATE().getText())));
+        }
+    }
+
+    private Optional<DateExpression> parseTime(final String in, final String pattern) {
+        try {
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+            final LocalTime time = LocalTime.parse(in, formatter);
+            final LocalDateTime dateTime = time.atDate(LocalDateTime.now(ZoneOffset.UTC).toLocalDate());
+            return Optional.of(new DateExpression.StaticDateTime(dateTime, in));
+        } catch (final DateTimeParseException e) {
+            errorMessages.add(String.format("Error Parsing Date: %s. %s.", in, e.getMessage()));
+            return Optional.empty();
         }
     }
 
