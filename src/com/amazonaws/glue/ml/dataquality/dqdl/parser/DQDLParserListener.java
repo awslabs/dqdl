@@ -52,11 +52,15 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.zone.ZoneRulesException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -331,30 +335,6 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         LinkedHashMap<String, DQRuleParameterValue> parameterMap =
             dqRuleType.createParameterMap(dqRuleType.getParameters(), parameters);
 
-        Condition condition;
-
-        List<Either<String, Condition>> conditions = Arrays.stream(dqRuleType.getReturnType().split("\\|"))
-            .map(rt -> parseCondition(dqRuleType, rt, dqRuleContext))
-            .collect(Collectors.toList());
-
-        Optional<Either<String, Condition>> optionalCondition = conditions.stream().filter(Either::isRight).findFirst();
-        if (optionalCondition.isPresent()) {
-            if (optionalCondition.get().isRight()) {
-                condition = optionalCondition.get().getRight();
-            } else {
-                return Either.fromLeft(optionalCondition.get().getLeft());
-            }
-        } else {
-            Optional<Either<String, Condition>> optionalFailedCondition =
-                conditions.stream().filter(Either::isLeft).findFirst();
-            if (optionalFailedCondition.isPresent()) {
-                return Either.fromLeft(optionalFailedCondition.get().getLeft());
-            } else {
-                return Either.fromLeft(
-                    String.format("Error while parsing condition for rule with rule type: %s", ruleType));
-            }
-        }
-
         String whereClause = null;
         if (dqRuleContext.whereClause() != null) {
             if (dqRuleType.isWhereClauseSupported()) {
@@ -403,6 +383,30 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                     return Either.fromLeft(String.format(
                             "Invalid tag provided for rule type: %s", ruleType));
                 }
+            }
+        }
+
+        Condition condition;
+
+        List<Either<String, Condition>> conditions = Arrays.stream(dqRuleType.getReturnType().split("\\|"))
+                .map(rt -> parseCondition(dqRuleType, rt, dqRuleContext, tags))
+                .collect(Collectors.toList());
+
+        Optional<Either<String, Condition>> optionalCondition = conditions.stream().filter(Either::isRight).findFirst();
+        if (optionalCondition.isPresent()) {
+            if (optionalCondition.get().isRight()) {
+                condition = optionalCondition.get().getRight();
+            } else {
+                return Either.fromLeft(optionalCondition.get().getLeft());
+            }
+        } else {
+            Optional<Either<String, Condition>> optionalFailedCondition =
+                    conditions.stream().filter(Either::isLeft).findFirst();
+            if (optionalFailedCondition.isPresent()) {
+                return Either.fromLeft(optionalFailedCondition.get().getLeft());
+            } else {
+                return Either.fromLeft(
+                        String.format("Error while parsing condition for rule with rule type: %s", ruleType));
             }
         }
 
@@ -486,7 +490,8 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     private Either<String, Condition> parseCondition(
         DQRuleType ruleType,
         String returnType,
-        DataQualityDefinitionLanguageParser.DqRuleContext dqRuleContext) {
+        DataQualityDefinitionLanguageParser.DqRuleContext dqRuleContext,
+        Map<String, String> tags) {
 
         Either<String, Condition> response =
             Either.fromLeft(String.format("Error parsing condition for return type: %s", returnType));
@@ -541,7 +546,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                             ruleType.getRuleTypeName()));
                 } else {
                     Optional<Condition> possibleCond =
-                        parseDateBasedCondition(dqRuleContext.condition().dateBasedCondition());
+                        parseDateBasedCondition(dqRuleContext.condition().dateBasedCondition(), tags);
 
                     if (possibleCond.isPresent()) {
                         response = Either.fromRight(possibleCond.get());
@@ -833,14 +838,14 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     }
 
     private Optional<Condition> parseDateBasedCondition(
-        DataQualityDefinitionLanguageParser.DateBasedConditionContext ctx) {
+        DataQualityDefinitionLanguageParser.DateBasedConditionContext ctx, Map<String, String> tags) {
 
         String exprStr = ctx.getText();
         Condition condition = null;
 
         if (ctx.BETWEEN() != null && ctx.dateExpression().size() == 2) {
-            Optional<DateExpression> lower = parseDateExpression(ctx.dateExpression(0));
-            Optional<DateExpression> upper = parseDateExpression(ctx.dateExpression(1));
+            Optional<DateExpression> lower = parseDateExpression(ctx.dateExpression(0), tags);
+            Optional<DateExpression> upper = parseDateExpression(ctx.dateExpression(1), tags);
             if (lower.isPresent() && upper.isPresent()) {
                 DateBasedConditionOperator op = (ctx.NOT() != null) ?
                     DateBasedConditionOperator.NOT_BETWEEN
@@ -850,35 +855,35 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                 );
             }
         } else if (ctx.GREATER_THAN_EQUAL_TO() != null && ctx.dateExpression().size() == 1) {
-            Optional<DateExpression> operand = parseDateExpression(ctx.dateExpression(0));
+            Optional<DateExpression> operand = parseDateExpression(ctx.dateExpression(0), tags);
             if (operand.isPresent()) {
                 condition = new DateBasedCondition(
                     exprStr, DateBasedConditionOperator.GREATER_THAN_EQUAL_TO, Collections.singletonList(operand.get())
                 );
             }
         } else if (ctx.GREATER_THAN() != null && ctx.dateExpression().size() == 1) {
-            Optional<DateExpression> operand = parseDateExpression(ctx.dateExpression(0));
+            Optional<DateExpression> operand = parseDateExpression(ctx.dateExpression(0), tags);
             if (operand.isPresent()) {
                 condition = new DateBasedCondition(
                     exprStr, DateBasedConditionOperator.GREATER_THAN, Collections.singletonList(operand.get())
                 );
             }
         } else if (ctx.LESS_THAN() != null && ctx.dateExpression().size() == 1) {
-            Optional<DateExpression> operand = parseDateExpression(ctx.dateExpression(0));
+            Optional<DateExpression> operand = parseDateExpression(ctx.dateExpression(0), tags);
             if (operand.isPresent()) {
                 condition = new DateBasedCondition(
                     exprStr, DateBasedConditionOperator.LESS_THAN, Collections.singletonList(operand.get())
                 );
             }
         } else if (ctx.LESS_THAN_EQUAL_TO() != null && ctx.dateExpression().size() == 1) {
-            Optional<DateExpression> operand = parseDateExpression(ctx.dateExpression(0));
+            Optional<DateExpression> operand = parseDateExpression(ctx.dateExpression(0), tags);
             if (operand.isPresent()) {
                 condition = new DateBasedCondition(
                     exprStr, DateBasedConditionOperator.LESS_THAN_EQUAL_TO, Collections.singletonList(operand.get())
                 );
             }
         } else if (ctx.EQUAL_TO() != null && ctx.dateExpression().size() == 1) {
-            Optional<DateExpression> operand = parseDateExpression(ctx.dateExpression(0));
+            Optional<DateExpression> operand = parseDateExpression(ctx.dateExpression(0), tags);
             if (operand.isPresent()) {
                 DateBasedConditionOperator op = (ctx.NEGATION() != null) ?
                     DateBasedConditionOperator.NOT_EQUALS
@@ -891,9 +896,8 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             ctx.dateExpressionArray() != null &&
             ctx.dateExpressionArray().dateExpression().size() > 0) {
             List<Optional<DateExpression>> expressions = ctx.dateExpressionArray().dateExpression().stream()
-                .map(this::parseDateExpression)
+                .map(x -> parseDateExpression(x, tags))
                 .collect(Collectors.toList());
-
             if (expressions.stream().allMatch(Optional::isPresent)) {
                 DateBasedConditionOperator op = (ctx.NOT() != null) ?
                     DateBasedConditionOperator.NOT_IN
@@ -1075,7 +1079,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     }
 
     private Optional<DateExpression> parseDateExpression(
-        DataQualityDefinitionLanguageParser.DateExpressionContext ctx) {
+        DataQualityDefinitionLanguageParser.DateExpressionContext ctx, Map<String, String> tags) {
         if (ctx.durationExpression() != null) {
             Optional<Duration> duration = parseDuration(ctx.durationExpression());
             return duration.map(value -> new DateExpression.CurrentDateExpression(
@@ -1095,20 +1099,28 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             final String pattern = ctx.timeExpression().MIL_TIME() != null
                     ? MILITARY_TIME_FORMAT
                     : AMPM_TIME_FORMAT;
-            return parseTime(time, pattern);
+            final String timeZone = tags.getOrDefault("timeZone", "UTC");
+            return parseTime(time, pattern, timeZone);
         } else {
             return Optional.of(new DateExpression.StaticDate(removeQuotes(ctx.DATE().getText())));
         }
     }
 
-    private Optional<DateExpression> parseTime(final String in, final String pattern) {
+    private Optional<DateExpression> parseTime(final String in, final String pattern, final String timeZone) {
         try {
+            final ZoneId zoneId = ZoneId.of(timeZone); // https://docs.oracle.com/javase/8/docs/api/java/time/ZoneId.html
             final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
             final LocalTime time = LocalTime.parse(in, formatter);
-            final LocalDateTime dateTime = time.atDate(LocalDateTime.now(ZoneOffset.UTC).toLocalDate());
-            return Optional.of(new DateExpression.StaticDateTime(dateTime, in));
+            final LocalDate today = LocalDate.now();
+            final LocalDateTime localDateTime = LocalDateTime.of(today, time);
+            final ZonedDateTime zonedDateTime = localDateTime.atZone(zoneId);
+            final ZonedDateTime utcTime = zonedDateTime.withZoneSameInstant(ZoneOffset.UTC);
+            return Optional.of(new DateExpression.StaticDateTime(utcTime.toLocalDateTime(), in));
         } catch (final DateTimeParseException e) {
             errorMessages.add(String.format("Error Parsing Date: %s. %s.", in, e.getMessage()));
+            return Optional.empty();
+        } catch (final ZoneRulesException e) {
+            errorMessages.add(String.format("Error Parsing Time Zone: %s. %s.", timeZone, e.getMessage()));
             return Optional.empty();
         }
     }

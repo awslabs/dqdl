@@ -33,7 +33,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -273,6 +272,7 @@ class DQRuleTest {
             Arguments.of("FileFreshness \"S3://PATH\" > \"09:30\""),
             Arguments.of("FileFreshness \"S3://PATH\" > \"13:30\""),
             Arguments.of("FileFreshness \"S3://PATH\" > \"21:45\""),
+            Arguments.of("FileFreshness \"S3://PATH\" > \"21:45\" with \"timeZone\" = \"America/New_York\""),
             Arguments.of("FileFreshness \"S3://PATH\" between \"9:30 AM\" and \"9:30 PM\""),
             Arguments.of("FileFreshness \"S3://PATH\" between \"9:30 AM\" and \"9:30 AM\""),
             Arguments.of("FileFreshness \"S3://PATH\" between \"09:30\" and \"21:45\""),
@@ -281,6 +281,21 @@ class DQRuleTest {
             Arguments.of("FileFreshness \"S3://PATH\" between \"2024-01-01\" and \"21:45\""),
             Arguments.of("FileFreshness \"S3://PATH\" between \"2024-01-01\" and (now() + 10 minutes)")
         );
+    }
+
+    @Test
+    void test_Timezone() throws Exception {
+        String rule = "Rules = [ FileFreshness > \"9:30 AM\" with timeZone = \"America/New_York\", FileFreshness > \"19:30\" with timeZone = \"Asia/Dubai\", FileFreshness > \"9:30 AM\" ]";
+        List<DQRule> rules = parser.parse(rule).getRules();
+        DateBasedCondition c1 = (DateBasedCondition) rules.get(0).getCondition();
+        DateBasedCondition c2 = (DateBasedCondition) rules.get(1).getCondition();
+        DateBasedCondition c3 = (DateBasedCondition) rules.get(2).getCondition();
+        Date today = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String todayStr = sdf.format(today);
+        assertEquals(todayStr + "T14:30", c1.getOperands().get(0).getEvaluatedExpression().toString());
+        assertEquals(todayStr + "T15:30", c2.getOperands().get(0).getEvaluatedExpression().toString());
+        assertEquals(todayStr + "T09:30", c3.getOperands().get(0).getEvaluatedExpression().toString());
     }
 
     @Test
