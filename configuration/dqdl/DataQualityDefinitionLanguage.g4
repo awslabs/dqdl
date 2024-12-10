@@ -140,7 +140,10 @@ dqRule: ruleType parameterWithConnectorWord* condition? whereClause? tagWithCond
 dqAnalyzer: analyzerType parameterWithConnectorWord*;
 
 // Variable Declarations
-expression: stringValuesArray;
+expression:
+    stringValues
+    | stringValuesArray;
+
 variableDeclaration:
     IDENTIFIER EQUAL_TO expression;
 variableDeclarations: variableDeclaration*;

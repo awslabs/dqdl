@@ -554,6 +554,17 @@ public class DQRulesetTest {
                 dqRuleset.getRules().get(0).toString());
     }
 
+    @Test
+    public void testStringVariable() {
+        String dqdl =
+                "sqlString = \"select id from primary where age < 100\"\n" +
+                        "Rules = [ CustomSql \"select id from primary where age < 100\" ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("CustomSql \"select id from primary where age < 100\"",
+                dqRuleset.getRules().get(0).toString());
+    }
 
     @Test
     void test_multipleRules() {

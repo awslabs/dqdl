@@ -291,14 +291,12 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
         if (expr.stringValuesArray() != null) {
             List<String> values = expr.stringValuesArray().stringValues().stream()
-                    .map(sv -> {
-                        if (sv.quotedString() != null) {
-                            return removeQuotes(sv.quotedString().getText());
-                        }
-                        return sv.getText();
-                    })
+                    .map(this::processStringValues)
                     .collect(Collectors.toList());
             variable = new DQVariable(variableName, DQVariable.VariableType.STRING_ARRAY, values);
+        } else if (expr.stringValues() != null) {
+            String value = processStringValues(expr.stringValues());
+            variable = new DQVariable(variableName, DQVariable.VariableType.STRING, value);
         }
 
         if (variable != null) {
@@ -1215,6 +1213,13 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         } catch (IllegalArgumentException e) {
             return false;
         }
+    }
+
+    private String processStringValues(DataQualityDefinitionLanguageParser.StringValuesContext sv) {
+        if (sv.quotedString() != null) {
+            return removeQuotes(sv.quotedString().getText());
+        }
+        return sv.getText();
     }
 
 }
