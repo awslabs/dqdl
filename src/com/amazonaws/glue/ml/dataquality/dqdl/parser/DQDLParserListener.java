@@ -45,10 +45,10 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.QuotedStrin
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedConditionOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringOperand;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Tag;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.variable.VariableReferenceOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.util.Either;
-import org.antlr.v4.runtime.misc.Pair;
-import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -73,6 +73,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Tag.convertToStringMap;
+
 public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListener {
     private final DQDLErrorListener errorListener;
     private final List<String> errorMessages = new ArrayList<>();
@@ -90,6 +92,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     private static final String PRIMARY_SOURCE_KEY = "Primary";
     private static final String ADDITIONAL_SOURCES_KEY = "AdditionalDataSources";
     private static final Set<String> ALLOWED_SOURCES_KEYS;
+    private static final String THRESHOLD_KEY = "threshold";
 
     private static final String MILITARY_TIME_FORMAT = "HH:mm";
     private static final String AMPM_TIME_FORMAT = "h:mm a";
@@ -349,45 +352,49 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
 
         Condition thresholdCondition = null;
-        Map<String, String> tags = new HashMap<>();
+        Map<String, Tag> tags = new HashMap<>();
         List<DataQualityDefinitionLanguageParser.TagWithConditionContext> tagContexts =
-                dqRuleContext.tagWithCondition();
-        if (tagContexts != null && !tagContexts.isEmpty()) {
-            for (DataQualityDefinitionLanguageParser.TagWithConditionContext tagContext : tagContexts) {
-                if (tagContext.numberBasedCondition() != null) {
-                    if (dqRuleType.isThresholdSupported()) {
-                        if (thresholdCondition != null) {
-                            return Either.fromLeft("Only one threshold condition at a time is supported.");
-                        }
-                        Either<String, Condition> outcome = processThresholdTag(tagContext, ruleType);
-                        if (outcome.isLeft()) {
-                            return Either.fromLeft(outcome.getLeft());
-                        } else {
-                            thresholdCondition = outcome.getRight();
-                        }
-                    } else {
-                        return Either.fromLeft(String.format(
-                                "Threshold condition not supported for rule type: %s", ruleType));
-                    }
-                } else if (tagContext.stringBasedCondition() != null) {
-                    Either<String, Pair<String, String>> outcome = processStringTag(tagContext);
+                (dqRuleContext.tagWithCondition() == null) ? new ArrayList<>() : dqRuleContext.tagWithCondition();
+        for (DataQualityDefinitionLanguageParser.TagWithConditionContext tagContext : tagContexts) {
+            if (tagContext.stringBasedCondition() != null) {
+                //process plain string tag
+                final Either<String, Tag> outcome = processStringTag(tagContext);
+                if (outcome.isLeft()) {
+                    return Either.fromLeft(outcome.getLeft());
+                } else {
+                    final Tag tag = outcome.getRight();
+                    tags.put(tag.getKey(), tag);
+                }
+            } else if (tagContext.numberBasedCondition() != null) {
+                final String tagName = tagContext.tagValues().getText();
+                if (tagName.equalsIgnoreCase(THRESHOLD_KEY)) {
+                    //process threshold tag
+                    final Either<String, Condition> outcome =
+                            processThresholdTag(dqRuleType, thresholdCondition, tagContext, ruleType);
                     if (outcome.isLeft()) {
                         return Either.fromLeft(outcome.getLeft());
                     } else {
-                        Pair<String, String> pair = outcome.getRight();
-                        tags.put(pair.a, pair.b);
+                        thresholdCondition = outcome.getRight();
                     }
                 } else {
-                    return Either.fromLeft(String.format(
-                            "Invalid tag provided for rule type: %s", ruleType));
+                    //convert number tag into string tag
+                    final Either<String, Tag> outcome = processNumberTag(tagContext, tagName);
+                    if (outcome.isLeft()) {
+                        return Either.fromLeft(outcome.getLeft());
+                    } else {
+                        final Tag tag = outcome.getRight();
+                        tags.put(tag.getKey(), tag);
+                    }
                 }
+            } else {
+                return Either.fromLeft(String.format("Invalid tag provided for rule type: %s", ruleType));
             }
         }
 
         Condition condition;
 
         List<Either<String, Condition>> conditions = Arrays.stream(dqRuleType.getReturnType().split("\\|"))
-                .map(rt -> parseCondition(dqRuleType, rt, dqRuleContext, tags))
+                .map(rt -> parseCondition(dqRuleType, rt, dqRuleContext, convertToStringMap(tags)))
                 .collect(Collectors.toList());
 
         Optional<Either<String, Condition>> optionalCondition = conditions.stream().filter(Either::isRight).findFirst();
@@ -414,17 +421,48 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         );
     }
 
-    private Either<String, Pair<String, String>> processStringTag(
+    private Either<String, Condition> processThresholdTag(DQRuleType dqRuleType,
+                                                          Condition thresholdCondition,
+                                                          DataQualityDefinitionLanguageParser
+                                                                  .TagWithConditionContext tagContext,
+                                                          String ruleType) {
+        if (dqRuleType.isThresholdSupported()) {
+            if (thresholdCondition != null) {
+                return Either.fromLeft("Only one threshold condition at a time is supported.");
+            }
+            return processThresholdTag(tagContext, ruleType);
+        } else {
+            return Either.fromLeft(String.format("Threshold condition not supported for rule type: %s", ruleType));
+        }
+    }
+
+    private Either<String, Tag> processNumberTag(DataQualityDefinitionLanguageParser
+                                                         .TagWithConditionContext tagContext,
+                                                 String tagName) {
+        if (!isTagValid(tagContext.numberBasedCondition())) {
+            return Either.fromLeft("Number tags only support the equality operator.");
+        }
+        final List<DataQualityDefinitionLanguageParser.NumberContext> numberContexts =
+                tagContext.numberBasedCondition().number();
+        if (numberContexts != null && !numberContexts.isEmpty()) {
+            final String tagValue = numberContexts.get(0).getText();
+            return Either.fromRight(new Tag(tagName, tagValue));
+        } else {
+            return Either.fromLeft(String.format("Error Parsing Tag %s", tagName));
+        }
+    }
+
+    private Either<String, Tag> processStringTag(
             DataQualityDefinitionLanguageParser.TagWithConditionContext tagContext) {
         if (!isTagValid(tagContext.stringBasedCondition())) {
-            return Either.fromLeft("Only EQUAL_TO condition is supported for String tags.");
+            return Either.fromLeft("String tags only support the equality operator.");
         }
-        String tagKey = getKeyFromTag(tagContext.tagValues());
+        String tagKey = tagContext.tagValues().getText();
         Optional<Condition> valueCondition = parseStringBasedCondition(tagContext.stringBasedCondition());
         if (valueCondition.isPresent()) {
             StringBasedCondition stringCondition = (StringBasedCondition) valueCondition.get();
-            String tagValue = stringCondition.getOperands().get(0).getOperand();
-            return Either.fromRight(new Pair<>(tagKey, tagValue));
+            String tagValue = stringCondition.getOperands().get(0).formatOperand();
+            return Either.fromRight(new Tag(tagKey, tagValue));
         } else {
             return Either.fromLeft(String.format("Error while parsing tag: %s", tagKey));
         }
@@ -443,14 +481,18 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
     }
 
-    private boolean isTagValid(DataQualityDefinitionLanguageParser.StringBasedConditionContext ctx) {
-        return ctx.EQUAL_TO() != null && ctx.NEGATION() == null;
-    }
-
-    private String getKeyFromTag(DataQualityDefinitionLanguageParser.TagValuesContext tagValuesContext) {
-        Optional<String> identifierKey = Optional.ofNullable(tagValuesContext.IDENTIFIER()).map(ParseTree::getText);
-        Optional<String> stringKey = Optional.ofNullable(tagValuesContext.quotedString()).map(ParseTree::getText);
-        return removeQuotes(identifierKey.orElseGet(stringKey::get));
+    private boolean isTagValid(ParserRuleContext ctx) {
+        if (ctx instanceof DataQualityDefinitionLanguageParser.StringBasedConditionContext) {
+            final DataQualityDefinitionLanguageParser.StringBasedConditionContext stringCtx =
+                    (DataQualityDefinitionLanguageParser.StringBasedConditionContext) ctx;
+            return stringCtx.EQUAL_TO() != null && stringCtx.NEGATION() == null;
+        } else if (ctx instanceof DataQualityDefinitionLanguageParser.NumberBasedConditionContext) {
+            final DataQualityDefinitionLanguageParser.NumberBasedConditionContext numberCtx =
+                    (DataQualityDefinitionLanguageParser.NumberBasedConditionContext) ctx;
+            return numberCtx.EQUAL_TO() != null && numberCtx.NEGATION() == null;
+        } else {
+            return false;
+        }
     }
 
     private Either<String, DQAnalyzer> getDQAnalyzer(

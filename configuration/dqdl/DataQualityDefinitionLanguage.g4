@@ -87,7 +87,7 @@ stringBasedCondition:
     | NOT? IN stringValuesArray
     | NOT? IN variableDereference
     | NOT? matchesRegexCondition;
-tagValues: quotedString | IDENTIFIER;
+tagValues: IDENTIFIER;
 
 dateExpressionArray: LBRAC dateExpression (COMMA dateExpression)* RBRAC;
 dateBasedCondition:

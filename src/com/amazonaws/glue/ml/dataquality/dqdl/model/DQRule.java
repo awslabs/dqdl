@@ -11,6 +11,7 @@
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Tag;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Tag.convertToStringMap;
 import static com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLVariableResolver.resolveVariablesInCondition;
 import static com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils.isBlank;
 
@@ -41,7 +43,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
     private final List<DQRule> nestedRules;
     private final String whereClause;
     private Boolean isExcludedAtRowLevelInCompositeRules = false;
-    private Map<String, String> tags;
+    private Map<String, Tag> tags;
 
     // Adding this constructor so as to not break the Data Quality ETL package.
     public DQRule(final String ruleType,
@@ -118,7 +120,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
                                                      final Condition condition,
                                                      final Condition thresholdCondition,
                                                      final String whereClause,
-                                                     final Map<String, String> tags) {
+                                                     final Map<String, Tag> tags) {
         DQRuleLogicalOperator operator = DQRuleLogicalOperator.AND;
         List<DQRule> nestedRules = new ArrayList<>();
 
@@ -143,7 +145,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
                                                                   final Condition condition,
                                                                   final Condition thresholdCondition,
                                                                   final String whereClause,
-                                                                  final Map<String, String> tags,
+                                                                  final Map<String, Tag> tags,
                                                                   final Map<String, DQVariable> variables) {
         // Create the unresolved rule first
         DQRule unresolvedRule = createFromParameterValueMap(ruleType, parameters, condition,
@@ -185,6 +187,10 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
         return this.toBuilder().condition(condition).build();
     }
 
+    public Map<String, String> getTags() {
+        return convertToStringMap(tags);
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -211,14 +217,9 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
                 if (!isBlank(formattedCondition)) sb.append(" with threshold ").append(formattedCondition);
             }
 
-            if (tags != null && !tags.isEmpty()) {
-                sb.append(" ");
-                for (Map.Entry<String, String> entry : tags.entrySet()) {
-                    sb.append("with \"")
-                            .append(entry.getKey())
-                            .append("\" = \"")
-                            .append(entry.getValue())
-                            .append("\" ");
+            if (tags != null) {
+                for (Map.Entry<String, Tag> entry : tags.entrySet()) {
+                    sb.append(entry.getValue());
                 }
             }
 

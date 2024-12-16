@@ -115,6 +115,8 @@ public class InvalidDQRulesetTest {
                 Arguments.of("Rules = [ FileFreshness > 9:30 ]"),
                 Arguments.of("Rules = [ FileFreshness > 9:30 SM ]"),
                 Arguments.of("Rules = [ FileFreshness > 22:1s ]"),
+                Arguments.of("Rules = [ FileFreshness \"S3://PATH\" > \"9:30 PM\" with threshold > 1 with threshold = 2 ]"),
+                Arguments.of("FileFreshness > \"9:30 AM\" with timeZone = \"America/New_Chicago\""),
                 Arguments.of("FileFreshness \"S3://PATH\" > \"21:45\" with \"timeZone\" = \"America/Dubai\""),
                 Arguments.of("(RowCount > 0) OR (IsComplete \"colA\") AND (IsUnique \"colA\"))"),
                 Arguments.of("((RowCount > 0) AND IsComplete"),

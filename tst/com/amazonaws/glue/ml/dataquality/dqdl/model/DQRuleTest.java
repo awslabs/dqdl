@@ -243,9 +243,9 @@ class DQRuleTest {
             Arguments.of("FileMatch \"S3://PATH\" in [\"hashList\"]"),
             Arguments.of("FileMatch \"S3://PATH\" in [\"hashList\",\"hashList\"]"),
             Arguments.of("FileMatch in [\"hashList\",\"hashList\"]"),
-            Arguments.of("FileMatch \"S3://PATH\" in [\"hashList\",\"hashList\"] with \"hashAlgorithm\" = \"MD5\""),
-            Arguments.of("FileMatch \"S3://PATH1\" \"S3://PATH2\" with \"randomTagThing\" = \"@sampom\""),
-            Arguments.of("FileMatch \"S3://PATH1\" in [\"a\"] with \"tag1\" = \"sampom\" with \"tag2\" = \"pomsam\""),
+            Arguments.of("FileMatch \"S3://PATH\" in [\"hashList\",\"hashList\"] with hashAlgorithm = \"MD5\""),
+            Arguments.of("FileMatch \"S3://PATH1\" \"S3://PATH2\" with randomTagThing = \"@sampom\""),
+            Arguments.of("FileMatch \"S3://PATH1\" in [\"a\"] with tag1 = \"sampom\" with tag2 = \"pomsam\""),
             Arguments.of("FileMatch \"S3://PATH1\" \"S3://PATH2\""),
             Arguments.of("FileUniqueness \"S3://PATH1\" >= 0.9"),
             Arguments.of("FileFreshness \"S3://PATH\" between \"2023-02-07\" and \"2024-07-15\""),
@@ -272,7 +272,7 @@ class DQRuleTest {
             Arguments.of("FileFreshness \"S3://PATH\" > \"09:30\""),
             Arguments.of("FileFreshness \"S3://PATH\" > \"13:30\""),
             Arguments.of("FileFreshness \"S3://PATH\" > \"21:45\""),
-            Arguments.of("FileFreshness \"S3://PATH\" > \"21:45\" with \"timeZone\" = \"America/New_York\""),
+            Arguments.of("FileFreshness \"S3://PATH\" > \"21:45\" with timeZone = \"America/New_York\""),
             Arguments.of("FileFreshness \"S3://PATH\" between \"9:30 AM\" and \"9:30 PM\""),
             Arguments.of("FileFreshness \"S3://PATH\" between \"9:30 AM\" and \"9:30 AM\""),
             Arguments.of("FileFreshness \"S3://PATH\" between \"09:30\" and \"21:45\""),
@@ -281,6 +281,21 @@ class DQRuleTest {
             Arguments.of("FileFreshness \"S3://PATH\" between \"2024-01-01\" and \"21:45\""),
             Arguments.of("FileFreshness \"S3://PATH\" between \"2024-01-01\" and (now() + 10 minutes)")
         );
+    }
+
+    @Test
+    void test_TagFormatting() throws Exception {
+        final String rule = "Rules = [ " +
+                "FileFreshness > \"9:30 AM\" with recentFiles = 1, " +
+                "FileFreshness > \"9:30 AM\" with recentFiles = \"1\", " +
+                "FileFreshness > \"9:30 AM\" with matchFileName = \"True\", " +
+                "FileFreshness > \"9:30 AM\" with timeZone = \"America/New_York\" " +
+                "]";
+        List<DQRule> rules = parser.parse(rule).getRules();
+        assertEquals("FileFreshness > \"9:30 AM\" with recentFiles = 1", rules.get(0).toString());
+        assertEquals("FileFreshness > \"9:30 AM\" with recentFiles = \"1\"", rules.get(1).toString());
+        assertEquals("FileFreshness > \"9:30 AM\" with matchFileName = \"True\"", rules.get(2).toString());
+        assertEquals("FileFreshness > \"9:30 AM\" with timeZone = \"America/New_York\"", rules.get(3).toString());
     }
 
     @Test
@@ -399,10 +414,10 @@ class DQRuleTest {
     @Test
     void test_checksumRuleParsing() throws Exception {
         String fileRules = "Rules = [ " +
-                "FileMatch in [\"exampleHash\"] with \"hashAlgorithm\" = \"MD5\" with \"dataFrame\" = \"true\" ," +
-                "FileMatch \"s3://sampom-bucket2/\" in [\"exampleHash2\"] with \"hashAlgorithm\" = \"SHA-256\" ," +
+                "FileMatch in [\"exampleHash\"] with hashAlgorithm = \"MD5\" with dataFrame = \"true\" ," +
+                "FileMatch \"s3://sampom-bucket2/\" in [\"exampleHash2\"] with hashAlgorithm = \"SHA-256\" ," +
                 "FileMatch \"s3://sampom-bucket3/\" in [\"exampleHash3\"] ," +
-                "FileMatch in [\"exampleHash4\"] with \"dataFrame\" = \"true\"" +
+                "FileMatch in [\"exampleHash4\"] with dataFrame = \"true\"" +
                 "]";
         DQRuleset dqRuleset = parser.parse(fileRules);
         List<DQRule> ruleList = dqRuleset.getRules();
