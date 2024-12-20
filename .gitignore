@@ -6,6 +6,8 @@ gen
 *.iml
 .idea
 
+dependency-reduced-pom.xml
+
 antlr-grammar
 antlr-generated-src
 gen
