@@ -33,6 +33,20 @@
         </license>
     </licenses>
 
+    <scm>
+        <connection>scm:git:git://github.com/awslabs/dqdl.git</connection>
+        <developerConnection>scm:git:ssh://github.com:awslabs/dqdl.git</developerConnection>
+        <url>https://github.com/awslabs/dqdl/tree/main</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>rdsharma26</id>
+            <name>Rahul Sharma</name>
+            <url>https://github.com/rdsharma26</url>
+        </developer>
+    </developers>
+
     <dependencies>
         <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
         <dependency>
