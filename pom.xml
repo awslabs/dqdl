@@ -164,7 +164,7 @@
                 <configuration>
                     <relocations>
                         <relocation>
-                            <pattern>com.amazonaws.glue.ml.dataquality</pattern>
+                            <pattern>com.amazonaws.glue.ml.dataquality.</pattern>
                             <shadedPattern>software.amazon.glue.</shadedPattern>
                         </relocation>
                     </relocations>
