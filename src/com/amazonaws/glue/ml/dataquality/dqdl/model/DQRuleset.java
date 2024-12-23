@@ -30,14 +30,20 @@ public class DQRuleset {
     private final String primarySourceName;
     private final List<String> additionalDataSourcesNames;
     private final List<DQRule> rules;
+    private final List<DQAnalyzer> analyzers;
 
     private static final String LINE_SEP = System.lineSeparator();
 
     public DQRuleset(final List<DQRule> rules) {
+        this(rules, new ArrayList<>());
+    }
+
+    public DQRuleset(final List<DQRule> rules, final List<DQAnalyzer> analyzers) {
         this.metadata = new HashMap<>();
         this.primarySourceName = null;
         this.additionalDataSourcesNames = new ArrayList<>();
         this.rules = rules;
+        this.analyzers = analyzers;
     }
 
     @Override
@@ -75,12 +81,23 @@ public class DQRuleset {
                 "}";
         }
 
-        String rulesStr = "Rules = [" + LINE_SEP +
-            rules.stream()
-                .map(i -> "    " + i)
-                .collect(Collectors.joining("," + LINE_SEP)) +
-            LINE_SEP + "]";
+        String rulesStr = "";
+        if (!rules.isEmpty()) {
+            rulesStr = "Rules = [" + LINE_SEP +
+                rules.stream()
+                    .map(i -> "    " + i)
+                    .collect(Collectors.joining("," + LINE_SEP)) +
+                LINE_SEP + "]";
+        }
 
+        String analyzersStr = "";
+        if (!analyzers.isEmpty()) {
+            analyzersStr = "Analyzers = [" + LINE_SEP +
+                analyzers.stream()
+                    .map(i -> "    " + i)
+                    .collect(Collectors.joining("," + LINE_SEP)) +
+                LINE_SEP + "]";
+        }
         StringBuilder sb = new StringBuilder();
 
         if (!metadataStr.isEmpty()) {
@@ -91,7 +108,16 @@ public class DQRuleset {
             sb.append(sourcesStr).append(LINE_SEP).append(LINE_SEP);
         }
 
-        sb.append(rulesStr);
+        if (!rulesStr.isEmpty()) {
+            sb.append(rulesStr);
+        }
+
+        if (!analyzersStr.isEmpty()) {
+            if (!rulesStr.isEmpty()) {
+                sb.append(LINE_SEP).append(LINE_SEP);
+            }
+            sb.append(analyzersStr);
+        }
 
         return sb.toString();
     }

@@ -12,6 +12,9 @@ package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string;
 
 public enum StringBasedConditionOperator {
     EQUALS,
+    NOT_EQUALS,
     IN,
-    MATCHES
+    NOT_IN,
+    MATCHES,
+    NOT_MATCHES
 }

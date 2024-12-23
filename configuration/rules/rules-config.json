@@ -4,7 +4,9 @@
       "rule_type_name": "RowCount",
       "description": "Check the number of rows in the dataset",
       "parameters": [],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "is_where_clause_supported": true,
+      "scope": "table"
     },
     {
       "rule_type_name": "RowCountMatch",
@@ -16,13 +18,15 @@
           "description": "Alias of reference dataset"
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "scope": "column"
     },
     {
       "rule_type_name": "ColumnCount",
       "description": "Checks the number of columns in the dataset",
       "parameters": [],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "scope": "table"
     },
     {
       "rule_type_name": "Completeness",
@@ -34,7 +38,10 @@
           "description": "Name of column to check completeness of"
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "is_excluded_at_row_level_in_composite_rules": true,
+      "is_where_clause_supported": true,
+      "scope": "column"
     },
     {
       "rule_type_name": "IsComplete",
@@ -46,11 +53,13 @@
           "description": "Name of column to check completeness of"
         }
       ],
-      "return_type": "BOOLEAN"
+      "return_type": "BOOLEAN",
+      "is_where_clause_supported": true,
+      "scope": "column"
     },
     {
       "rule_type_name": "ColumnDataType",
-      "description": "Check the data type of the given column",
+      "description": "Check the data type of the given column. Supported values: Boolean, Date, Timestamp, Integer, Double, Float, Long",
       "parameters": [
         {
           "type": "String",
@@ -59,7 +68,9 @@
         }
       ],
       "return_type": "STRING",
-      "is_threshold_supported": true
+      "is_threshold_supported": true,
+      "is_where_clause_supported": true,
+      "scope": "column"
     },
     {
       "rule_type_name": "ColumnNamesMatchPattern",
@@ -71,7 +82,8 @@
           "description": "Pattern to match against the names of the columns"
         }
       ],
-      "return_type": "BOOLEAN"
+      "return_type": "BOOLEAN",
+      "scope": "table"
     },
     {
       "rule_type_name": "ColumnExists",
@@ -83,7 +95,8 @@
           "description": "Name of column to check existence of"
         }
       ],
-      "return_type": "BOOLEAN"
+      "return_type": "BOOLEAN",
+      "scope": "column"
     },
     {
       "rule_type_name": "ColumnCorrelation",
@@ -100,7 +113,9 @@
           "description": "Name of second column"
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "is_where_clause_supported": true,
+      "scope": "column"
     },
     {
       "rule_type_name": "Uniqueness",
@@ -112,7 +127,10 @@
           "description": "Name of column to check uniqueness of"
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "is_excluded_at_row_level_in_composite_rules": true,
+      "is_where_clause_supported": true,
+      "scope": "column"
     },
     {
       "rule_type_name": "IsUnique",
@@ -124,7 +142,9 @@
           "description": "Name of column to check uniqueness of"
         }
       ],
-      "return_type": "BOOLEAN"
+      "return_type": "BOOLEAN",
+      "is_where_clause_supported": true,
+      "scope": "column"
     },
     {
       "rule_type_name": "Mean",
@@ -136,7 +156,9 @@
           "description": "Name of column to check mean of"
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "is_where_clause_supported": true,
+      "scope": "column"
     },
     {
       "rule_type_name": "Sum",
@@ -148,7 +170,9 @@
           "description": "Name of column to check sum of"
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "is_where_clause_supported": true,
+      "scope": "column"
     },
     {
       "rule_type_name": "StandardDeviation",
@@ -160,7 +184,9 @@
           "description": "Name of column to check standard deviation of"
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "is_where_clause_supported": true,
+      "scope": "column"
     },
     {
       "rule_type_name": "Entropy",
@@ -172,7 +198,9 @@
           "description": "Name of column to check entropy of"
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "is_where_clause_supported": true,
+      "scope": "column"
     },
     {
       "rule_type_name": "DistinctValuesCount",
@@ -184,7 +212,9 @@
           "description": "Name of column to check distinct values count of"
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "is_where_clause_supported": true,
+      "scope": "column"
     },
     {
       "rule_type_name": "UniqueValueRatio",
@@ -196,7 +226,9 @@
           "description": "Name of column to check unique value ratio of"
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "is_where_clause_supported": true,
+      "scope": "column"
     },
     {
       "rule_type_name": "ColumnLength",
@@ -208,7 +240,9 @@
           "description": "Name of column to check the length of the values of"
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "is_where_clause_supported": true,
+      "scope": "column"
     },
     {
       "rule_type_name": "IsPrimaryKey",
@@ -221,7 +255,9 @@
           "is_var_arg": true
         }
       ],
-      "return_type": "BOOLEAN"
+      "return_type": "BOOLEAN",
+      "is_where_clause_supported": true,
+      "scope": "column"
     },
     {
       "rule_type_name": "ColumnValues",
@@ -234,7 +270,9 @@
         }
       ],
       "return_type": "STRING_ARRAY|NUMBER_ARRAY|DATE_ARRAY",
-      "is_threshold_supported": true
+      "is_threshold_supported": true,
+      "is_where_clause_supported": true,
+      "scope": "column"
     },
     {
       "rule_type_name": "DataFreshness",
@@ -246,7 +284,9 @@
           "description": "Name of column to check the freshness of"
         }
       ],
-      "return_type": "DURATION_ARRAY"
+      "return_type": "DURATION_ARRAY",
+      "is_where_clause_supported": true,
+      "scope": "column"
     },
     {
       "rule_type_name": "CustomSql",
@@ -259,7 +299,8 @@
         }
       ],
       "return_type": "NUMBER|BOOLEAN",
-      "is_threshold_supported": true
+      "is_threshold_supported": true,
+      "scope": "table"
     },
     {
       "rule_type_name": "ReferentialIntegrity",
@@ -276,7 +317,9 @@
           "description": "Alias of reference dataset and comma separated names of columns from reference dataset. The alias and the names should be separated by a period. The names should be enclosed in curly brackets."
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "is_excluded_at_row_level_in_composite_rules": true,
+      "scope": "table"
     },
     {
       "rule_type_name": "DatasetMatch",
@@ -293,7 +336,9 @@
           "description": "Mappings of key columns used for joining the two datasets"
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "is_excluded_at_row_level_in_composite_rules": true,
+      "scope": "table"
     },
     {
       "rule_type_name": "DatasetMatch",
@@ -315,7 +360,8 @@
           "description": "Mappings of columns used for matching"
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "scope": "table"
     },
     {
       "rule_type_name": "SchemaMatch",
@@ -327,7 +373,8 @@
           "description": "Alias of reference dataset"
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "scope": "table"
     },
     {
       "rule_type_name": "AggregateMatch",
@@ -344,7 +391,161 @@
           "description": "The second aggregate expression"
         }
       ],
-      "return_type": "NUMBER"
+      "return_type": "NUMBER",
+      "scope": "column"
+    },
+    {
+      "rule_type_name": "DetectAnomalies",
+      "description": "Checks if the current value of the metric is anomalous with respect to the historical values",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "MetricParameter",
+          "description": "The parameters required to evaluate the metric. The first parameter must be the metric name.",
+          "is_var_arg": true
+        }
+      ],
+      "return_type": "BOOLEAN",
+      "scope": "column"
+    },
+    {
+      "rule_type_name": "AllStatistics",
+      "is_analyzer_only": true,
+      "description": "Analyzer Only. Produces a collection of statistics.",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of the column to analyze"
+        }
+      ],
+      "return_type": "NUMBER",
+      "scope": "column"
+    },
+    {
+      "rule_type_name": "FileMatch",
+      "description": "Match Files/Directories against Files/Directories.",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "DataPath",
+          "description": "File/Directory for comparison"
+        },
+        {
+          "type": "String",
+          "name": "CompareDataPath",
+          "description": "Other File/Directory for comparison"
+        }
+      ],
+      "return_type": "BOOLEAN",
+      "is_threshold_supported": false,
+      "is_where_clause_supported": false,
+      "scope": "file",
+      "experimental": true
+    },
+    {
+      "rule_type_name": "FileMatch",
+      "description": "Match Files/Directories inferred from DataFrames against a list of checksum values.",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "DataPath",
+          "description": "File/Directory for comparison"
+        }
+      ],
+      "return_type": "STRING",
+      "is_threshold_supported": false,
+      "is_where_clause_supported": false,
+      "scope": "file",
+      "experimental": true
+    },
+    {
+      "rule_type_name": "FileMatch",
+      "description": "Match Files/Directories inferred from DataFrames against a list of checksum values.",
+      "parameters": [],
+      "return_type": "STRING",
+      "is_threshold_supported": false,
+      "is_where_clause_supported": false,
+      "scope": "file",
+      "experimental": true
+    },
+    {
+      "rule_type_name": "FileUniqueness",
+      "description": "Checks the contents of a folder and the uniqueness of each file within.",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "DataPath",
+          "description": "Data Path for FileUniqueness."
+        }
+      ],
+      "return_type": "NUMBER",
+      "is_threshold_supported": false,
+      "is_where_clause_supported": false,
+      "scope": "file",
+      "experimental": true
+    },
+    {
+      "rule_type_name": "FileUniqueness",
+      "description": "Checks the contents of an inferred folder and the uniqueness of each file within.",
+      "parameters": [],
+      "return_type": "NUMBER",
+      "is_threshold_supported": false,
+      "is_where_clause_supported": false,
+      "scope": "file",
+      "experimental": true
+    },
+    {
+      "rule_type_name": "FileFreshness",
+      "description": "Checks the age of a filepath against a specified date.",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "DataPath",
+          "description": "Data Path for FileFreshness."
+        }
+      ],
+      "return_type": "DATE",
+      "is_threshold_supported": true,
+      "is_where_clause_supported": false,
+      "scope": "file",
+      "experimental": true
+    },
+    {
+      "rule_type_name": "FileFreshness",
+      "description": "Checks the age of an inferred file against a specified date.",
+      "parameters": [],
+      "return_type": "DATE",
+      "is_threshold_supported": true,
+      "is_where_clause_supported": false,
+      "scope": "file",
+      "experimental": true
+    },
+    {
+      "rule_type_name": "FileSize",
+      "description": "Checks the size of a filepath.",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "DataPath",
+          "description": "Data Path for FileSize."
+        }
+      ],
+      "return_type": "SIZE",
+      "is_threshold_supported": true,
+      "is_where_clause_supported": false,
+      "scope": "file",
+      "experimental": true
+    },
+    {
+      "rule_type_name": "FileSize",
+      "description": "Checks the size of an inferred file.",
+      "parameters": [],
+      "return_type": "SIZE",
+      "is_threshold_supported": true,
+      "is_where_clause_supported": false,
+      "scope": "file",
+      "experimental": true
     }
   ]
 }

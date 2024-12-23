@@ -1,25 +1,39 @@
-grammar DataQualityDefinitionLanguage; // "parser grammars for DQDL"
+grammar DataQualityDefinitionLanguage; //  "parser grammars for DQDL"
 import CommonLexerRules;
 
 // Sections
 metadataSectionStart: 'Metadata';
 dataSourcesSectionStart: 'DataSources';
 rulesSectionStart: 'Rules';
+analyzersSectionStart: 'Analyzers';
 
 // Expressions
 dateNow: 'now()';
 
-durationUnit: 'days' | 'hours';
+durationUnit: 'days' | 'hours' | 'minutes';
 
 durationExpression: (DIGIT | INT) durationUnit;
+
+sizeUnit:
+    'B'
+    | 'KB'
+    | 'MB'
+    | 'GB'
+    | 'TB';
+
+sizeExpression: (DIGIT | INT) sizeUnit;
+
+timeExpression: TIME | MIL_TIME;
 
 dateExpressionOp: ('-' | '+');
 dateExpression:
 	DATE
 	| dateNow
-	| LPAREN dateNow dateExpressionOp durationExpression RPAREN;
+	| LPAREN dateNow dateExpressionOp durationExpression RPAREN
+	| timeExpression
+	| NULL;
 
-number:
+atomicNumber:
 	DIGIT
 	| NEGATIVE DIGIT
 	| INT
@@ -27,71 +41,131 @@ number:
 	| DECIMAL
 	| NEGATIVE DECIMAL;
 
+functionParameters:
+    number
+    | number (COMMA number)*;
+
+functionCall:
+  IDENTIFIER LPAREN RPAREN
+  | IDENTIFIER LPAREN functionParameters RPAREN;
+
+numberOp: '+' | '-' | '/' | '*';
+
+number:
+    number numberOp number
+    | functionCall
+    | LPAREN number RPAREN
+    | atomicNumber
+    | NULL;
+
 quotedString: QUOTED_STRING;
 
 matchesRegexCondition: 'matches' quotedString;
 
 numberArray: LBRAC number (COMMA number)* RBRAC;
 numberBasedCondition:
-    BETWEEN number AND number
+    NOT? BETWEEN number AND number
     | GREATER_THAN number
     | GREATER_THAN_EQUAL_TO number
     | LESS_THAN number
     | LESS_THAN_EQUAL_TO number
-    | EQUAL_TO number
-    | IN numberArray;
+    | NEGATION? EQUAL_TO number
+    | NOT? IN numberArray;
 
-quotedStringArray: LBRAC quotedString (COMMA quotedString)* RBRAC;
+variableDereference: '$' IDENTIFIER;
+
+stringValues:
+    quotedString
+    | variableDereference
+    | NULL
+    | EMPTY
+    | WHITESPACES_ONLY;
+
+stringValuesArray: LBRAC stringValues (COMMA stringValues)* RBRAC;
 stringBasedCondition:
-    EQUAL_TO quotedString
-    | IN quotedStringArray
-    | matchesRegexCondition;
+    NEGATION? EQUAL_TO stringValues
+    | NOT? IN stringValuesArray
+    | NOT? IN variableDereference
+    | NOT? matchesRegexCondition;
+tagValues: IDENTIFIER;
 
 dateExpressionArray: LBRAC dateExpression (COMMA dateExpression)* RBRAC;
 dateBasedCondition:
-	BETWEEN dateExpression AND dateExpression
+	NOT? BETWEEN dateExpression AND dateExpression
 	| GREATER_THAN dateExpression
 	| GREATER_THAN_EQUAL_TO dateExpression
 	| LESS_THAN dateExpression
 	| LESS_THAN_EQUAL_TO dateExpression
-	| EQUAL_TO dateExpression
-	| IN dateExpressionArray;
+	| NEGATION? EQUAL_TO dateExpression
+	| NOT? IN dateExpressionArray;
 
 durationExpressionArray: LBRAC durationExpression (COMMA durationExpression)* RBRAC;
 durationBasedCondition:
-    BETWEEN durationExpression AND durationExpression
+    NOT? BETWEEN durationExpression AND durationExpression
     | GREATER_THAN durationExpression
     | GREATER_THAN_EQUAL_TO durationExpression
     | LESS_THAN durationExpression
     | LESS_THAN_EQUAL_TO durationExpression
-    | EQUAL_TO durationExpression
-    | IN durationExpressionArray;
+    | NEGATION? EQUAL_TO durationExpression
+    | NOT? IN durationExpressionArray;
+
+sizeExpressionArray: LBRAC sizeExpression (COMMA sizeExpression)* RBRAC;
+sizeBasedCondition:
+    NOT? BETWEEN sizeExpression AND sizeExpression
+    | GREATER_THAN sizeExpression
+    | GREATER_THAN_EQUAL_TO sizeExpression
+    | LESS_THAN sizeExpression
+    | LESS_THAN_EQUAL_TO sizeExpression
+    | NEGATION? EQUAL_TO sizeExpression
+    | NOT? IN sizeExpressionArray;
 
 ruleType: IDENTIFIER;
-parameter: (QUOTED_STRING | INT | DIGIT);
+analyzerType: IDENTIFIER;
+parameter: QUOTED_STRING
+           | IDENTIFIER;
+connectorWord: OF | AND;
+parameterWithConnectorWord: connectorWord? parameter;
+tagWithCondition: 'with' tagValues (stringBasedCondition | numberBasedCondition);
 
 condition:
     numberBasedCondition
 	| stringBasedCondition
 	| dateBasedCondition
-	| durationBasedCondition;
+	| durationBasedCondition
+	| sizeBasedCondition;
 
-withThresholdCondition: 'with' 'threshold' numberBasedCondition;
+whereClause: 'where' quotedString;
 
-dqRule: ruleType parameter* condition? withThresholdCondition?;
+dqRule: ruleType parameterWithConnectorWord* condition? whereClause? tagWithCondition*;
+dqAnalyzer: analyzerType parameterWithConnectorWord*;
+
+// Variable Declarations
+expression:
+    stringValues
+    | stringValuesArray;
+
+variableDeclaration:
+    IDENTIFIER EQUAL_TO expression;
+variableDeclarations: variableDeclaration*;
 
 topLevelRule:
-	dqRule
-	| '(' dqRule ')' (AND '(' dqRule ')')*
-	| '(' dqRule ')' (OR '(' dqRule ')')*;
+    LPAREN topLevelRule RPAREN
+    | topLevelRule AND topLevelRule
+    | topLevelRule OR topLevelRule
+    | dqRule;
 
 // Rules Definition
 dqRules: topLevelRule (COMMA topLevelRule)*;
+dqAnalyzers: dqAnalyzer (COMMA dqAnalyzer)*;
 
 // Top Level Document
 rules:
 	rulesSectionStart EQUAL_TO LBRAC dqRules RBRAC
 	| rulesSectionStart EQUAL_TO LBRAC RBRAC; // empty array
+
+analyzers:
+    analyzersSectionStart EQUAL_TO LBRAC dqAnalyzers RBRAC
+    | analyzersSectionStart EQUAL_TO LBRAC RBRAC; // empty array
 
 // This dictionary does not support nested dictionaries. Just strings and arrays.
 dictionary: LCURL pair (COMMA pair)* RCURL;
@@ -101,5 +175,6 @@ array: LBRAC QUOTED_STRING (COMMA QUOTED_STRING)* RBRAC;
 
 metadata: metadataSectionStart EQUAL_TO dictionary;
 dataSources: dataSourcesSectionStart EQUAL_TO dictionary;
+rulesOrAnalyzers: rules | analyzers | rules analyzers;
 
-document: metadata? dataSources? rules;
+document: metadata? dataSources? variableDeclarations? rulesOrAnalyzers;

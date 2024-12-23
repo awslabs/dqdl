@@ -10,6 +10,8 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model.condition;
 
+import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number.OperandEvaluator;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -26,5 +28,12 @@ public class Condition implements Serializable {
 
     public String getFormattedCondition() {
         return this.conditionAsString;
+    }
+
+    public String getSortedFormattedCondition() {
+        return this.conditionAsString;
+    }
+    public Boolean evaluate(Double metric, DQRule dqRule, OperandEvaluator evaluator) {
+        throw new UnsupportedOperationException();
     }
 }

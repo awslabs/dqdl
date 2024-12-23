@@ -32,7 +32,20 @@ public class DurationBasedConditionTest {
                         new Duration(4, DurationUnit.DAYS)
                     )
                 ),
+                "between 3 hours and 4 days",
                 "between 3 hours and 4 days"
+            ),
+            Arguments.of(
+                new DurationBasedCondition(
+                    "notbetween3hoursand4days",
+                    DurationBasedConditionOperator.NOT_BETWEEN,
+                    Arrays.asList(
+                        new Duration(3, DurationUnit.HOURS),
+                        new Duration(4, DurationUnit.DAYS)
+                    )
+                ),
+                "not between 3 hours and 4 days",
+                "not between 3 hours and 4 days"
             ),
             Arguments.of(
                 new DurationBasedCondition(
@@ -40,6 +53,7 @@ public class DurationBasedConditionTest {
                     DurationBasedConditionOperator.GREATER_THAN,
                     Collections.singletonList(new Duration(256, DurationUnit.HOURS))
                 ),
+                "> 256 hours",
                 "> 256 hours"
             ),
             Arguments.of(
@@ -48,6 +62,7 @@ public class DurationBasedConditionTest {
                     DurationBasedConditionOperator.GREATER_THAN_EQUAL_TO,
                     Collections.singletonList(new Duration(2, DurationUnit.DAYS))
                 ),
+                ">= 2 days",
                 ">= 2 days"
             ),
             Arguments.of(
@@ -56,6 +71,7 @@ public class DurationBasedConditionTest {
                     DurationBasedConditionOperator.LESS_THAN,
                     Collections.singletonList(new Duration(25000, DurationUnit.HOURS))
                 ),
+                "< 25000 hours",
                 "< 25000 hours"
             ),
             Arguments.of(
@@ -64,6 +80,7 @@ public class DurationBasedConditionTest {
                     DurationBasedConditionOperator.LESS_THAN_EQUAL_TO,
                     Collections.singletonList(new Duration(24, DurationUnit.DAYS))
                 ),
+                "<= 24 days",
                 "<= 24 days"
             ),
             Arguments.of(
@@ -72,7 +89,17 @@ public class DurationBasedConditionTest {
                     DurationBasedConditionOperator.EQUALS,
                     Collections.singletonList(new Duration(10, DurationUnit.DAYS))
                 ),
+                "= 10 days",
                 "= 10 days"
+            ),
+            Arguments.of(
+                new DurationBasedCondition(
+                    "!=10days",
+                    DurationBasedConditionOperator.NOT_EQUALS,
+                    Collections.singletonList(new Duration(10, DurationUnit.DAYS))
+                ),
+                "!= 10 days",
+                "!= 10 days"
             ),
             Arguments.of(
                 new DurationBasedCondition(
@@ -85,7 +112,22 @@ public class DurationBasedConditionTest {
                         new Duration(7, DurationUnit.DAYS)
                     )
                 ),
-                "in [3 hours, 4 days, 96 hours, 7 days]"
+                "in [3 hours,4 days,96 hours,7 days]",
+                "in [3 hours,4 days,7 days,96 hours]"
+            ),
+            Arguments.of(
+                new DurationBasedCondition(
+                    "notin[3hours,4days,96hours,7days]",
+                    DurationBasedConditionOperator.NOT_IN,
+                    Arrays.asList(
+                        new Duration(3, DurationUnit.HOURS),
+                        new Duration(4, DurationUnit.DAYS),
+                        new Duration(96, DurationUnit.HOURS),
+                        new Duration(7, DurationUnit.DAYS)
+                    )
+                ),
+                "not in [3 hours,4 days,96 hours,7 days]",
+                "not in [3 hours,4 days,7 days,96 hours]"
             )
         );
     }
@@ -93,7 +135,9 @@ public class DurationBasedConditionTest {
     @ParameterizedTest
     @MethodSource("provideDurationConditionsWithExpectedFormattedStrings")
     public void test_correctlyFormatsDuration(DurationBasedCondition condition,
-                                              String expectedFormattedString) {
+                                              String expectedFormattedString,
+                                              String expectedSortedFormattedString) {
         assertEquals(expectedFormattedString, condition.getFormattedCondition());
+        assertEquals(expectedSortedFormattedString, condition.getSortedFormattedCondition());
     }
 }

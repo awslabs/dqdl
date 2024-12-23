@@ -16,6 +16,7 @@ import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageLexer
 import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageParser;
 import com.amazonaws.glue.ml.dataquality.dqdl.util.Either;
 
+import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -24,10 +25,12 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import java.util.List;
 
+@Slf4j
 public class DQDLParser {
     private static final String PARSING_ERROR_MESSAGE_PREFIX = "Parsing Error";
 
     public DQRuleset parse(String dqdl) throws InvalidDataQualityRulesetException {
+
         CharStream input = CharStreams.fromString(dqdl);
         DQDLErrorListener errorListener = new DQDLErrorListener();
 
@@ -41,15 +44,18 @@ public class DQDLParser {
         parser.addErrorListener(errorListener);
 
         DQDLParserListener listener = new DQDLParserListener(errorListener);
-        ParseTreeWalker.DEFAULT.walk(listener, parser.document());
-
+        try {
+            ParseTreeWalker.DEFAULT.walk(listener, parser.document());
+        } catch (StringIndexOutOfBoundsException e) {
+            log.error(e.getMessage(), e);
+            throw new InvalidDataQualityRulesetException("Invalid DQDL.");
+        }
         Either<List<String>, DQRuleset> dqRulesetEither = listener.getParsedRuleset();
-
         if (dqRulesetEither.isLeft()) {
             throw new InvalidDataQualityRulesetException(generateExceptionMessage(dqRulesetEither.getLeft()));
-        } else {
-            return dqRulesetEither.getRight();
         }
+        return dqRulesetEither.getRight();
+
     }
 
     private String generateExceptionMessage(List<String> errorMessages) {

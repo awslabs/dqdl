@@ -71,11 +71,12 @@ public class DeserializationTest {
     }
 
     @Test
-    public void test_parseDQRuleType() throws JsonProcessingException {
+    public void test_parseDQRuleTypeWithThresholdAndRowLevelFlags() throws JsonProcessingException {
         String ruleTypeName = "DatasetMatch";
         String ruleTypeDesc = "This rule matches two datasets";
         String returnType = "STRING";
         boolean isThresholdSupported = true;
+        boolean isExcludedAtRowLevelInCompositeRules = true;
 
         // Parameter 1
         String param1Type = "String";
@@ -98,15 +99,67 @@ public class DeserializationTest {
                 "\"description\":\"%s\"," +
                 "\"parameters\": [ %s, %s ]," +
                 "\"return_type\": \"%s\"," +
-                "\"is_threshold_supported\": %s" +
+                "\"is_threshold_supported\": \"%s\"," +
+                "\"is_excluded_at_row_level_in_composite_rules\": %s" +
             "}",
-            ruleTypeName, ruleTypeDesc, param1Json, param2Json, returnType, isThresholdSupported);
+            ruleTypeName, ruleTypeDesc, param1Json, param2Json, returnType, isThresholdSupported,
+                isExcludedAtRowLevelInCompositeRules);
 
         DQRuleType ruleType = new ObjectMapper().readValue(json, DQRuleType.class);
         assertEquals(ruleTypeName, ruleType.getRuleTypeName());
         assertEquals(ruleTypeDesc, ruleType.getDescription());
         assertEquals(returnType, ruleType.getReturnType());
         assertEquals(isThresholdSupported, ruleType.isThresholdSupported());
+        assertEquals(isExcludedAtRowLevelInCompositeRules, ruleType.isExcludedAtRowLevelInCompositeRules());
+
+        DQRuleParameter param1 = ruleType.getParameters().get(0);
+        assertEquals(param1Type, param1.getType());
+        assertEquals(param1Name, param1.getName());
+        assertEquals(param1Desc, param1.getDescription());
+
+        DQRuleParameter param2 = ruleType.getParameters().get(1);
+        assertEquals(param2Type, param2.getType());
+        assertEquals(param2Name, param2.getName());
+        assertEquals(param2Desc, param2.getDescription());
+    }
+
+    @Test
+    public void test_parseDQRuleTypeWithNoThresholdAndRowLevelFlags() throws JsonProcessingException {
+        String ruleTypeName = "DatasetMatch";
+        String ruleTypeDesc = "This rule matches two datasets";
+        String returnType = "STRING";
+        boolean isThresholdSupported = false;
+        boolean isExcludedAtRowLevelInCompositeRules = false;
+
+        // Parameter 1
+        String param1Type = "String";
+        String param1Name = "PrimaryDatasetAlias";
+        String param1Desc = "This is the primary dataset alias";
+        String param1Json = String.format(
+                "{\"type\":\"%s\",\"name\":\"%s\",\"description\":\"%s\"}", param1Type, param1Name, param1Desc);
+
+        // Parameter2
+        String param2Type = "String";
+        String param2Name = "ReferenceDatasetAlias";
+        String param2Desc = "This is the reference dataset alias";
+
+        String param2Json = String.format(
+                "{\"type\":\"%s\",\"name\":\"%s\",\"description\":\"%s\"}", param2Type, param2Name, param2Desc);
+
+        String json = String.format(
+                "{" +
+                        "\"rule_type_name\":\"%s\"," +
+                        "\"description\":\"%s\"," +
+                        "\"parameters\": [ %s, %s ]," +
+                        "\"return_type\": \"%s\"" +
+                        "}", ruleTypeName, ruleTypeDesc, param1Json, param2Json, returnType);
+
+        DQRuleType ruleType = new ObjectMapper().readValue(json, DQRuleType.class);
+        assertEquals(ruleTypeName, ruleType.getRuleTypeName());
+        assertEquals(ruleTypeDesc, ruleType.getDescription());
+        assertEquals(returnType, ruleType.getReturnType());
+        assertEquals(isThresholdSupported, ruleType.isThresholdSupported());
+        assertEquals(isExcludedAtRowLevelInCompositeRules, ruleType.isExcludedAtRowLevelInCompositeRules());
 
         DQRuleParameter param1 = ruleType.getParameters().get(0);
         assertEquals(param1Type, param1.getType());
@@ -178,5 +231,31 @@ public class DeserializationTest {
 
         assertEquals(IllegalArgumentException.class, thrown.getCause().getClass());
         assertTrue(thrown.getMessage().contains("Property isVarArg can only be set to true on last element in parameters list"));
+    }
+
+    @Test
+    public void test_parseDQRuleTypeScope() throws JsonProcessingException {
+        String ruleTypeName = "ColumnCount";
+        String ruleTypeDesc = "This rule checks the column count";
+        String returnType = "NUMBER";
+        String scope = "table";
+
+        String json = String.format(
+            "{" +
+                "\"rule_type_name\":\"%s\"," +
+                "\"description\":\"%s\"," +
+                "\"parameters\": [ ]," +
+                "\"return_type\": \"%s\"," +
+                "\"scope\": \"%s\"" +
+            "}",
+            ruleTypeName, ruleTypeDesc, returnType, scope);
+
+        DQRuleType ruleType = new ObjectMapper().readValue(json, DQRuleType.class);
+
+        assertEquals(ruleTypeName, ruleType.getRuleTypeName());
+        assertEquals(ruleTypeDesc, ruleType.getDescription());
+        assertEquals(returnType, ruleType.getReturnType());
+        assertEquals(scope, ruleType.getScope());
+        assertTrue(ruleType.getParameters().isEmpty());
     }
 }

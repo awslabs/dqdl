@@ -12,10 +12,13 @@ package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration;
 
 public enum DurationBasedConditionOperator {
     BETWEEN,
+    NOT_BETWEEN,
     GREATER_THAN,
     GREATER_THAN_EQUAL_TO,
     LESS_THAN,
     LESS_THAN_EQUAL_TO,
     EQUALS,
-    IN
+    NOT_EQUALS,
+    IN,
+    NOT_IN
 }

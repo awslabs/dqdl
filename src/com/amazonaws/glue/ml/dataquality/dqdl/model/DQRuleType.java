@@ -22,7 +22,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -33,17 +32,36 @@ public class DQRuleType {
     private final List<DQRuleParameter> parameters;
     private final String returnType;
     private final boolean isThresholdSupported;
+    private final boolean isExcludedAtRowLevelInCompositeRules;
+    private final boolean isWhereClauseSupported;
+    private final boolean isAnalyzerOnly;
+    private final String scope;
+    private final boolean isExperimental;
 
+    @SuppressWarnings("checkstyle:parameternumber")
     public DQRuleType(@JsonProperty(value = "rule_type_name") String ruleTypeName,
                       @JsonProperty(value = "description") String description,
                       @JsonProperty(value = "parameters") List<DQRuleParameter> parameters,
                       @JsonProperty(value = "return_type") String returnType,
-                      @JsonProperty(value = "is_threshold_supported") boolean isThresholdSupported) {
+                      // boolean defaults to false if not present
+                      @JsonProperty(value = "is_threshold_supported") boolean isThresholdSupported,
+                      @JsonProperty(value = "is_excluded_at_row_level_in_composite_rules")
+                          boolean isExcludedAtRowLevelInCompositeRules,
+                      @JsonProperty(value = "is_where_clause_supported")
+                          boolean isWhereClauseSupported,
+                      @JsonProperty(value = "is_analyzer_only") boolean isAnalyzerOnly,
+                      @JsonProperty(value = "scope") String scope,
+                      @JsonProperty(value = "experimental") boolean isExperimental) {
         this.ruleTypeName = ruleTypeName;
         this.description = description;
         this.parameters = parameters;
         this.returnType = returnType;
         this.isThresholdSupported = isThresholdSupported;
+        this.isExcludedAtRowLevelInCompositeRules = isExcludedAtRowLevelInCompositeRules;
+        this.isWhereClauseSupported = isWhereClauseSupported;
+        this.isAnalyzerOnly = isAnalyzerOnly;
+        this.scope = scope;
+        this.isExperimental = isExperimental;
 
         if (parameters.isEmpty()) {
             return;
@@ -60,11 +78,9 @@ public class DQRuleType {
     }
 
     public Optional<String> verifyParameters(List<DQRuleParameter> expectedParameters,
-                                             List<String> actualParameters) {
+                                             List<DQRuleParameterValue> actualParameters) {
         if (!expectedParameters.isEmpty()) {
-
-            boolean isVarArg = expectedParameters.get(
-                    expectedParameters.size() - 1).isVarArg();
+            boolean isVarArg = expectedParameters.get(expectedParameters.size() - 1).isVarArg();
 
             if (isVarArg) {
                 if (expectedParameters.size() > actualParameters.size()) {
@@ -82,9 +98,9 @@ public class DQRuleType {
         return Optional.empty();
     }
 
-    public Map<String, String> createParameterMap(List<DQRuleParameter> dqRuleTypeParameters,
-                                                  List<String> actualParameters) {
-        Map<String, String> parameterMap = new LinkedHashMap<>();
+    public LinkedHashMap<String, DQRuleParameterValue> createParameterMap(List<DQRuleParameter> dqRuleTypeParameters,
+                                                                          List<DQRuleParameterValue> actualParameters) {
+        LinkedHashMap<String, DQRuleParameterValue> parameterMap = new LinkedHashMap<>();
 
         for (int i = 0; i < dqRuleTypeParameters.size(); i++) {
             String dqRuleTypeParameterName = dqRuleTypeParameters.get(i).getName();
@@ -98,7 +114,7 @@ public class DQRuleType {
 
                 for (int j = counter; j < actualParameters.size(); j++) {
                     String newDqRuleTypeParameterName = dqRuleTypeParameterName + (j + 1);
-                    String actualParameterName = actualParameters.get(j);
+                    DQRuleParameterValue actualParameterName = actualParameters.get(j);
 
                     parameterMap.put(newDqRuleTypeParameterName, actualParameterName);
                 }

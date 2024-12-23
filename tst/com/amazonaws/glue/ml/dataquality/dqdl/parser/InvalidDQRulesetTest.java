@@ -24,58 +24,155 @@ public class InvalidDQRulesetTest {
 
     private static Stream<Arguments> provideInvalidRulesets() {
         return Stream.of(
-            Arguments.of("Rules = {"),
-            Arguments.of("Rules = }"),
-            Arguments.of("Rules = { }"),
-            Arguments.of("Rules = [ ]"),
-            Arguments.of("Rules = ["),
-            Arguments.of("Rules = ]"),
-            Arguments.of("Rules = Abcdefg123"),
-            Arguments.of("Rules11 = [ ColumnValues \"load_dt\" > (now() - 1) ]"),
-            Arguments.of("Rules = [ 11ColumnValues \"load_dt\" > (now() - 1) ]"),
-            Arguments.of("Rules = [ ColumnValues \"load_dt\" \"load_dt_2\" > (now() - 1) ]"),
-            Arguments.of("Rules = [ Completeness \"col-A\" ]"),
-            Arguments.of("Rules = { Completeness \"col-A\" }"),
-            Arguments.of("Rules = [ ColumnNamesMatchPattern aws_* ]"),
-            Arguments.of("Rules = [ IsComplete \"col-A\" > 0.05 ]"),
-            Arguments.of("Rules = [ IsUnique \"col-A\" <= 1.5 ]"),
-            Arguments.of("Rules = [ IsPrimaryKey \"col-A\" between 1 and 2 ]"),
-            Arguments.of("Rules = [ ColumnDataType \"col-A\" ]"),
-            Arguments.of("Rules = [ ColumnDataType \"col-A\" with threshold > 0.7 ]"),
-            Arguments.of("Rules = [ ColumnDataType \"col-A\" \"col-B\" ]"),
-            Arguments.of("Rules = [ ColumnValues \"col-A\" matches ]"),
-            Arguments.of("Rules = [ ColumnValues \"col-A\" now() ]"),
-            Arguments.of("Rules = [ ColumnValues \"col-A\" > now() + 1 hours ]"),
-            Arguments.of("Rules = [ ColumnValues \"col-A\" = (now() - 3 weeks) ]"),
-            Arguments.of("Rules = [ Completeness \"col-A\" > 0.4 with threshold > 0.4]"),
-            Arguments.of("Rules = [ ColumnValues \"col-A\" > 0.4 with]"),
-            Arguments.of("Rules = [ ColumnValues \"col-A\" > 0.4 threshold]"),
-            Arguments.of("Rules = [ ColumnValues \"col-A\" > 0.4 with threshold]"),
-            Arguments.of("Rules = [ ColumnValues \"col-A\" in [1,\"2\"] ]"),
-            Arguments.of("Rules = [ DataFreshness \"col-A\" <= 3 ]"),
-            Arguments.of("Rules = [ DataFreshness \"col-A\" > 30 ]"),
-            Arguments.of("Rules = [ DataFreshness \"col-A\" between 2 and 4 days ]"),
-            Arguments.of("Rules = [ ReferentialIntegrity \"col-A\" \"reference\" \"col-A1\" ]"),
-            Arguments.of("Rules = [ ReferentialIntegrity \"col-A\" = 0.99 ]"),
-            Arguments.of("Rules = [ DatasetMatch \"reference\" = 0.99 ]"),
-            Arguments.of("Rules = [ DatasetMatch \"reference\" \"ID\" ]"),
-            Arguments.of("Rules = [ DatasetMatch \"reference\" \"ID\" \"colA\" ]"),
-            Arguments.of("Rules = [ DatasetMatch \"reference\" \"ID\" \"colA\" > 0.9 with threshold > 0.9]"),
-            Arguments.of("Rules = [ SchemaMatch with threshold between 0.2 and 0.4 ]"),
-            Arguments.of("Rules = [ SchemaMatch \"ref-1\" between 0.2 and 0.4 with threshold > 0.5 ]"),
-            Arguments.of("Rules = [ SchemaMatch \"ref-1\" \"ref-2\" ]"),
-            Arguments.of("Rules = [ RowCountMatch > 0.1 ]"),
-            Arguments.of("Rules = [ RowCountMatch \"reference-1\" \"col-1\" > 0.1 ]"),
-            Arguments.of("Rules = [ RowCountMatch \"reference-1\" > 0.1 with threshold > 0.1 ]"),
-            Arguments.of("Rules = [ AggregateMatch > 0.1 ]"),
-            Arguments.of("Rules = [ AggregateMatch \"sum(col-A)\" > 0.1 ]"),
-            Arguments.of("Rules = [ AggregateMatch \"sum(col-A)\" \"sum(reference.colA)\"]")
+                Arguments.of(""),
+                Arguments.of("Metadata = {}"),
+                Arguments.of("DataSources = {}"),
+                Arguments.of("Metadata = { \"Version\": \"1.0\" }"),
+                Arguments.of("Metadata = { \"Version\": \"1.0\" } DataSources = {}"),
+                Arguments.of("Metadata = { \"Version\": \"1.0\" } DataSources = { \"Primary\": \"Foo\" }"),
+                Arguments.of("Rules = {"),
+                Arguments.of("Rules = }"),
+                Arguments.of("Rules = { }"),
+                Arguments.of("Rules = [ ]"),
+                Arguments.of("Rules = ["),
+                Arguments.of("Rules = ]"),
+                Arguments.of("Rules = Abcdefg123"),
+                Arguments.of("Rules11 = [ ColumnValues \"load_dt\" > (now() - 1) ]"),
+                Arguments.of("Rules = [ 11ColumnValues \"load_dt\" > (now() - 1) ]"),
+                Arguments.of("Rules = [ ColumnValues \"load_dt\" \"load_dt_2\" > (now() - 1) ]"),
+                Arguments.of("Rules = [ Completeness \"col-A\" ]"),
+                Arguments.of("Rules = { Completeness \"col-A\" }"),
+                Arguments.of("Rules = [ ColumnNamesMatchPattern aws_* ]"),
+                Arguments.of("Rules = [ ColumnNamesMatchPattern \"aws_*\" where \"aws_id > 100\"]"),
+                Arguments.of("Rules = [ IsComplete \"col-A\" > 0.05 ]"),
+                Arguments.of("Rules = [ IsUnique \"col-A\" <= 1.5 ]"),
+                Arguments.of("Rules = [ IsPrimaryKey \"col-A\" between 1 and 2 ]"),
+                Arguments.of("Rules = [ ColumnDataType \"col-A\" ]"),
+                Arguments.of("Rules = [ ColumnDataType \"col-A\" with threshold > 0.7 ]"),
+                Arguments.of("Rules = [ ColumnDataType \"col-A\" \"col-B\" ]"),
+                Arguments.of("Rules = [ ColumnDataType \"col_1\" in [\"Date\",\"String\"] with threshold > 0.9 with threshold > 0.7 ]"),
+                Arguments.of("Rules = [ ColumnValues \"col-A\" matches ]"),
+                Arguments.of("Rules = [ ColumnValues \"col-A\" now() ]"),
+                Arguments.of("Rules = [ ColumnValues \"col-A\" > now() + 1 hours ]"),
+                Arguments.of("Rules = [ ColumnValues \"col-A\" = (now() - 3 weeks) ]"),
+                Arguments.of("Rules = [ Completeness \"col-A\" > 0.4 with threshold > 0.4]"),
+                Arguments.of("Rules = [ ColumnValues \"col-A\" > 0.4 with]"),
+                Arguments.of("Rules = [ ColumnValues \"col-A\" > 0.4 threshold]"),
+                Arguments.of("Rules = [ ColumnValues \"col-A\" > 0.4 with threshold]"),
+                Arguments.of("Rules = [ ColumnValues \"col-A\" in [1,\"2\"] ]"),
+                Arguments.of("Rules = [ DataFreshness \"col-A\" <= 3 ]"),
+                Arguments.of("Rules = [ DataFreshness \"col-A\" > 30 ]"),
+                Arguments.of("Rules = [ DataFreshness \"col-A\" > 9:30 ]"),
+                Arguments.of("Rules = [ DataFreshness \"col-A\" > 9:30 SM ]"),
+                Arguments.of("Rules = [ DataFreshness \"col-A\" > 25:30 ]"),
+                Arguments.of("Rules = [ DataFreshness \"col-A\" between 2 and 4 days ]"),
+                Arguments.of("Rules = [ ReferentialIntegrity \"col-A\" \"reference\" \"col-A1\" ]"),
+                Arguments.of("Rules = [ ReferentialIntegrity \"col-A\" = 0.99 ]"),
+                Arguments.of("Rules = [ ReferentialIntegrity \"col-A\" \"reference.col-A\" = 0.99 where \"col-A > 100\"]"),
+                Arguments.of("Rules = [ DatasetMatch \"reference\" = 0.99 ]"),
+                Arguments.of("Rules = [ DatasetMatch \"reference\" \"ID\" ]"),
+                Arguments.of("Rules = [ DatasetMatch \"reference\" \"ID\" \"colA\" ]"),
+                Arguments.of("Rules = [ DatasetMatch \"reference\" \"ID\" \"colA\" > 0.9 with threshold > 0.9]"),
+                Arguments.of("Rules = [ DatasetMatch \"reference\" \"ID\" \"colA\" > 0.9 where \"ID > 100\"]"),
+                Arguments.of("Rules = [ SchemaMatch with threshold between 0.2 and 0.4 ]"),
+                Arguments.of("Rules = [ SchemaMatch \"ref-1\" between 0.2 and 0.4 with threshold > 0.5 ]"),
+                Arguments.of("Rules = [ SchemaMatch \"ref-1\" \"ref-2\" ]"),
+                Arguments.of("Rules = [ RowCountMatch > 0.1 ]"),
+                Arguments.of("Rules = [ RowCountMatch \"reference-1\" \"col-1\" > 0.1 ]"),
+                Arguments.of("Rules = [ RowCountMatch \"reference-1\" > 0.1 with threshold > 0.1 ]"),
+                Arguments.of("Rules = [ RowCountMatch \"reference-1\" > 0.1 where \"id > 100\"]"),
+                Arguments.of("Rules = [ AggregateMatch > 0.1 ]"),
+                Arguments.of("Rules = [ AggregateMatch \"sum(col-A)\" > 0.1 ]"),
+                Arguments.of("Rules = [ AggregateMatch \"sum(col-A)\" \"sum(reference.colA)\"]"),
+                Arguments.of("Rules = [ AggregateMatch \"sum(col-A)\" \"sum(reference.colA)\" > 0.8 where \"col-A > 100\"]"),
+                Arguments.of("Rules = [ DetectAnomalies ]"),
+                Arguments.of("Rules = [ DetectAnomalies \"col-A\"  where \"col-A > 100\"]"),
+                Arguments.of("Rules = [ AllStatistics \"id\" > 0 ]"),
+                Arguments.of("Rules = [ FileMatch ]"),
+                Arguments.of("Rules = [ FileMatch in [] ]"),
+                Arguments.of("Rules = [ FileMatch SHA SHA SHA ]"),
+                Arguments.of("Rules = [ FileMatch SHA SHA SHA in [] ]"),
+                Arguments.of("Rules = [ FileMatch s3Path ]"),
+                Arguments.of("Rules = [ FileMatch s3Path with noHashAlgorithm ]"),
+                Arguments.of("FileMatch \"S3://PATH\" \"S3://PATH\" in [\"hashList\",\"hashList\"] with hashAlgorithm = \"MD5\""),
+                Arguments.of("Rules = [ FileMatch S3://PATH1 ]"),
+                Arguments.of("Rules = [ FileUniqueness S3://PATH1 S3://PATH1 ]"),
+                Arguments.of("Rules = [ FileFreshness between \"2024-07-15\" ]"),
+                Arguments.of("Rules = [ FileFreshness \"S3://PATH\" between and \"2024-07-15\" ]"),
+                Arguments.of("Rules = [ FileFreshness \"S3://PATH\" \"S3://PATH\" ]"),
+                Arguments.of("Rules = [ FileFreshness > (now() 3 days) ]"),
+                Arguments.of("Rules = [ FileUniqueness \"PATH\" ]"),
+                Arguments.of("Rules = [ FileUniqueness ]"),
+                Arguments.of("Rules = [ FileSize ]"),
+                Arguments.of("Rules = [ FileSize > 1 SAM]"),
+                Arguments.of("Rules = [ FileSize > 1 KB with exampleTag in [\"SAM\"] ]"),
+                Arguments.of("Rules = [ FileSize > 1 KB with exampleTag != \"SAM\"]"),
+                Arguments.of("Rules = [ FileSize 1 GB]"),
+                Arguments.of("Rules = [ FileSize <= 1 ZB ]"),
+                Arguments.of("Rules = [ FileFreshness > 13:50 AM ]"),
+                Arguments.of("Rules = [ FileFreshness > 13:50 PM ]"),
+                Arguments.of("Rules = [ FileFreshness > 25:00 ]"),
+                Arguments.of("Rules = [ FileFreshness > 9:30 ]"),
+                Arguments.of("Rules = [ FileFreshness > 9:30 SM ]"),
+                Arguments.of("Rules = [ FileFreshness > 22:1s ]"),
+                Arguments.of("Rules = [ FileFreshness \"S3://PATH\" > \"9:30 PM\" with threshold > 1 with threshold = 2 ]"),
+                Arguments.of("FileFreshness > \"9:30 AM\" with timeZone = \"America/New_Chicago\""),
+                Arguments.of("FileFreshness \"S3://PATH\" > \"21:45\" with \"timeZone\" = \"America/Dubai\""),
+                Arguments.of("(RowCount > 0) OR (IsComplete \"colA\") AND (IsUnique \"colA\"))"),
+                Arguments.of("((RowCount > 0) AND IsComplete"),
+                Arguments.of("variable > 1"),
+                Arguments.of("Rules = [ RowCount > $min_count ]"),
+                Arguments.of("max_size = 1 ZB\nRules = [ FileSize <= $max_size ]"),
+                Arguments.of("min_count = 100\nRules = [ RowCount > $min_count ]"),
+                Arguments.of("min count = 100\nRules = [ RowCount > 100 ]"),
+                Arguments.of("min count = \nRules = [ RowCount > 100 ]"),
+                Arguments.of("Rules = [\"Active\", \"Pending\", \"Closed\"]\n" +
+                        "Rules = [ RowCount > 100 ]"),
+                Arguments.of("Rules = [\"Active\", \"Pending\", \"Closed\"]\n" +
+                        "Rules = [ RowCount > 100 ]"),
+                Arguments.of("allowed_counts = [5, 10, 15, 20]\n" +
+                        "Rules = [ ColumnValues \"product_code\" not in $allowed_counts ]"),
+                Arguments.of(".allowed_counts = [5, 10, 15, 20]\n" +
+                        "Rules = [ ColumnValues \"product_code\" not in $.allowed_counts ]"),
+                Arguments.of("allowed_counts = [5, 10, 15, 20]\n" +
+                        "Rules = [ ColumnValues \"product_code\" not in random$allowed_counts ]"),
+                Arguments.of("phone_pattern = '^\\\\d{3}-\\\\d{3}-\\\\d{4}$'\n" +
+                        "Rules = [ ColumnValues \"colA\" matches $phone_pattern ]"),
+                Arguments.of("allowed_statuses = [\"Active\", \"Pending\", \"Closed\"]\n" +
+                        "Rules = [ ColumnValues \"colA\" in allowed_statuses ]"),
+                Arguments.of("allowed_statuses = [\"Active\", \"Pending\", \"Closed\"]\n" +
+                        "allowed_statuses = [\"Active\", \"Pending\", \"Closed\"]\n" +
+                        "Rules = [ ColumnValues \"colA\" in $allowed_statuses ]"),
+                Arguments.of("max$value = 1000\nRules = [ RowCount > 1000 ]"),
+                Arguments.of("base = 10\nfactor = 5\nRules = [ RowCount > $base * $factor ]")
+        );
+    }
+
+    private static Stream<Arguments> provideInvalidRulesetsWithAnalyzers() {
+        return Stream.of(
+                Arguments.of("Rules = [ ] Analyzers = [ ]"),
+                Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ IsComplete \"colA\" ]"),
+                Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ Completeness \"colA\", ]"),
+                Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ Completeness \"colA\", Foo ]"),
+                Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ Completeness \"colA\" > 1.0 ]"),
+                Arguments.of("Rules = [ IsPrimaryKey \"col-A\"] Analyzers = [ Completeness \"colA\", Uniqueness \"colB\" = 1.0 ]")
         );
     }
 
     @ParameterizedTest
     @MethodSource("provideInvalidRulesets")
     void test_invalidRulesetParsing(String ruleset) {
+        try {
+            parser.parse(ruleset);
+            fail("Ruleset validation exception was expected");
+        } catch (InvalidDataQualityRulesetException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideInvalidRulesetsWithAnalyzers")
+    void test_invalidRulesetWithAnalyzersParsing(String ruleset) {
         try {
             parser.parse(ruleset);
             fail("Ruleset validation exception was expected");

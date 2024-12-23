@@ -1,14 +1,14 @@
 /*
- * DateBasedCondition.java
+ * SizeBasedCondition.java
  *
- * Copyright (c) 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright (c) 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * PROPRIETARY/CONFIDENTIAL
  *
  * Use is subject to license terms.
  */
 
-package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date;
+package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.size;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
 import com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils;
@@ -20,13 +20,13 @@ import java.util.stream.Collectors;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class DateBasedCondition extends Condition {
-    private final DateBasedConditionOperator operator;
-    private final List<DateExpression> operands;
+public class SizeBasedCondition extends Condition {
+    private final SizeBasedConditionOperator operator;
+    private final List<Size> operands;
 
-    public DateBasedCondition(final String conditionAsString,
-                              final DateBasedConditionOperator operator,
-                              final List<DateExpression> operands) {
+    public SizeBasedCondition(final String conditionAsString,
+                                  final SizeBasedConditionOperator operator,
+                                  final List<Size> operands) {
         super(conditionAsString);
         this.operator = operator;
         this.operands = operands;
@@ -34,31 +34,29 @@ public class DateBasedCondition extends Condition {
 
     @Override
     public String getFormattedCondition() {
-        if (StringUtils.isBlank(conditionAsString)) return "";
+        if (this.operands.isEmpty()) return "";
 
         switch (operator) {
             case BETWEEN:
                 return String.format("between %s and %s",
-                    operands.get(0).getFormattedExpression(),
-                    operands.get(1).getFormattedExpression()
-                );
+                    operands.get(0).getFormattedSize(),
+                    operands.get(1).getFormattedSize());
             case NOT_BETWEEN:
                 return String.format("not between %s and %s",
-                    operands.get(0).getFormattedExpression(),
-                    operands.get(1).getFormattedExpression()
-                );
+                    operands.get(0).getFormattedSize(),
+                    operands.get(1).getFormattedSize());
             case GREATER_THAN:
-                return String.format("> %s", operands.get(0).getFormattedExpression());
+                return String.format("> %s", operands.get(0).getFormattedSize());
             case GREATER_THAN_EQUAL_TO:
-                return String.format(">= %s", operands.get(0).getFormattedExpression());
+                return String.format(">= %s", operands.get(0).getFormattedSize());
             case LESS_THAN:
-                return String.format("< %s", operands.get(0).getFormattedExpression());
+                return String.format("< %s", operands.get(0).getFormattedSize());
             case LESS_THAN_EQUAL_TO:
-                return String.format("<= %s", operands.get(0).getFormattedExpression());
+                return String.format("<= %s", operands.get(0).getFormattedSize());
             case EQUALS:
-                return String.format("= %s", operands.get(0).getFormattedExpression());
+                return String.format("= %s", operands.get(0).getFormattedSize());
             case NOT_EQUALS:
-                return String.format("!= %s", operands.get(0).getFormattedExpression());
+                return String.format("!= %s", operands.get(0).getFormattedSize());
             case IN: {
                 List<String> formattedOperands = getFormattedOperands();
                 return String.format("in [%s]", String.join(",", formattedOperands));
@@ -89,17 +87,10 @@ public class DateBasedCondition extends Condition {
     }
 
     private List<String> getFormattedOperands() {
-        List<String> formattedOperands = operands.stream()
-            .map(DateExpression::getFormattedExpression)
-            .collect(Collectors.toList());
-        return formattedOperands;
+        return operands.stream().map(Size::getFormattedSize).collect(Collectors.toList());
     }
 
     private List<String> getSortedFormattedOperands() {
-        List<String> formattedOperands = operands.stream()
-                .map(DateExpression::getFormattedExpression)
-                .sorted()
-                .collect(Collectors.toList());
-        return formattedOperands;
+        return operands.stream().map(Size::getFormattedSize).sorted().collect(Collectors.toList());
     }
 }

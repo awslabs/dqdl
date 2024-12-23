@@ -11,6 +11,7 @@
 package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.duration;
 
 public enum DurationUnit {
+    MINUTES,
     HOURS,
     DAYS
 }
