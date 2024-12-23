@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>software.amazon.glue</groupId>
     <artifactId>dqdl</artifactId>
-    <version>0.9.0</version>
+    <version>1.0.0</version>
 
     <properties>
         <antlr.generated.package>com.amazonaws.glue.ml.dataquality.dqdl</antlr.generated.package>
@@ -45,6 +45,21 @@
             <id>rdsharma26</id>
             <name>Rahul Sharma</name>
             <url>https://github.com/rdsharma26</url>
+        </developer>
+        <developer>
+            <id>eycho-am</id>
+            <name>Edward Cho</name>
+            <url>https://github.com/eycho-am</url>
+        </developer>
+        <developer>
+            <id>shriyavanvari</id>
+            <name>Shriya Vanvari</name>
+            <url>https://github.com/shriyavanvari</url>
+        </developer>
+        <developer>
+            <id>SamPom100</id>
+            <name>Sam Pomerantz</name>
+            <url>https://github.com/SamPom100</url>
         </developer>
     </developers>
 
@@ -149,7 +164,7 @@
                 <configuration>
                     <relocations>
                         <relocation>
-                            <pattern>com.amazonaws.glue.ml.</pattern>
+                            <pattern>com.amazonaws.glue.ml.dataquality</pattern>
                             <shadedPattern>software.amazon.glue.</shadedPattern>
                         </relocation>
                     </relocations>
