@@ -15,10 +15,10 @@ import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageParse
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQAnalyzer;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleLogicalOperator;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleParameterValue;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterConstantValue;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterValue;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleType;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleset;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.DQVariable;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.date.DateBasedConditionOperator;
@@ -47,6 +47,9 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBased
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Tag;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.variable.VariableReferenceOperand;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterVariableValue;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.variable.DQVariable;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.variable.VariableResolutionResult;
 import com.amazonaws.glue.ml.dataquality.dqdl.util.Either;
 import org.antlr.v4.runtime.ParserRuleContext;
 
@@ -71,6 +74,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Tag.convertToStringMap;
@@ -303,10 +307,19 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
 
         if (variable != null) {
+            // Check for nested variables
+            if (containsVariableReference(variable.getValue().toString())) {
+                errorMessages.add(String.format("Nested variables are not supported in variable '%s'", variableName));
+                return;
+            }
             dqVariables.put(variableName, variable);
         } else {
             errorMessages.add(String.format("Failed to parse variable '%s'", variableName));
         }
+    }
+
+    private boolean containsVariableReference(String value) {
+        return Pattern.compile("\\$[a-zA-Z_][a-zA-Z0-9_.]*").matcher(value).find();
     }
 
     private Either<String, DQRule> getDQRule(
@@ -415,9 +428,24 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             }
         }
 
+        Either<String, VariableResolutionResult> resolutionResultEither =
+                resolveVariables(parameterMap, condition, thresholdCondition);
+
+        if (resolutionResultEither.isLeft()) {
+            return Either.fromLeft(resolutionResultEither.getLeft());
+        }
+
+        VariableResolutionResult resolutionResult = resolutionResultEither.getRight();
+
         return Either.fromRight(
-                DQRule.createFromParameterValueMapWithVariables(
-                        dqRuleType, parameterMap, condition, thresholdCondition, whereClause, tags, dqVariables)
+                DQRule.createFromParameterValueMap(
+                        dqRuleType,
+                        resolutionResult.getResolvedParameters(),
+                        resolutionResult.getResolvedCondition(),
+                        resolutionResult.getResolvedThresholdCondition(),
+                        whereClause,
+                        tags
+                )
         );
     }
 
@@ -1211,13 +1239,17 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         String connectorWord = pc.connectorWord() == null ? "" : pc.connectorWord().getText();
 
         if (pc.parameter().QUOTED_STRING() != null) {
-            return new DQRuleParameterValue(
+            return new DQRuleParameterConstantValue(
                 removeQuotes(pc.parameter().QUOTED_STRING().getText()), true, connectorWord);
         } else if (pc.parameter().IDENTIFIER() != null) {
-            return new DQRuleParameterValue(
+            return new DQRuleParameterConstantValue(
                 pc.parameter().IDENTIFIER().getText(), false, connectorWord);
+        } else if (pc.parameter().variableDereference() != null &&
+                pc.parameter().variableDereference().IDENTIFIER() != null) {
+            String varName = pc.parameter().variableDereference().IDENTIFIER().getText();
+            return new DQRuleParameterVariableValue(varName, connectorWord);
         } else {
-            return new DQRuleParameterValue(pc.parameter().getText(), true, connectorWord);
+            return new DQRuleParameterConstantValue(pc.parameter().getText(), true, connectorWord);
         }
     }
 
@@ -1262,6 +1294,13 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             return removeQuotes(sv.quotedString().getText());
         }
         return sv.getText();
+    }
+
+    private Either<String, VariableResolutionResult> resolveVariables(
+            LinkedHashMap<String, DQRuleParameterValue> parameters,
+            Condition condition,
+            Condition thresholdCondition) {
+        return DQDLVariableResolver.resolveVariables(parameters, condition, thresholdCondition, dqVariables);
     }
 
 }
