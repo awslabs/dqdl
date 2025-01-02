@@ -10,6 +10,7 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
+import com.amazonaws.glue.ml.dataquality.dqdl.model.variable.DQVariable;
 import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.time.LocalDate;

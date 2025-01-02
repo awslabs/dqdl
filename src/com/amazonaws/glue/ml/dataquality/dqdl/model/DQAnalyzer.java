@@ -10,6 +10,7 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
+import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterValue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

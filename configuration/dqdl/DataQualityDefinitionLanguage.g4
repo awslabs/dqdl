@@ -122,7 +122,8 @@ sizeBasedCondition:
 ruleType: IDENTIFIER;
 analyzerType: IDENTIFIER;
 parameter: QUOTED_STRING
-           | IDENTIFIER;
+           | IDENTIFIER
+           | variableDereference;
 connectorWord: OF | AND;
 parameterWithConnectorWord: connectorWord? parameter;
 tagWithCondition: 'with' tagValues (stringBasedCondition | numberBasedCondition);

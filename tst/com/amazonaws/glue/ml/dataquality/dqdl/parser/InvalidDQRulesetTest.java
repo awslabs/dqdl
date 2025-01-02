@@ -144,7 +144,9 @@ public class InvalidDQRulesetTest {
                         "allowed_statuses = [\"Active\", \"Pending\", \"Closed\"]\n" +
                         "Rules = [ ColumnValues \"colA\" in $allowed_statuses ]"),
                 Arguments.of("max$value = 1000\nRules = [ RowCount > 1000 ]"),
-                Arguments.of("base = 10\nfactor = 5\nRules = [ RowCount > $base * $factor ]")
+                Arguments.of("base = 10\nfactor = 5\nRules = [ RowCount > $base * $factor ]"),
+                Arguments.of("invalidSqlString = [\"X1\", \"Y2\", \"Z3\"]\n\" +\n" +
+                        "Rules = [ CustomSql $sqlString ]")
         );
     }
 

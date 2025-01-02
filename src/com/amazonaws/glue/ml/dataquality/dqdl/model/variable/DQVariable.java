@@ -8,7 +8,7 @@
  * Use is subject to license terms.
  */
 
-package com.amazonaws.glue.ml.dataquality.dqdl.model;
+package com.amazonaws.glue.ml.dataquality.dqdl.model.variable;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;

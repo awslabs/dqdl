@@ -10,6 +10,8 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
+import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterConstantValue;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterVariableValue;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,7 +24,7 @@ public class DQRuleParameterValueTest {
     @Test
     public void test_constructorWithValueArg() {
         String value = "col-A";
-        DQRuleParameterValue param = new DQRuleParameterValue(value);
+        DQRuleParameterConstantValue param = new DQRuleParameterConstantValue(value, false);
         assertEquals(value, param.getValue());
         assertFalse(param.isQuoted());
         assertTrue(param.getConnectorWord().isEmpty());
@@ -32,49 +34,71 @@ public class DQRuleParameterValueTest {
     public void test_constructorWithValueAndIsQuotedArgs() {
         String value = "col-A";
         boolean isQuoted = true;
-        DQRuleParameterValue param = new DQRuleParameterValue(value, isQuoted);
+        DQRuleParameterConstantValue param = new DQRuleParameterConstantValue(value, isQuoted);
         assertEquals(value, param.getValue());
         assertEquals(isQuoted, param.isQuoted());
         assertTrue(param.getConnectorWord().isEmpty());
     }
 
     @Test
-    public void test_parameterValueToStringWithNoConnectorWordAndNoQuotes() {
+    public void test_parameterConstantValueToStringWithNoConnectorWordAndNoQuotes() {
         String value = "col-A";
         String connectorWord = "";
         boolean isQuoted = false;
-        DQRuleParameterValue param = new DQRuleParameterValue(value, isQuoted, connectorWord);
+        DQRuleParameterConstantValue param = new DQRuleParameterConstantValue(value, isQuoted, connectorWord);
         assertEquals(value, param.toString());
     }
 
     @Test
-    public void test_parameterValueToStringWithConnectorWordAndNoQuotes() {
+    public void test_parameterConstantValueToStringWithConnectorWordAndNoQuotes() {
         String value = "col-A";
         String connectorWord = "of";
         boolean isQuoted = false;
-        DQRuleParameterValue param = new DQRuleParameterValue(value, isQuoted, connectorWord);
+        DQRuleParameterConstantValue param = new DQRuleParameterConstantValue(value, isQuoted, connectorWord);
         assertEquals(String.format("%s %s", connectorWord, value), param.toString());
     }
 
     @Test
-    public void test_parameterValueToStringWithConnectorWordAndWithQuotes() {
+    public void test_parameterConstantValueToStringWithConnectorWordAndWithQuotes() {
         String value = "col-A";
         String connectorWord = "of";
         boolean isQuoted = true;
-        DQRuleParameterValue param = new DQRuleParameterValue(value, isQuoted, connectorWord);
+        DQRuleParameterConstantValue param = new DQRuleParameterConstantValue(value, isQuoted, connectorWord);
         assertEquals(String.format("%s \"%s\"", connectorWord, value), param.toString());
     }
 
     @Test
-    public void test_equalsAndHashCode() {
+    public void test_parameterVariableValueToString() {
+        String value = "variableName";
+        String connectorWord = "of";
+        DQRuleParameterVariableValue param = new DQRuleParameterVariableValue(value, connectorWord);
+        assertEquals(String.format("%s $%s", connectorWord, value), param.toString());
+    }
+
+    @Test
+    public void test_equalsAndHashCodeForConstantValue() {
         String value = "col-A";
         String connectorWord = "of";
         boolean isQuoted = true;
 
-        DQRuleParameterValue param1 = new DQRuleParameterValue(value, isQuoted, connectorWord);
-        DQRuleParameterValue param2 = new DQRuleParameterValue(value, isQuoted, connectorWord);
+        DQRuleParameterConstantValue param1 = new DQRuleParameterConstantValue(value, isQuoted, connectorWord);
+        DQRuleParameterConstantValue param2 = new DQRuleParameterConstantValue(value, isQuoted, connectorWord);
 
         assertNotSame(param1, param2);
         assertEquals(param1, param2);
+        assertEquals(param1.hashCode(), param2.hashCode());
+    }
+
+    @Test
+    public void test_equalsAndHashCodeForVariableValue() {
+        String value = "variableName";
+        String connectorWord = "of";
+
+        DQRuleParameterVariableValue param1 = new DQRuleParameterVariableValue(value, connectorWord);
+        DQRuleParameterVariableValue param2 = new DQRuleParameterVariableValue(value, connectorWord);
+
+        assertNotSame(param1, param2);
+        assertEquals(param1, param2);
+        assertEquals(param1.hashCode(), param2.hashCode());
     }
 }

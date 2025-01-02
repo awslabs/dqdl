@@ -19,6 +19,8 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.size.Size;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.size.SizeBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringOperand;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterConstantValue;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterValue;
 import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLParser;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -616,9 +618,15 @@ class DQRuleTest {
         assertTrue(rule.getParameters().containsKey(columnKey));
         assertEquals(column, rule.getParameters().get(columnKey));
         assertTrue(rule.getParameterValueMap().containsKey(columnKey));
-        assertEquals(column, rule.getParameterValueMap().get(columnKey).getValue());
-        assertTrue(rule.getParameterValueMap().get(columnKey).getConnectorWord().isEmpty());
-        assertTrue(rule.getParameterValueMap().get(columnKey).isQuoted());
+
+        DQRuleParameterValue paramValue = rule.getParameterValueMap().get(columnKey);
+        assertTrue(paramValue instanceof DQRuleParameterConstantValue);
+        DQRuleParameterConstantValue constantValue = (DQRuleParameterConstantValue) paramValue;
+
+        assertEquals(column, constantValue.getValue());
+        assertTrue(constantValue.getConnectorWord().isEmpty());
+        assertTrue(constantValue.isQuoted());
+
         assertTrue(rule.getCondition().getConditionAsString().isEmpty());
         assertTrue(rule.getThresholdCondition().getConditionAsString().isEmpty());
         assertEquals(operator, rule.getOperator());
@@ -762,14 +770,20 @@ class DQRuleTest {
         assertTrue(rule.getParameters().containsKey(columnKey));
         assertEquals(column, rule.getParameters().get(columnKey));
         assertTrue(rule.getParameterValueMap().containsKey(columnKey));
-        assertEquals(column, rule.getParameterValueMap().get(columnKey).getValue());
-        assertTrue(rule.getParameterValueMap().get(columnKey).getConnectorWord().isEmpty());
-        assertTrue(rule.getParameterValueMap().get(columnKey).isQuoted());
+
+        DQRuleParameterValue paramValue = rule.getParameterValueMap().get(columnKey);
+        assertTrue(paramValue instanceof DQRuleParameterConstantValue);
+        DQRuleParameterConstantValue constantValue = (DQRuleParameterConstantValue) paramValue;
+
+        assertEquals(column, constantValue.getValue());
+        assertTrue(constantValue.getConnectorWord().isEmpty());
+        assertTrue(constantValue.isQuoted());
+
         assertTrue(rule.getCondition().getConditionAsString().isEmpty());
         assertTrue(rule.getThresholdCondition().getConditionAsString().isEmpty());
         assertEquals(operator, rule.getOperator());
         assertTrue(rule.getNestedRules().isEmpty());
-        assertEquals(rule.getWhereClause(), whereClause);
+        assertEquals(whereClause, rule.getWhereClause());
     }
 
     @Test
@@ -791,9 +805,15 @@ class DQRuleTest {
         assertTrue(rule.getParameters().containsKey(columnKey));
         assertEquals(column, rule.getParameters().get(columnKey));
         assertTrue(rule.getParameterValueMap().containsKey(columnKey));
-        assertEquals(column, rule.getParameterValueMap().get(columnKey).getValue());
-        assertTrue(rule.getParameterValueMap().get(columnKey).getConnectorWord().isEmpty());
-        assertTrue(rule.getParameterValueMap().get(columnKey).isQuoted());
+
+        DQRuleParameterValue paramValue = rule.getParameterValueMap().get(columnKey);
+        assertTrue(paramValue instanceof DQRuleParameterConstantValue);
+        DQRuleParameterConstantValue constantValue = (DQRuleParameterConstantValue) paramValue;
+
+        assertEquals(column, constantValue.getValue());
+        assertTrue(constantValue.getConnectorWord().isEmpty());
+        assertTrue(constantValue.isQuoted());
+
         assertTrue(rule.getCondition().getConditionAsString().isEmpty());
         assertTrue(rule.getThresholdCondition().getConditionAsString().isEmpty());
     }

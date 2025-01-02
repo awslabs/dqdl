@@ -11,18 +11,19 @@
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.exception.InvalidDataQualityRulesetException;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterConstantValue;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterValue;
 import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLParser;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 // This is a copy of the original DQRulesetTest.
@@ -235,7 +236,12 @@ public class DQRulesetTest {
             assertEquals(0, dqAnalyzers.get(0).getParameterValueMap().size());
             assertEquals("Completeness", dqAnalyzers.get(1).getRuleType());
             assertTrue(dqAnalyzers.get(1).getParameterValueMap().containsKey("TargetColumn"));
-            assertEquals("col-A", dqAnalyzers.get(1).getParameterValueMap().get("TargetColumn").getValue());
+
+            DQRuleParameterValue paramValue = dqAnalyzers.get(1).getParameterValueMap().get("TargetColumn");
+            assertTrue(paramValue instanceof DQRuleParameterConstantValue);
+            DQRuleParameterConstantValue constantValue = (DQRuleParameterConstantValue) paramValue;
+            assertEquals("col-A", constantValue.getValue());
+            assertTrue(constantValue.isQuoted());
         });
     }
 
@@ -453,7 +459,7 @@ public class DQRulesetTest {
     }
 
     @Test
-    public void testStringVariableResolvedCorrectly() {
+    void testStringVariableResolvedCorrectly() {
         String dqdlWithVariable =
                 "locationVariable = [\"YYZ14\", \"b\", \"c\"]\n" +
                         "Rules = [ ColumnValues \"Location-id\" in $locationVariable ]";
@@ -475,7 +481,7 @@ public class DQRulesetTest {
     }
 
     @Test
-    public void testStringArrayVariable() {
+    void testStringArrayVariable() {
         String dqdl =
                 "str_arr = [\"a\", \"b\", \"c\"]\n" +
                         "Rules = [ ColumnValues \"order-id\" in $str_arr ]";
@@ -487,7 +493,7 @@ public class DQRulesetTest {
     }
 
     @Test
-    public void testMultipleRulesWithStringArrayVariable() {
+    void testMultipleRulesWithStringArrayVariable() {
         String dqdl =
                 "codes = [\"A1\", \"B2\", \"C3\"]\n" +
                         "statuses = [\"active\", \"pending\", \"inactive\"]\n" +
@@ -505,7 +511,7 @@ public class DQRulesetTest {
     }
 
     @Test
-    public void testStringArrayVariableWithNotIn() {
+    void testStringArrayVariableWithNotIn() {
         String dqdl =
                 "invalid_codes = [\"X1\", \"Y2\", \"Z3\"]\n" +
                         "Rules = [ ColumnValues \"product_code\" not in $invalid_codes ]";
@@ -517,7 +523,7 @@ public class DQRulesetTest {
     }
 
     @Test
-    public void testUnusedVariable() {
+    void testUnusedVariable() {
         String dqdl =
                 "invalid_codes = [\"X1\", \"Y2\", \"Z3\"]\n" +
                         "Rules = [ ColumnValues \"product_code\" not in [\"A1\", \"B2\", \"C3\"] ]";
@@ -529,7 +535,7 @@ public class DQRulesetTest {
     }
 
     @Test
-    public void testMultipleVariableDefinitionsOnlyOneUsed() {
+    void testMultipleVariableDefinitionsOnlyOneUsed() {
         String dqdl =
                 "invalid_codes = [\"X1\", \"Y2\", \"Z3\"]\n" +
                 "invalid_codes1 = [\"X1\", \"Y2\", \"Z3\"]\n" +
@@ -542,28 +548,180 @@ public class DQRulesetTest {
     }
 
     @Test
-    public void testVariableDefinitionMissing() {
+    void testVariableDefinitionMissing() {
         String dqdl =
                 "invalid_codes = [\"X1\", \"Y2\", \"Z3\"]\n" +
                         "invalid_codes1 = [\"X1\", \"Y2\", \"Z3\"]\n" +
                         "Rules = [ ColumnValues \"product_code\" not in $invalid_codes2 ]";
 
-        DQRuleset dqRuleset = parseDQDL(dqdl);
-        assertEquals(1, dqRuleset.getRules().size());
-        assertEquals("ColumnValues \"product_code\" not in $invalid_codes2",
-                dqRuleset.getRules().get(0).toString());
+        try {
+            dqdlParser.parse(dqdl);
+            fail("InvalidDataQualityRulesetException was expected");
+        } catch (InvalidDataQualityRulesetException e) {
+            String errorMessage = e.getMessage();
+            assertTrue(errorMessage.contains("Variable not found: invalid_codes2"),
+                    "Error message should mention the missing variable");
+            System.out.println("Caught expected exception: " + errorMessage);
+        }
     }
 
     @Test
-    public void testStringVariable() {
+    void testStringVariable() {
         String dqdl =
                 "sqlString = \"select id from primary where age < 100\"\n" +
-                        "Rules = [ CustomSql \"select id from primary where age < 100\" ]";
+                        "Rules = [ CustomSql $sqlString ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        DQRule dqRule = dqRuleset.getRules().get(0);
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("select id from primary where age < 100",
+                dqRule.getParameters().get("CustomSqlStatement"));
+        assertEquals("CustomSql $sqlString", dqRule.toString());
+    }
+
+    @Test
+    void testStringVariableBetweenAnd() {
+        String dqdl =
+                "sqlString = \"select id from primary where age < 100\"\n" +
+                        "Rules = [ CustomSql $sqlString between 10 and 20 ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        DQRule dqRule = dqRuleset.getRules().get(0);
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("select id from primary where age < 100",
+                dqRule.getParameters().get("CustomSqlStatement"));
+        assertEquals("CustomSql $sqlString between 10 and 20", dqRule.toString());
+    }
+
+    @Test
+    void testStringVariableWithThreshold() {
+        String dqdl =
+                "sqlString = \"select Name from primary where Age > 18\"\n" +
+                        "Rules = [ CustomSql $sqlString with threshold  > 3 ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        DQRule dqRule = dqRuleset.getRules().get(0);
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("select Name from primary where Age > 18",
+                dqRule.getParameters().get("CustomSqlStatement"));
+        assertEquals("CustomSql $sqlString with threshold > 3",dqRule.toString());
+    }
+
+    @Test
+    void testCustomSqlRuleWithInvalidVariableType() {
+        String dqdl =
+                "invalidSqlString = [\"X1\", \"Y2\", \"Z3\"]\n" +
+                        "Rules = [ CustomSql $invalidSqlString ]";
+
+        try {
+            dqdlParser.parse(dqdl);
+            fail("Expected InvalidDataQualityRulesetException was not thrown");
+        } catch (InvalidDataQualityRulesetException e) {
+            String errorMessage = e.getMessage();
+            assertTrue(errorMessage.contains("Invalid variable type for 'invalidSqlString'"),
+                    "Error message should mention the invalid variable type");
+            assertTrue(errorMessage.contains("expected STRING"),
+                    "Error message should mention the expected type");
+            System.out.println("Caught expected exception: " + errorMessage);
+        }
+    }
+
+    @Test
+    void testVariableReuse() {
+        String dqdl =
+                "sqlString = \"select id from primary where age < 100\"\n" +
+                        "Rules = [ \n" +
+                        "    CustomSql $sqlString, " +
+                        "    CustomSql $sqlString" +
+                        "]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        DQRule dqRule1 = dqRuleset.getRules().get(0);
+        DQRule dqRule2 = dqRuleset.getRules().get(1);
+        assertEquals(2, dqRuleset.getRules().size());
+        assertEquals("select id from primary where age < 100",
+                dqRule1.getParameters().get("CustomSqlStatement"));
+        assertEquals("select id from primary where age < 100",
+                dqRule2.getParameters().get("CustomSqlStatement"));
+        assertEquals("CustomSql $sqlString", dqRule1.toString());
+        assertEquals("CustomSql $sqlString", dqRule2.toString());
+    }
+
+    @Test
+    void testVariableOverriding() {
+        String dqdl =
+                "var = \"first value\"\n" +
+                        "var = \"second value\"\n" +
+                        "Rules = [ CustomSql $var ]";
+
+        assertThrows(InvalidDataQualityRulesetException.class, () -> dqdlParser.parse(dqdl),
+                "Should throw exception for variable redefinition");
+    }
+
+    @Test
+    void testNestedVariables() {
+        String dqdl =
+                "inner_var = \"inner\"\n" +
+                        "outer_var = \"outer $inner_var\"\n" +
+                        "Rules = [ CustomSql $outer_var ]";
+
+        assertThrows(InvalidDataQualityRulesetException.class, () -> dqdlParser.parse(dqdl),
+                "Should throw exception for nested variables");
+    }
+
+    @Test
+    void testVariableWithEmptyValue() {
+        String dqdl =
+                "empty_var = \"\"\n" +
+                        "Rules = [ CustomSql $empty_var ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        DQRule dqRule = dqRuleset.getRules().get(0);
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("", dqRule.getParameters().get("CustomSqlStatement"));
+        assertEquals("CustomSql $empty_var", dqRule.toString());
+    }
+
+    @Test
+    void testVariableInNonCustomSqlRule() throws InvalidDataQualityRulesetException {
+        String dqdl =
+                "column_name = \"age\"\n" +
+                        "Rules = [ Mean $column_name > 3 ]";
+
+        DQRuleset dqRuleset = dqdlParser.parse(dqdl);
+        DQRule dqRule = dqRuleset.getRules().get(0);
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("age", dqRule.getParameters().get("TargetColumn"));
+        assertEquals("Mean $column_name > 3", dqRule.toString());
+    }
+
+    @Test
+    void testNoStringInterpolation() {
+        String dqdl =
+                "id = \"ZZZ\"\n" +
+                        "Rules = [ CustomSql \"select $id from primary where age < 100\" ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        DQRule dqRule = dqRuleset.getRules().get(0);
+        assertEquals(1, dqRuleset.getRules().size());
+        assertEquals("select $id from primary where age < 100",
+                dqRule.getParameters().get("CustomSqlStatement"));
+        assertEquals("CustomSql \"select $id from primary where age < 100\"", dqRule.toString());
+    }
+
+    @Test
+    void testMeanRuleWithVariableInColumnName() {
+        String dqdl =
+                "column_name = \"product_rating\"\n" +
+                        "Rules = [\n" +
+                        "    Mean \"xy$column_name\" < 20\n" +
+                        "]";
 
         DQRuleset dqRuleset = parseDQDL(dqdl);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals("CustomSql \"select id from primary where age < 100\"",
-                dqRuleset.getRules().get(0).toString());
+        DQRule dqRule = dqRuleset.getRules().get(0);
+        assertEquals("xy$column_name", dqRule.getParameters().get("TargetColumn"));
+        assertEquals("Mean \"xy$column_name\" < 20", dqRule.toString());
     }
 
     @Test
