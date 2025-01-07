@@ -47,7 +47,7 @@ public abstract class DateExpression implements Serializable {
 
         @Override
         public LocalDateTime getEvaluatedExpression() {
-            return LocalDateTime.now(ZoneOffset.UTC);
+            return LocalDateTime.now(ZoneOffset.UTC).withSecond(0).withNano(0);
         }
     }
 
@@ -103,13 +103,13 @@ public abstract class DateExpression implements Serializable {
                     return evaluateMinutes(
                             operator,
                             duration.getAmount() * 60,
-                            LocalDateTime.now(ZoneOffset.UTC).withMinute(0)
+                            LocalDateTime.now(ZoneOffset.UTC)
                     );
                 case DAYS:
                     return evaluateMinutes(
                             operator,
                             duration.getAmount() * 60 * 24,
-                            LocalDateTime.now(ZoneOffset.UTC).withMinute(0)
+                            LocalDateTime.now(ZoneOffset.UTC)
                     );
                 default:
                     throw new RuntimeException("Unsupported duration unit: " + duration.getUnit());

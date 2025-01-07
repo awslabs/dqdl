@@ -100,7 +100,7 @@ public class DateExpressionTest {
         DateExpression.DateExpressionOperator operator =
             DateExpression.DateExpressionOperator.PLUS;
 
-        LocalDateTime currentDate = LocalDateTime.now(ZoneOffset.UTC).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime currentDate = LocalDateTime.now(ZoneOffset.UTC).withSecond(0).withNano(0);
         DateExpression.CurrentDateExpression currentDateExpression =
             new DateExpression.CurrentDateExpression(operator, duration);
 
