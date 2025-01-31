@@ -101,8 +101,6 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
     private static final String MILITARY_TIME_FORMAT = "HH:mm";
     private static final String AMPM_TIME_FORMAT = "h:mm a";
 
-    private static final int COMPOSITE_RULE_MAX_NESTING_DEPTH = 5;
-
     static {
         ALLOWED_METADATA_KEYS = new HashSet<>();
         ALLOWED_METADATA_KEYS.add(METADATA_VERSION_KEY);
@@ -204,7 +202,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
 
         for (DataQualityDefinitionLanguageParser.TopLevelRuleContext tlc: dqRulesContext.topLevelRule()) {
-            Either<String, DQRule> dqRuleEither = parseTopLevelRule(tlc, 0);
+            Either<String, DQRule> dqRuleEither = parseTopLevelRule(tlc);
             if (dqRuleEither.isLeft()) {
                 errorMessages.add(dqRuleEither.getLeft());
                 return;
@@ -214,14 +212,13 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
     }
 
-    private Either<String, DQRule> parseTopLevelRule(DataQualityDefinitionLanguageParser.TopLevelRuleContext tlc,
-                                                     int depth) {
+    private Either<String, DQRule> parseTopLevelRule(DataQualityDefinitionLanguageParser.TopLevelRuleContext tlc) {
         if (tlc.LPAREN() != null && tlc.RPAREN() != null) {
-            return parseTopLevelRule(tlc.topLevelRule(0), depth);
+            return parseTopLevelRule(tlc.topLevelRule(0));
         } else if (tlc.AND() != null || tlc.OR() != null) {
             DQRuleLogicalOperator op = tlc.AND() != null ? DQRuleLogicalOperator.AND : DQRuleLogicalOperator.OR;
             List<Either<String, DQRule>> nestedRuleEitherList =
-                tlc.topLevelRule().stream().map(r -> parseTopLevelRule(r, depth + 1)).collect(Collectors.toList());
+                tlc.topLevelRule().stream().map(this::parseTopLevelRule).collect(Collectors.toList());
 
             List<String> allErrorMessages = new ArrayList<>();
             List<DQRule> allRules = new ArrayList<>();
@@ -242,13 +239,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                 return Either.fromLeft(allErrorMessages.get(0));
             }
         } else if (tlc.dqRule() != null) {
-            if (depth > COMPOSITE_RULE_MAX_NESTING_DEPTH) {
-                return Either.fromLeft(
-                        String.format("Maximum nested expression depth of %s reached for composite rule",
-                                COMPOSITE_RULE_MAX_NESTING_DEPTH));
-            } else {
-                return getDQRule(tlc.dqRule());
-            }
+            return getDQRule(tlc.dqRule());
         } else {
             return Either.fromLeft("No valid rule found");
         }
