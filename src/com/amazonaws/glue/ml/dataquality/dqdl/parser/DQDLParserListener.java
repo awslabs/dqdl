@@ -15,8 +15,6 @@ import com.amazonaws.glue.ml.dataquality.dqdl.DataQualityDefinitionLanguageParse
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQAnalyzer;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleLogicalOperator;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterConstantValue;
-import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterValue;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleType;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRuleset;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
@@ -47,6 +45,8 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBased
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Tag;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.variable.VariableReferenceOperand;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterConstantValue;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterValue;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterVariableValue;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.variable.DQVariable;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.variable.VariableResolutionResult;
@@ -56,7 +56,6 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -1170,10 +1169,9 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             final ZoneId zoneId = ZoneId.of(timeZone); // https://docs.oracle.com/javase/8/docs/api/java/time/ZoneId.html
             final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
             final LocalTime time = LocalTime.parse(in, formatter);
-            final LocalDate today = LocalDate.now();
-            final LocalDateTime localDateTime = LocalDateTime.of(today, time);
-            final ZonedDateTime zonedDateTime = localDateTime.atZone(zoneId);
-            final ZonedDateTime utcTime = zonedDateTime.withZoneSameInstant(ZoneOffset.UTC);
+            final LocalDate today = LocalDate.now(zoneId);
+            final ZonedDateTime localDateTime = ZonedDateTime.of(today, time, zoneId);
+            final ZonedDateTime utcTime = localDateTime.withZoneSameInstant(ZoneOffset.UTC);
             return Optional.of(new DateExpression.StaticDateTime(utcTime.toLocalDateTime(), in));
         } catch (final DateTimeParseException e) {
             errorMessages.add(String.format("Error Parsing Date: %s. %s.", in, e.getMessage()));

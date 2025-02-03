@@ -34,11 +34,16 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -286,6 +291,25 @@ class DQRuleTest {
     }
 
     @Test
+    void test_UTC_nightBug() throws Exception {
+        final String rule = "Rules = [ " +
+                "FileFreshness > \"7:35 PM\" with timeZone = \"America/Chicago\" " +
+                "]";
+        List<DQRule> rules = parser.parse(rule).getRules();
+        DateBasedCondition c1 = (DateBasedCondition) rules.get(0).getCondition();
+        LocalDateTime ruleTime = c1.getOperands().get(0).getEvaluatedExpression();
+
+        //chicago time
+        final ZoneId zoneId = ZoneId.of("America/Chicago"); // https://docs.oracle.com/javase/8/docs/api/java/time/ZoneId.html
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a");
+        final LocalTime userTime = LocalTime.parse("7:35 PM", formatter);
+        final LocalDate userDate = ZonedDateTime.now(zoneId).toLocalDate();
+        final ZonedDateTime userDateTime = ZonedDateTime.of(userDate, userTime, zoneId);
+        final ZonedDateTime utcTime = userDateTime.withZoneSameInstant(ZoneOffset.UTC);
+        assertEquals(utcTime.toLocalDateTime(), ruleTime);
+    }
+
+    @Test
     void test_TagFormatting() throws Exception {
         final String rule = "Rules = [ " +
                 "FileFreshness > \"9:30 AM\" with recentFiles = 1, " +
@@ -307,12 +331,12 @@ class DQRuleTest {
         DateBasedCondition c1 = (DateBasedCondition) rules.get(0).getCondition();
         DateBasedCondition c2 = (DateBasedCondition) rules.get(1).getCondition();
         DateBasedCondition c3 = (DateBasedCondition) rules.get(2).getCondition();
-        Date today = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String todayStr = sdf.format(today);
-        assertEquals(todayStr + "T14:30", c1.getOperands().get(0).getEvaluatedExpression().toString());
-        assertEquals(todayStr + "T15:30", c2.getOperands().get(0).getEvaluatedExpression().toString());
-        assertEquals(todayStr + "T09:30", c3.getOperands().get(0).getEvaluatedExpression().toString());
+        String nycToday = ZonedDateTime.now(ZoneId.of("America/New_York")).toLocalDate().toString();
+        String asiaToday = ZonedDateTime.now(ZoneId.of("Asia/Dubai")).toLocalDate().toString();
+        String utcToday = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDate().toString();
+        assertEquals(nycToday + "T14:30", c1.getOperands().get(0).getEvaluatedExpression().toString());
+        assertEquals(asiaToday + "T15:30", c2.getOperands().get(0).getEvaluatedExpression().toString());
+        assertEquals(utcToday + "T09:30", c3.getOperands().get(0).getEvaluatedExpression().toString());
     }
 
     @Test
@@ -322,15 +346,13 @@ class DQRuleTest {
         DateBasedCondition c1 = (DateBasedCondition) parsedRule.getCondition();
         DateExpression d1 = c1.getOperands().get(0);
         DateExpression d2 = c1.getOperands().get(1);
-        Date today = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String todayStr = sdf.format(today);
+        String utcToday = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDate().toString();
         assertEquals("FileFreshness", parsedRule.getRuleType());
         assertEquals("between \"9:15 AM\" and \"21:45\"", c1.getFormattedCondition());
         assertEquals("\"9:15 AM\"" ,d1.getFormattedExpression());
         assertEquals("\"21:45\"" ,d2.getFormattedExpression());
-        assertEquals(todayStr + "T09:15", d1.getEvaluatedExpression().toString());
-        assertEquals(todayStr + "T21:45", d2.getEvaluatedExpression().toString());
+        assertEquals(utcToday + "T09:15", d1.getEvaluatedExpression().toString());
+        assertEquals(utcToday + "T21:45", d2.getEvaluatedExpression().toString());
     }
 
     @Test
