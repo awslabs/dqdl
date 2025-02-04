@@ -100,7 +100,8 @@ public class DQRuleType {
     }
 
     public LinkedHashMap<String, DQRuleParameterValue> createParameterMap(List<DQRuleParameter> dqRuleTypeParameters,
-                                                                          List<DQRuleParameterValue> actualParameters) {
+                                                                          List<DQRuleParameterValue> actualParameters,
+                                                                          String typeName) {
         LinkedHashMap<String, DQRuleParameterValue> parameterMap = new LinkedHashMap<>();
 
         for (int i = 0; i < dqRuleTypeParameters.size(); i++) {
@@ -113,11 +114,17 @@ public class DQRuleType {
                     counter = dqRuleTypeParameters.size() - 1;
                 }
 
-                for (int j = counter; j < actualParameters.size(); j++) {
-                    String newDqRuleTypeParameterName = dqRuleTypeParameterName + (j + 1);
-                    DQRuleParameterValue actualParameterName = actualParameters.get(j);
-
-                    parameterMap.put(newDqRuleTypeParameterName, actualParameterName);
+                // Special handling for Uniqueness and IsUnique with single column
+                if ((typeName.equals("Uniqueness") || typeName.equals("IsUnique"))
+                        && actualParameters.size() == 1) {
+                    parameterMap.put(dqRuleTypeParameterName, actualParameters.get(0));
+                } else {
+                    // Original behavior for all other cases
+                    for (int j = counter; j < actualParameters.size(); j++) {
+                        String newDqRuleTypeParameterName = dqRuleTypeParameterName + (j + 1);
+                        DQRuleParameterValue actualParameterName = actualParameters.get(j);
+                        parameterMap.put(newDqRuleTypeParameterName, actualParameterName);
+                    }
                 }
             } else {
                 parameterMap.put(dqRuleTypeParameterName, actualParameters.get(i));

@@ -337,7 +337,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
 
         LinkedHashMap<String, DQRuleParameterValue> parameterMap =
-            dqRuleType.createParameterMap(dqRuleType.getParameters(), parameters);
+            dqRuleType.createParameterMap(dqRuleType.getParameters(), parameters, ruleType);
 
         String whereClause = null;
         if (dqRuleContext.whereClause() != null) {
@@ -540,7 +540,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
 
         LinkedHashMap<String, DQRuleParameterValue> parameterMap =
-            dqRuleType.createParameterMap(dqRuleType.getParameters(), parameters);
+            dqRuleType.createParameterMap(dqRuleType.getParameters(), parameters, analyzerType);
 
         return Either.fromRight(DQAnalyzer.createFromValueMap(analyzerType, parameterMap));
     }
