@@ -124,7 +124,8 @@
         {
           "type": "String",
           "name": "TargetColumn",
-          "description": "Name of column to check uniqueness of"
+          "description": "Name of column(s) to check uniqueness of",
+          "is_var_arg": true
         }
       ],
       "return_type": "NUMBER",
@@ -139,7 +140,8 @@
         {
           "type": "String",
           "name": "TargetColumn",
-          "description": "Name of column to check uniqueness of"
+          "description": "Name of column(s) to check uniqueness of",
+          "is_var_arg": true
         }
       ],
       "return_type": "BOOLEAN",
