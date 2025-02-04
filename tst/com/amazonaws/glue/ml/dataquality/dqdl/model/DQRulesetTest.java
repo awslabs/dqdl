@@ -424,11 +424,45 @@ public class DQRulesetTest {
     }
 
     @Test
-    void test_isUniqueRule() {
+    void test_uniquenessRule() {
         String dqdl = "Rules = [ (Uniqueness \"col_1\" between 0.1 and 0.2) ]";
         DQRuleset dqRuleset = parseDQDL(dqdl);
         assertEquals(1, dqRuleset.getRules().size());
-        assertEquals("Uniqueness", dqRuleset.getRules().get(0).getRuleType());
+        DQRule uniquenessRule = dqRuleset.getRules().get(0);
+        assertEquals("Uniqueness", uniquenessRule.getRuleType());
+        assertEquals(uniquenessRule.getParameters().get("TargetColumn"), "col_1");
+    }
+
+    @Test
+    void test_uniquenessRuleMultipleColumn() {
+        String dqdl = "Rules = [ (Uniqueness \"col_1\" \"col_2\" between 0.1 and 0.2) ]";
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+        DQRule uniquenessRule = dqRuleset.getRules().get(0);
+        assertEquals("Uniqueness", uniquenessRule.getRuleType());
+        assertEquals(uniquenessRule.getParameters().get("TargetColumn1"), "col_1");
+        assertEquals(uniquenessRule.getParameters().get("TargetColumn2"), "col_2");
+    }
+
+    @Test
+    void test_isUniqueRule() {
+        String dqdl = "Rules = [ (IsUnique \"col_1\") ]";
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+        DQRule isUniqueRule = dqRuleset.getRules().get(0);
+        assertEquals("IsUnique", isUniqueRule.getRuleType());
+        assertEquals(isUniqueRule.getParameters().get("TargetColumn"), "col_1");
+    }
+
+    @Test
+    void test_isUniqueRuleMultipleColumn() {
+        String dqdl = "Rules = [ (IsUnique \"col_1\" \"col_2\") ]";
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+        DQRule isUniqueRule = dqRuleset.getRules().get(0);
+        assertEquals("IsUnique", isUniqueRule.getRuleType());
+        assertEquals(isUniqueRule.getParameters().get("TargetColumn1"), "col_1");
+        assertEquals(isUniqueRule.getParameters().get("TargetColumn2"), "col_2");
     }
 
     @Test

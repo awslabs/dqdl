@@ -66,6 +66,7 @@ public class DQAnalyzerTest {
             Arguments.of("ColumnCount"),
             Arguments.of("ColumnCorrelation \"col_1\" \"col_2\""),
             Arguments.of("Uniqueness \"col_1\""),
+            Arguments.of("Uniqueness \"col_1\" \"col_2\""),
             Arguments.of("Sum \"col_A-B.C\""),
             Arguments.of("Mean \"col_A-B.CD\""),
             Arguments.of("StandardDeviation \"col_A-B.CD\""),
