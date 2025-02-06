@@ -41,7 +41,11 @@ public final class DQDLVariableResolver {
                     return Either.fromLeft(resolvedOperand.getLeft());
                 }
                 resolvedOperands.addAll(resolvedOperand.getRight());
+            } else if (operand instanceof QuotedStringOperand) {
+                // Only escape single quotes for string literals
+                resolvedOperands.add(createEscapedStringOperand(operand.getOperand()));
             } else {
+                // For other types of operands, add them as-is
                 resolvedOperands.add(operand);
             }
         }
@@ -97,12 +101,12 @@ public final class DQDLVariableResolver {
         List<StringOperand> resolvedOperands = new ArrayList<>();
         switch (variable.getType()) {
             case STRING:
-                resolvedOperands.add(new QuotedStringOperand(variable.getValue().toString()));
+                resolvedOperands.add(createEscapedStringOperand(variable.getValue().toString()));
                 break;
             case STRING_ARRAY:
                 List<String> values = (List<String>) variable.getValue();
                 for (String value : values) {
-                    resolvedOperands.add(new QuotedStringOperand(value));
+                    resolvedOperands.add(createEscapedStringOperand(value));
                 }
                 break;
             default:
@@ -157,5 +161,9 @@ public final class DQDLVariableResolver {
 
         return Either.fromRight(new VariableResolutionResult(
                 resolvedParameters, resolvedCondition, thresholdCondition));
+    }
+
+    private static QuotedStringOperand createEscapedStringOperand(String value) {
+        return new QuotedStringOperand(value.replace("'", "\\'"));
     }
 }
