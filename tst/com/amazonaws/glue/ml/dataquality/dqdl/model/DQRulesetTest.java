@@ -11,6 +11,8 @@
 package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.exception.InvalidDataQualityRulesetException;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedCondition;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterConstantValue;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterValue;
 import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLParser;
@@ -512,6 +514,10 @@ public class DQRulesetTest {
                 dqRulesetWithVariable.getRules().get(0).toString());
         assertEquals(ruleWithoutVariable,
                 dqRulesetWithoutVariable.getRules().get(0).toString());
+        assertEquals("in $locationVariable",
+                dqRulesetWithVariable.getRules().get(0).getCondition().getSortedFormattedCondition());
+        assertEquals("in [\"YYZ14\",\"b\",\"c\"]",
+                dqRulesetWithoutVariable.getRules().get(0).getCondition().getSortedFormattedCondition());
     }
 
     @Test
@@ -524,6 +530,8 @@ public class DQRulesetTest {
         assertEquals(1, dqRuleset.getRules().size());
         assertEquals("ColumnValues \"order-id\" in $str_arr",
                 dqRuleset.getRules().get(0).toString());
+        assertEquals("in $str_arr",
+                dqRuleset.getRules().get(0).getCondition().getSortedFormattedCondition());
     }
 
     @Test
@@ -542,6 +550,8 @@ public class DQRulesetTest {
                 dqRuleset.getRules().get(0).toString());
         assertEquals("ColumnValues \"status\" in $statuses",
                 dqRuleset.getRules().get(1).toString());
+        assertEquals("in $codes",
+                dqRuleset.getRules().get(0).getCondition().getSortedFormattedCondition());
     }
 
     @Test
@@ -554,6 +564,8 @@ public class DQRulesetTest {
         assertEquals(1, dqRuleset.getRules().size());
         assertEquals("ColumnValues \"product_code\" not in $invalid_codes",
                 dqRuleset.getRules().get(0).toString());
+        assertEquals("not in $invalid_codes",
+                dqRuleset.getRules().get(0).getCondition().getSortedFormattedCondition());
     }
 
     @Test
@@ -566,6 +578,8 @@ public class DQRulesetTest {
         assertEquals(1, dqRuleset.getRules().size());
         assertEquals("ColumnValues \"product_code\" not in [\"A1\",\"B2\",\"C3\"]",
                 dqRuleset.getRules().get(0).toString());
+        assertEquals("not in [\"A1\",\"B2\",\"C3\"]",
+                dqRuleset.getRules().get(0).getCondition().getSortedFormattedCondition());
     }
 
     @Test
@@ -579,6 +593,8 @@ public class DQRulesetTest {
         assertEquals(1, dqRuleset.getRules().size());
         assertEquals("ColumnValues \"product_code\" not in [\"A1\",\"B2\",\"C3\"]",
                 dqRuleset.getRules().get(0).toString());
+        assertEquals("not in [\"A1\",\"B2\",\"C3\"]",
+                dqRuleset.getRules().get(0).getCondition().getSortedFormattedCondition());
     }
 
     @Test
@@ -597,6 +613,51 @@ public class DQRulesetTest {
                     "Error message should mention the missing variable");
             System.out.println("Caught expected exception: " + errorMessage);
         }
+    }
+
+    @Test
+    void testStringArrayVariableWithSingleQuotes() {
+        String dqdl =
+                "str_arr = [\"don't\", \"won't\", \"can't\"]\n" +
+                        "Rules = [ ColumnValues \"order-id\" in $str_arr ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertTrue(operands.get(0).formatOperand().contains("don\\'t"));
+        assertTrue(operands.get(1).formatOperand().contains("won\\'t"));
+        assertTrue(operands.get(2).formatOperand().contains("can\\'t"));
+        assertEquals("in $str_arr", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testDirectStringWithSingleQuotes() {
+        String dqdl = "Rules = [ ColumnValues \"order-id\" = \"don't\" ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertTrue(operands.get(0).formatOperand().contains("don\\'t"));
+        assertEquals("= \"don't\"", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testDirectStringArrayWithSingleQuotes() {
+        String dqdl = "Rules = [ ColumnValues \"order-id\" in [\"don't\", \"won't\", \"can't\"] ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertTrue(operands.get(0).formatOperand().contains("don\\'t"));
+        assertTrue(operands.get(1).formatOperand().contains("won\\'t"));
+        assertTrue(operands.get(2).formatOperand().contains("can\\'t"));
+        assertEquals("in [\"can't\",\"don't\",\"won't\"]", rule.getCondition().getSortedFormattedCondition());
     }
 
     @Test
