@@ -59,9 +59,9 @@ public class StringBasedCondition extends Condition {
             case NOT_EQUALS:
                 return String.format("!= %s", effectiveOperands.get(0).formatOperand());
             case IN:
-                return formatInCondition(false, false);
+                return formatInConditionWithVariables(false);
             case NOT_IN:
-                return formatInCondition(true, false);
+                return formatInConditionWithVariables(true);
             default:
                 break;
         }
@@ -75,25 +75,20 @@ public class StringBasedCondition extends Condition {
 
         switch (operator) {
             case IN:
-                return formatInCondition(false, true);
+                return formatInConditionWithValues(false, true);
             case NOT_IN:
-                return formatInCondition(true, true);
+                return formatInConditionWithValues(true, true);
+            case EQUALS:
+                return String.format("= %s", operands.get(0).formatOperand());
+            case NOT_EQUALS:
+                return String.format("!= %s", operands.get(0).formatOperand());
+            case MATCHES:
+                return String.format("matches %s", operands.get(0).formatOperand());
+            case NOT_MATCHES:
+                return String.format("not matches %s", operands.get(0).formatOperand());
             default:
                 return getFormattedCondition();
         }
-    }
-
-    private String formatInCondition(boolean isNot, boolean sorted) {
-        List<StringOperand> effectiveOperands = getEffectiveOperands();
-        List<String> formattedOperands = sorted
-                ? getSortedFormattedOperands(effectiveOperands) : getFormattedOperands(effectiveOperands);
-        String operandStr;
-        if (formattedOperands.size() == 1 && effectiveOperands.get(0) instanceof VariableReferenceOperand) {
-            operandStr = formattedOperands.get(0);
-        } else {
-            operandStr = "[" + String.join(",", formattedOperands) + "]";
-        }
-        return String.format("%sin %s", isNot ? "not " : "", operandStr);
     }
 
     private List<String> getFormattedOperands(List<StringOperand> operands) {
@@ -112,4 +107,26 @@ public class StringBasedCondition extends Condition {
     private List<StringOperand> getEffectiveOperands() {
         return unresolvedOperands != null ? unresolvedOperands : operands;
     }
+
+    private String formatInConditionWithVariables(boolean isNot) {
+        List<StringOperand> effectiveOperands = getEffectiveOperands();
+        List<String> formattedOperands = getFormattedOperands(effectiveOperands);
+        String operandStr;
+        if (effectiveOperands.size() == 1 && effectiveOperands.get(0) instanceof VariableReferenceOperand) {
+            operandStr = formattedOperands.get(0);
+        } else {
+            operandStr = "[" + String.join(",", formattedOperands) + "]";
+        }
+        return String.format("%sin %s", isNot ? "not " : "", operandStr);
+    }
+
+    private String formatInConditionWithValues(boolean isNot, boolean sorted) {
+        List<String> formattedOperands = sorted
+                ? getSortedFormattedOperands(operands)
+                : getFormattedOperands(operands);
+
+        String operandStr = "[" + String.join(",", formattedOperands) + "]";
+        return String.format("%sin %s", isNot ? "not " : "", operandStr);
+    }
+
 }

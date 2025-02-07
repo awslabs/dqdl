@@ -514,7 +514,7 @@ public class DQRulesetTest {
                 dqRulesetWithVariable.getRules().get(0).toString());
         assertEquals(ruleWithoutVariable,
                 dqRulesetWithoutVariable.getRules().get(0).toString());
-        assertEquals("in $locationVariable",
+        assertEquals("in [\"YYZ14\",\"b\",\"c\"]",
                 dqRulesetWithVariable.getRules().get(0).getCondition().getSortedFormattedCondition());
         assertEquals("in [\"YYZ14\",\"b\",\"c\"]",
                 dqRulesetWithoutVariable.getRules().get(0).getCondition().getSortedFormattedCondition());
@@ -530,7 +530,7 @@ public class DQRulesetTest {
         assertEquals(1, dqRuleset.getRules().size());
         assertEquals("ColumnValues \"order-id\" in $str_arr",
                 dqRuleset.getRules().get(0).toString());
-        assertEquals("in $str_arr",
+        assertEquals("in [\"a\",\"b\",\"c\"]",
                 dqRuleset.getRules().get(0).getCondition().getSortedFormattedCondition());
     }
 
@@ -550,7 +550,7 @@ public class DQRulesetTest {
                 dqRuleset.getRules().get(0).toString());
         assertEquals("ColumnValues \"status\" in $statuses",
                 dqRuleset.getRules().get(1).toString());
-        assertEquals("in $codes",
+        assertEquals("in [\"A1\",\"B2\",\"C3\"]",
                 dqRuleset.getRules().get(0).getCondition().getSortedFormattedCondition());
     }
 
@@ -564,7 +564,7 @@ public class DQRulesetTest {
         assertEquals(1, dqRuleset.getRules().size());
         assertEquals("ColumnValues \"product_code\" not in $invalid_codes",
                 dqRuleset.getRules().get(0).toString());
-        assertEquals("not in $invalid_codes",
+        assertEquals("not in [\"X1\",\"Y2\",\"Z3\"]",
                 dqRuleset.getRules().get(0).getCondition().getSortedFormattedCondition());
     }
 
@@ -629,7 +629,7 @@ public class DQRulesetTest {
         assertTrue(operands.get(0).formatOperand().contains("don\\'t"));
         assertTrue(operands.get(1).formatOperand().contains("won\\'t"));
         assertTrue(operands.get(2).formatOperand().contains("can\\'t"));
-        assertEquals("in $str_arr", rule.getCondition().getSortedFormattedCondition());
+        assertEquals("in [\"can\\'t\",\"don\\'t\",\"won\\'t\"]", rule.getCondition().getSortedFormattedCondition());
     }
 
     @Test
@@ -642,7 +642,7 @@ public class DQRulesetTest {
         DQRule rule = dqRuleset.getRules().get(0);
         List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
         assertTrue(operands.get(0).formatOperand().contains("don\\'t"));
-        assertEquals("= \"don't\"", rule.getCondition().getSortedFormattedCondition());
+        assertEquals("= \"don\\'t\"", rule.getCondition().getSortedFormattedCondition());
     }
 
     @Test
@@ -657,7 +657,7 @@ public class DQRulesetTest {
         assertTrue(operands.get(0).formatOperand().contains("don\\'t"));
         assertTrue(operands.get(1).formatOperand().contains("won\\'t"));
         assertTrue(operands.get(2).formatOperand().contains("can\\'t"));
-        assertEquals("in [\"can't\",\"don't\",\"won't\"]", rule.getCondition().getSortedFormattedCondition());
+        assertEquals("in [\"can\\'t\",\"don\\'t\",\"won\\'t\"]", rule.getCondition().getSortedFormattedCondition());
     }
 
     @Test
