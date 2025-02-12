@@ -661,6 +661,280 @@ public class DQRulesetTest {
     }
 
     @Test
+    void testStringArrayVariableWithPreEscapedSingleQuotes() {
+        String dqdl =
+                "str_arr = [\"don\\'t\", \"won\\'t\", \"can\\'t\"]\n" +
+                        "Rules = [ ColumnValues \"order-id\" in $str_arr ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertTrue(operands.get(0).formatOperand().contains("don\\'t"));
+        assertTrue(operands.get(1).formatOperand().contains("won\\'t"));
+        assertTrue(operands.get(2).formatOperand().contains("can\\'t"));
+        assertEquals("in [\"can\\'t\",\"don\\'t\",\"won\\'t\"]", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testDirectStringWithPreEscapedSingleQuotes() {
+        String dqdl = "Rules = [ ColumnValues \"order-id\" = \"don\\'t\" ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertTrue(operands.get(0).formatOperand().contains("don\\'t"));
+        assertEquals("= \"don\\'t\"", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testDirectStringArrayWithPreEscapedSingleQuotes() {
+        String dqdl = "Rules = [ ColumnValues \"order-id\" in [\"don\\'t\", \"won\\'t\", \"can\\'t\"] ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertTrue(operands.get(0).formatOperand().contains("don\\'t"));
+        assertTrue(operands.get(1).formatOperand().contains("won\\'t"));
+        assertTrue(operands.get(2).formatOperand().contains("can\\'t"));
+        assertEquals("in [\"can\\'t\",\"don\\'t\",\"won\\'t\"]", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testDirectStringArrayWithMixedPreEscapedSingleQuotes() {
+        String dqdl = "Rules = [ ColumnValues \"order-id\" in [\"something\\'s vs another's\"] ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertTrue(operands.get(0).formatOperand().contains("something\\'s vs another\\'s"));
+        assertEquals("in [\"something\\'s vs another\\'s\"]", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testStringArrayVariableWithMixedPreEscapedSingleQuotes() {
+        String dqdl =
+                "str_arr = [\"something\\'s vs another's\"]\n" +
+                        "Rules = [ ColumnValues \"order-id\" in $str_arr ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertTrue(operands.get(0).formatOperand().contains("something\\'s vs another\\'s"));
+        assertEquals("in [\"something\\'s vs another\\'s\"]", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testDirectEmptyString() {
+        String dqdl = "Rules = [ ColumnValues \"order-id\" = \"\" ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertEquals("\"\"", operands.get(0).formatOperand());
+        assertEquals("= \"\"", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testDirectEmptyStringArray() {
+        String dqdl = "Rules = [ ColumnValues \"order-id\" in [\"\"] ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertEquals("\"\"", operands.get(0).formatOperand());
+        assertEquals("in [\"\"]", rule.getCondition().getSortedFormattedCondition());
+    }
+
+
+    @Test
+    void testDirectStringWithOnlyEscapeCharacters() {
+        String dqdl = "Rules = [ ColumnValues \"order-id\" = \"\\\\\" ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertEquals("\"\\\\\"", operands.get(0).formatOperand());
+        assertEquals("= \"\\\\\"", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testDirectStringArrayWithOnlyEscapeCharacters() {
+        String dqdl = "Rules = [ ColumnValues \"order-id\" in [\"\\\\\"] ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertEquals("\"\\\"", operands.get(0).formatOperand());
+                assertEquals("in [\"\\\"]", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testDirectStringWithConsecutiveEscapeCharacters() {
+        String dqdl = "Rules = [ ColumnValues \"order-id\" = \"\\\\\\\\'\" ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertEquals("\"\\\\\\\\'\"", operands.get(0).formatOperand());
+        assertEquals("= \"\\\\\\\\'\"", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testDirectStringArrayWithConsecutiveEscapeCharacters() {
+        String dqdl = "Rules = [ ColumnValues \"order-id\" in [\"\\\\\\\\'\"] ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertEquals("\"\\\\'\"", operands.get(0).formatOperand());
+        assertEquals("in [\"\\\\'\"]", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testDirectStringWithOtherSpecialCharacters() {
+        String dqdl = "Rules = [ ColumnValues \"order-id\" = \"hello!@#$%^&*()\" ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertEquals("\"hello!@#$%^&*()\"", operands.get(0).formatOperand());
+        assertEquals("= \"hello!@#$%^&*()\"", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testDirectStringArrayWithOtherSpecialCharacters() {
+        String dqdl = "Rules = [ ColumnValues \"order-id\" in [\"hello!@#$%^&*()\"] ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertEquals("\"hello!@#$%^&*()\"", operands.get(0).formatOperand());
+        assertEquals("in [\"hello!@#$%^&*()\"]", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testDirectStringWithMixedSpecialCharacters() {
+        String dqdl = "Rules = [ ColumnValues \"order-id\" = \"hello!@#$%^&*()'s world\" ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertEquals("\"hello!@#$%^&*()\\'s world\"", operands.get(0).formatOperand());
+        assertEquals("= \"hello!@#$%^&*()\\'s world\"", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testDirectStringArrayWithMixedSpecialCharacters() {
+        String dqdl = "Rules = [ ColumnValues \"order-id\" in [\"hello!@#$%^&*()'s world\"] ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertEquals("\"hello!@#$%^&*()\\'s world\"", operands.get(0).formatOperand());
+        assertEquals("in [\"hello!@#$%^&*()\\'s world\"]", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testEmptyStringArrayVariable() {
+        String dqdl = "str_arr = [\"\"]\n" +
+                "Rules = [ ColumnValues \"order-id\" in $str_arr ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertEquals("\"\"", operands.get(0).formatOperand());
+        assertEquals("in [\"\"]", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testArrayVariableWithOnlyEscapeCharacters() {
+        String dqdl = "str_arr = [\"\\\\\"]\n" +
+                "Rules = [ ColumnValues \"order-id\" in $str_arr ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertEquals("\"\\\"", operands.get(0).formatOperand());
+        assertEquals("in [\"\\\"]", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testStringArrayVariableWithConsecutiveEscapeCharacters() {
+        String dqdl = "str_arr = [\"\\\\\\\\'\"]\n" +
+                "Rules = [ ColumnValues \"order-id\" in $str_arr ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertEquals("\"\\\\'\"", operands.get(0).formatOperand());
+        assertEquals("in [\"\\\\'\"]", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testStringArrayVariableWithOtherSpecialCharacters() {
+        String dqdl =  "str_arr = [\"hello!@#$%^&*()\"]\n" +
+                "Rules = [ ColumnValues \"order-id\" in $str_arr ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertEquals("\"hello!@#$%^&*()\"", operands.get(0).formatOperand());
+        assertEquals("in [\"hello!@#$%^&*()\"]", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
+    void testStringArrayVariableWithMixedSpecialCharacters() {
+        String dqdl = "str_arr = [\"hello!@#$%^&*()'s world\"]\n" +
+                "Rules = [ ColumnValues \"order-id\" in $str_arr ]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        assertEquals(1, dqRuleset.getRules().size());
+
+        DQRule rule = dqRuleset.getRules().get(0);
+        List<StringOperand> operands = ((StringBasedCondition) rule.getCondition()).getOperands();
+        assertEquals("\"hello!@#$%^&*()\\'s world\"", operands.get(0).formatOperand());
+        assertEquals("in [\"hello!@#$%^&*()\\'s world\"]", rule.getCondition().getSortedFormattedCondition());
+    }
+
+    @Test
     void testStringVariable() {
         String dqdl =
                 "sqlString = \"select id from primary where age < 100\"\n" +

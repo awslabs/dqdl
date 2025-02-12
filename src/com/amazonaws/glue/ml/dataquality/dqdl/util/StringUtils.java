@@ -30,4 +30,9 @@ public final class StringUtils {
     public static boolean isNotBlank(final CharSequence cs) {
         return !isBlank(cs);
     }
+
+    public static String removeEscapes(String stringWithEscapes) {
+        stringWithEscapes = stringWithEscapes.replaceAll("\\\\(.)", "$1");
+        return stringWithEscapes;
+    }
 }
