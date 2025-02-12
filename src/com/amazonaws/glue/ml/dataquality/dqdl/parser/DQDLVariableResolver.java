@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
 
+import static com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils.removeEscapes;
+
 public final class DQDLVariableResolver {
 
     // Private constructor to prevent instantiation
@@ -106,7 +108,7 @@ public final class DQDLVariableResolver {
             case STRING_ARRAY:
                 List<String> values = (List<String>) variable.getValue();
                 for (String value : values) {
-                    resolvedOperands.add(createEscapedStringOperand(value));
+                    resolvedOperands.add(createEscapedStringOperandWithPreprocessing(value));
                 }
                 break;
             default:
@@ -164,6 +166,27 @@ public final class DQDLVariableResolver {
     }
 
     private static QuotedStringOperand createEscapedStringOperand(String value) {
-        return new QuotedStringOperand(value.replace("'", "\\'"));
+        StringBuilder result = new StringBuilder();
+        boolean prevWasBackslash = false;
+
+        for (char c : value.toCharArray()) {
+            if (c == '\\') {
+                prevWasBackslash = true;
+                result.append(c);
+            } else if (c == '\'' && !prevWasBackslash) {
+                result.append("\\'");
+                prevWasBackslash = false;
+            } else {
+                result.append(c);
+                prevWasBackslash = false;
+            }
+        }
+
+        return new QuotedStringOperand(result.toString());
+    }
+
+    private static QuotedStringOperand createEscapedStringOperandWithPreprocessing(String value) {
+        String preprocessedValue = removeEscapes(value);
+        return createEscapedStringOperand(preprocessedValue);
     }
 }

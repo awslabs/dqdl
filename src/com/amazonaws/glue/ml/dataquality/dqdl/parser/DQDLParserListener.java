@@ -77,6 +77,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Tag.convertToStringMap;
+import static com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils.removeEscapes;
 
 public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListener {
     private final DQDLErrorListener errorListener;
@@ -1210,11 +1211,6 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             quotedString = quotedString.substring(0, quotedString.length() - 1);
         }
         return quotedString;
-    }
-
-    private String removeEscapes(String stringWithEscapes) {
-        stringWithEscapes = stringWithEscapes.replaceAll("\\\\(.)", "$1");
-        return stringWithEscapes;
     }
 
     private List<DQRuleParameterValue> parseParameters(
