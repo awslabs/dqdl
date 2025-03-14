@@ -10,6 +10,7 @@
 
 package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -82,5 +83,37 @@ public class StringBasedConditionTest {
                                               String expectedSortedFormattedString) {
         assertEquals(expectedFormattedString, condition.getFormattedCondition());
         assertEquals(expectedSortedFormattedString, condition.getSortedFormattedCondition());
+    }
+
+    @Test
+    public void test_ignoreCaseOrdering() {
+        StringBasedCondition c = new StringBasedCondition(
+                "in[\"D\",\"a\",\"C\",\"b\"]",
+                StringBasedConditionOperator.IN,
+                Arrays.asList(
+                        new QuotedStringOperand("d"),
+                        new QuotedStringOperand("a"),
+                        new QuotedStringOperand("b"),
+                        new QuotedStringOperand("c")
+                )
+        );
+        assertEquals(c.getSortedFormattedCondition(), c.getSortedFormattedCondition(false));
+        assertEquals("in [\"a\",\"b\",\"c\",\"d\"]", c.getSortedFormattedCondition(true));
+
+        StringBasedCondition keywordC = new StringBasedCondition(
+                "in[\"Z\",\"a\",WHITESPACES_ONLY,EMPTY,\"C\",NULL,\"s\"]",
+                StringBasedConditionOperator.IN,
+                Arrays.asList(
+                        new QuotedStringOperand("z"),
+                        new QuotedStringOperand("a"),
+                        new KeywordStringOperand(WHITESPACES_ONLY),
+                        new KeywordStringOperand(EMPTY),
+                        new QuotedStringOperand("c"),
+                        new KeywordStringOperand(NULL),
+                        new QuotedStringOperand("s")
+                )
+        );
+        assertEquals(keywordC.getSortedFormattedCondition(), keywordC.getSortedFormattedCondition(false));
+        assertEquals("in [\"a\",\"c\",\"s\",\"z\",EMPTY,NULL,WHITESPACES_ONLY]", keywordC.getSortedFormattedCondition(true));
     }
 }
