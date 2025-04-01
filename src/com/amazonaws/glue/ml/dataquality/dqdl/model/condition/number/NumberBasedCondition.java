@@ -13,7 +13,6 @@ package com.amazonaws.glue.ml.dataquality.dqdl.model.condition.number;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.DQRule;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
 import com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils;
-import static java.lang.Math.abs;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +44,6 @@ public class NumberBasedCondition extends Condition {
 
         List<Double> operandsAsDouble = operands.stream()
             .map(operand -> evaluator.evaluate(dqRule, operand)).collect(Collectors.toList());
-
 
         log.info(String.format("Evaluating condition for rule: %s", dqRule));
         List<String> formatOps = operandsAsDouble.stream().map(OP_FORMAT::format).collect(Collectors.toList());
@@ -196,6 +194,6 @@ public class NumberBasedCondition extends Condition {
     }
 
     protected boolean isOperandEqualToMetric(Double metric, Double operand) {
-        return abs(metric - operand) <= 0.00001;
+        return metric.equals(operand);
     }
 }
