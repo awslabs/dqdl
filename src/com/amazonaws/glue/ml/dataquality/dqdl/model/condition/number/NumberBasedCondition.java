@@ -46,76 +46,76 @@ public class NumberBasedCondition extends Condition {
             .map(operand -> evaluator.evaluate(dqRule, operand)).collect(Collectors.toList());
 
         log.info(String.format("Evaluating condition for rule: %s", dqRule));
-        List<String> formatOps = operandsAsDouble.stream().map(OP_FORMAT::format).collect(Collectors.toList());
-        String formatMetric = OP_FORMAT.format(metric);
 
         switch (operator) {
             case BETWEEN:
                 if (operands.size() != 2) return false;
                 else {
                     boolean result = metric > operandsAsDouble.get(0) && metric < operandsAsDouble.get(1);
-                    log.info("{} between {} and {}? {}", formatMetric, formatOps.get(0), formatOps.get(1), result);
+                    log.info("{} between {} and {}? {}",
+                            metric, operandsAsDouble.get(0), operandsAsDouble.get(1), result);
                     return result;
                 }
             case NOT_BETWEEN:
                 if (operands.size() != 2) return false;
                 else {
                     boolean result = metric <= operandsAsDouble.get(0) || metric >= operandsAsDouble.get(1);
-                    log.info("{} not between {} and {}? {}", formatMetric, formatOps.get(0), formatOps.get(1), result);
+                    log.info("{} not between {} and {}? {}",
+                            metric, operandsAsDouble.get(0), operandsAsDouble.get(1), result);
                     return result;
                 }
             case GREATER_THAN_EQUAL_TO:
                 if (operands.size() != 1) return false;
                 else {
                     boolean result = metric >= operandsAsDouble.get(0);
-                    log.info("{} >= {}? {}", formatMetric, formatOps.get(0), result);
+                    log.info("{} >= {}? {}", metric, operandsAsDouble.get(0), result);
                     return result;
                 }
             case GREATER_THAN:
                 if (operands.size() != 1) return false;
                 else {
                     boolean result = metric > operandsAsDouble.get(0);
-                    log.info("{} > {}? {}", formatMetric, formatOps.get(0), result);
+                    log.info("{} > {}? {}", metric, operandsAsDouble.get(0), result);
                     return result;
                 }
             case LESS_THAN_EQUAL_TO:
                 if (operands.size() != 1) return false;
                 else {
                     boolean result = metric <= operandsAsDouble.get(0);
-                    log.info("{} <= {}? {}", formatMetric, formatOps.get(0), result);
+                    log.info("{} <= {}? {}", metric, operandsAsDouble.get(0), result);
                     return result;
                 }
             case LESS_THAN:
                 if (operands.size() != 1) return false;
                 else {
                     boolean result = metric < operandsAsDouble.get(0);
-                    log.info("{} < {}? {}", formatMetric, formatOps.get(0), result);
+                    log.info("{} < {}? {}", metric, operandsAsDouble.get(0), result);
                     return result;
                 }
             case EQUALS:
                 if (operands.size() != 1) return false;
                 else {
                     boolean result = isOperandEqualToMetric(metric, operandsAsDouble.get(0));
-                    log.info("{} == {}? {}", formatMetric, formatOps.get(0), result);
+                    log.info("{} == {}? {}", metric, operandsAsDouble.get(0), result);
                     return result;
                 }
             case NOT_EQUALS:
                 if (operands.size() != 1) return false;
                 else {
                     boolean result = !isOperandEqualToMetric(metric, operandsAsDouble.get(0));
-                    log.info("{} != {}? {}", formatMetric, formatOps.get(0), result);
+                    log.info("{} != {}? {}", metric, operandsAsDouble.get(0), result);
                     return result;
                 }
             case IN: {
                 boolean result = operandsAsDouble.stream().anyMatch(operand ->
                     isOperandEqualToMetric(metric, operand));
-                log.info("{} in {}? {}", formatMetric, formatOps, result);
+                log.info("{} in {}? {}", metric, operandsAsDouble, result);
                 return result;
             }
             case NOT_IN: {
                 boolean result = !operandsAsDouble.stream().anyMatch(operand ->
                     isOperandEqualToMetric(metric, operand));
-                log.info("{} not in {}? {}", formatMetric, formatOps, result);
+                log.info("{} not in {}? {}", metric, operandsAsDouble, result);
                 return result;
             }
             default:
