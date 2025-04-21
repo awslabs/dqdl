@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>software.amazon.glue</groupId>
     <artifactId>dqdl</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 
     <properties>
         <antlr.generated.package>com.amazonaws.glue.ml.dataquality.dqdl</antlr.generated.package>
