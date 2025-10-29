@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>software.amazon.glue</groupId>
     <artifactId>dqdl</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 
     <properties>
         <antlr.generated.package>com.amazonaws.glue.ml.dataquality.dqdl</antlr.generated.package>
-        <antlr.version>4.7</antlr.version>
+        <antlr.version>4.13.2</antlr.version>
         <configuration.dir>configuration</configuration.dir>
         <dqdl.antlr.grammar.file>DataQualityDefinitionLanguage.g4</dqdl.antlr.grammar.file>
         <jackson.databind.version>2.12.7.1</jackson.databind.version>
@@ -17,8 +17,8 @@
         <lombok.version>1.18.28</lombok.version>
         <slf4j.version>2.0.16</slf4j.version>
         <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <maven.surefire.plugin.version>3.1.2</maven.surefire.plugin.version>
     </properties>
 
@@ -60,6 +60,11 @@
             <id>SamPom100</id>
             <name>Sam Pomerantz</name>
             <url>https://github.com/SamPom100</url>
+        </developer>
+                <developer>
+            <id>LinanZheng</id>
+            <name>Linan Zheng</name>
+            <url>https://github.com/LinanZheng</url>
         </developer>
     </developers>
 
@@ -143,6 +148,13 @@
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>
