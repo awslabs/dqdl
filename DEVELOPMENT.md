@@ -2,7 +2,7 @@
 
 ## Recommended Environment
 
-- Package has been compiled With Java 8 and Java 17
+- Package has been compiled With Java 11 and Java 17
 - Maven 3.9+
 
 ## Building the Project
@@ -42,5 +42,5 @@ mvn clean install -DskipTests
 
 ## Notes
 
-- The project currently compiles to Java 8 bytecode (pom.xml has maven.compiler.source/target=1.8)
+- The project currently compiles to Java 11 bytecode (pom.xml has maven.compiler.source/target=11)
 - ANTLR-generated code is placed in `target/generated-sources/antlr4/`
