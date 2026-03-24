@@ -20,7 +20,10 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -1092,6 +1095,250 @@ public class DQRulesetTest {
         assertEquals("xy$column_name", dqRule.getParameters().get("TargetColumn"));
         assertEquals("Mean \"xy$column_name\" < 20", dqRule.toString());
     }
+
+    @Test
+    void test_ParenthesesWithLabelsWorks() throws InvalidDataQualityRulesetException {
+        String dqdl = "Rules = [\n" +
+                "  (ColumnValues \"trade_currency\" != NULL AND ColumnLength \"trade_currency\" > 0) labels = [\"rule_id\" = \"123\"],\n" +
+                "  (ColumnValues \"depository_receipt\" != \"Yes\" OR IsComplete \"adr_per_share\") labels = [\"rule_id\" = \"456\"],\n" +
+                "  (ColumnValues \"country_iso\" != NULL AND ColumnLength \"country_iso\" > 0) labels = [\"rule_id\" = \"789\"]\n" +
+                "]";
+        
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        List<DQRule> rules = dqRuleset.getRules();
+        
+        assertEquals(3, rules.size());
+        
+        // First rule: AND composite with labels
+        assertEquals(Collections.singletonMap("rule_id", "123"), rules.get(0).getLabels());
+        assertEquals("Composite", rules.get(0).getRuleType());
+        assertEquals(DQRuleLogicalOperator.AND, rules.get(0).getOperator());
+        assertEquals(2, rules.get(0).getNestedRules().size());
+        assertEquals("ColumnValues \"trade_currency\" != NULL", rules.get(0).getNestedRules().get(0).toString());
+        assertEquals("ColumnLength \"trade_currency\" > 0", rules.get(0).getNestedRules().get(1).toString());
+        
+        // Second rule: OR composite with labels
+        assertEquals(Collections.singletonMap("rule_id", "456"), rules.get(1).getLabels());
+        assertEquals("Composite", rules.get(1).getRuleType());
+        assertEquals(DQRuleLogicalOperator.OR, rules.get(1).getOperator());
+        assertEquals(2, rules.get(1).getNestedRules().size());
+        assertEquals("ColumnValues \"depository_receipt\" != \"Yes\"", rules.get(1).getNestedRules().get(0).toString());
+        assertEquals("IsComplete \"adr_per_share\"", rules.get(1).getNestedRules().get(1).toString());
+        
+        // Third rule: AND composite with labels
+        assertEquals(Collections.singletonMap("rule_id", "789"), rules.get(2).getLabels());
+        assertEquals("Composite", rules.get(2).getRuleType());
+        assertEquals(DQRuleLogicalOperator.AND, rules.get(2).getOperator());
+        assertEquals(2, rules.get(2).getNestedRules().size());
+        assertEquals("ColumnValues \"country_iso\" != NULL", rules.get(2).getNestedRules().get(0).toString());
+        assertEquals("ColumnLength \"country_iso\" > 0", rules.get(2).getNestedRules().get(1).toString());
+    }
+
+    @Test
+    void test_CompositeRuleWithNestedRuleLabels() throws InvalidDataQualityRulesetException {
+        String dqdl = "Rules = [\n" +
+                "  (ColumnValues \"x\" != NULL labels=[\"nested1\"=\"value1\"] AND ColumnLength \"x\" > 0 labels=[\"nested2\"=\"value2\"]) labels=[\"outer\"=\"value3\"]\n" +
+                "]";
+        
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        DQRule compositeRule = dqRuleset.getRules().get(0);
+        
+        // Composite rule should have outer labels
+        assertEquals(Collections.singletonMap("outer", "value3"), compositeRule.getLabels());
+        
+        // Nested rules should keep their individual labels
+        assertEquals(Collections.singletonMap("nested1", "value1"), compositeRule.getNestedRules().get(0).getLabels());
+        assertEquals(Collections.singletonMap("nested2", "value2"), compositeRule.getNestedRules().get(1).getLabels());
+    }
+
+    @Test
+    void test_CompositeRuleWithConflictingNestedLabels() throws InvalidDataQualityRulesetException {
+        String dqdl = "Rules = [\n" +
+                "  (ColumnValues \"x\" != NULL labels=[\"key\"=\"value1\"] AND ColumnLength \"x\" > 0 labels=[\"key\"=\"value2\"]) labels=[\"key\"=\"value3\"]\n" +
+                "]";
+        
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        DQRule compositeRule = dqRuleset.getRules().get(0);
+        
+        // Outer labels should take precedence
+        assertEquals(Collections.singletonMap("key", "value3"), compositeRule.getLabels());
+        
+        // Nested rules should keep their conflicting labels
+        assertEquals(Collections.singletonMap("key", "value1"), compositeRule.getNestedRules().get(0).getLabels());
+        assertEquals(Collections.singletonMap("key", "value2"), compositeRule.getNestedRules().get(1).getLabels());
+    }
+
+    @Test
+    void test_CompositeRuleWithOnlyNestedLabels() throws InvalidDataQualityRulesetException {
+        String dqdl = "Rules = [\n" +
+                "  (ColumnValues \"x\" != NULL labels=[\"nested1\"=\"value1\"] AND ColumnLength \"x\" > 0 labels=[\"nested2\"=\"value2\"])\n" +
+                "]";
+        
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        DQRule compositeRule = dqRuleset.getRules().get(0);
+        
+        // Composite rule should have no labels (only default labels if any)
+        assertTrue(compositeRule.getLabels().isEmpty());
+        
+        // Nested rules should keep their labels
+        assertEquals(Collections.singletonMap("nested1", "value1"), compositeRule.getNestedRules().get(0).getLabels());
+        assertEquals(Collections.singletonMap("nested2", "value2"), compositeRule.getNestedRules().get(1).getLabels());
+    }
+
+    @Test
+    void test_NonParenthesesWithLabelsFails() {
+        String dqdl = "Rules = [\n" +
+                "  ColumnValues \"trade_currency\" != NULL AND ColumnLength \"trade_currency\" > 0 labels = [\"rule_id\" = \"123\"]\n" +
+                "]";
+        
+        // This parses but labels are applied incorrectly
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        DQRule rule = dqRuleset.getRules().get(0);
+        
+        // The composite rule should NOT have the labels (they go to the last individual rule)
+        assertTrue(rule.getLabels().isEmpty());
+        assertEquals("Composite", rule.getRuleType());
+        
+        // The labels incorrectly go to the second nested rule
+        assertEquals(Collections.singletonMap("rule_id", "123"), rule.getNestedRules().get(1).getLabels());
+    }
+
+    @Test
+    void test_DefaultLabels() throws InvalidDataQualityRulesetException {
+        String dqdl =
+                "DefaultLabels=[\"key\"=\"value\"]\n" +
+                        "Rules = [ IsPrimaryKey \"anniezc\" ]";
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        DQRule dqRule = dqRuleset.getRules().get(0);
+
+        Map<String, String> expectedLabels = new HashMap<>();
+        expectedLabels.put("key", "value");
+
+        assertEquals(expectedLabels, dqRule.getLabels());
+    }
+
+    @Test
+    void test_DefaultLabelsWithAdditionalLabels() throws InvalidDataQualityRulesetException {
+        String dqdl =
+                "DefaultLabels=[\"key\"=\"value\"]\n" +
+                        "Rules = [ IsPrimaryKey \"anniezc\" labels=[\"k\"=\"v\"] ]";
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        DQRule dqRule = dqRuleset.getRules().get(0);
+
+        Map<String, String> expectedLabels = new HashMap<>();
+        expectedLabels.put("key", "value");
+        expectedLabels.put("k", "v");
+
+        assertEquals(expectedLabels, dqRule.getLabels());
+    }
+
+    @Test
+    void test_DefaultLabelsWithDuplicateKeys() {
+        String dqdl =
+                "DefaultLabels=[\"key\"=\"value\", \"key\"=\"value2\"]\n" +
+                        "Rules = [ IsPrimaryKey \"anniezc\" ]";
+        try {
+            dqdlParser.parse(dqdl);
+            fail("Should've thrown InvalidDataQualityRulesetException");
+        } catch (InvalidDataQualityRulesetException e) {
+            assertTrue(e.getMessage().contains("Duplicate label key. Key must be unique."));
+        }
+    }
+
+    @Test
+    void test_DefaultLabelsCaseSensitivity() throws InvalidDataQualityRulesetException {
+        String dqdl =
+                "DefaultLabels=[\"key\"=\"value\", \"Key\"=\"value2\"]\n" +
+                        "Rules = [ IsPrimaryKey \"anniezc\" ]";
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        DQRule dqRule = dqRuleset.getRules().get(0);
+
+        Map<String, String> expectedLabels = new HashMap<>();
+        expectedLabels.put("key", "value");
+        expectedLabels.put("Key", "value2");
+
+        assertEquals(expectedLabels, dqRule.getLabels());
+    }
+
+    @Test
+    void test_DefaultLabelsWithDuplicateValues() throws InvalidDataQualityRulesetException {
+        String dqdl =
+                "DefaultLabels=[\"key\"=\"value\", \"key2\"=\"value\"]\n" +
+                        "Rules = [ IsPrimaryKey \"anniezc\" ]";
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        DQRule dqRule = dqRuleset.getRules().get(0);
+
+        Map<String, String> expectedLabels = new HashMap<>();
+        expectedLabels.put("key", "value");
+        expectedLabels.put("key2", "value");
+
+        assertEquals(expectedLabels, dqRule.getLabels());
+    }
+
+    @Test
+    void test_MaxNumberOfLabels() {
+        String dqdl =
+                "DefaultLabels=[\"k\"=\"v\", \"k1\"=\"v\", \"k2\"=\"v\", \"k3\"=\"v\", \"k4\"=\"v\", \"k5\"=\"v\", \"k6\"=\"v\", \"k7\"=\"v\", \"k8\"=\"v\", \"k9\"=\"v\", \"k10\"=\"v\"]\n" +
+                        "Rules = [ IsPrimaryKey \"anniezc\" ]";
+        try {
+            dqdlParser.parse(dqdl);
+            fail("Should've thrown InvalidDataQualityRulesetException");
+        } catch (InvalidDataQualityRulesetException e) {
+            assertTrue(e.getMessage().contains("Number of labels exceed maximum allowed (MAX: 10)"));
+        }
+    }
+
+    @Test
+    void test_AddingLabelsAfterReachingMax() {
+        String dqdl =
+                "DefaultLabels=[\"k\"=\"v\", \"k1\"=\"v\", \"k2\"=\"v\", \"k3\"=\"v\", \"k4\"=\"v\", \"k5\"=\"v\", \"k6\"=\"v\", \"k7\"=\"v\", \"k8\"=\"v\", \"k9\"=\"v\"]\n" +
+                        "Rules = [ IsPrimaryKey \"anniezc\" labels=[\"key\"=\"val\"] ]";
+        try {
+            dqdlParser.parse(dqdl);
+            fail("Should've thrown InvalidDataQualityRulesetException");
+        } catch (InvalidDataQualityRulesetException e) {
+            assertTrue(e.getMessage().contains("Number of labels exceed maximum allowed (MAX: 10)"));
+        }
+    }
+
+    @Test
+    void test_OverridingDefaultLabels() throws InvalidDataQualityRulesetException {
+        String dqdl =
+                "DefaultLabels=[\"key\"=\"value\"]\n" +
+                        "Rules = [ IsPrimaryKey \"anniezc\" labels=[\"key\"=\"v\"] ]";
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        DQRule dqRule = dqRuleset.getRules().get(0);
+
+        Map<String, String> expectedLabels = new HashMap<>();
+        expectedLabels.put("key", "v");
+
+        assertEquals(expectedLabels, dqRule.getLabels());
+    }
+
+    @Test
+    void test_DefaultLabelsAppliedToRules() {
+        String dqdl = "DefaultLabels=[\"env\"=\"prod\", \"team\"=\"dataQuality\"]\n" +
+                "Rules = [IsComplete \"colA\", IsComplete \"colB\" labels=[\"priority\"=\"high\"]]";
+
+        DQRuleset dqRuleset = parseDQDL(dqdl);
+        List<DQRule> rules = dqRuleset.getRules();
+
+        assertEquals(2, rules.size());
+
+        // First rule should have only default labels
+        Map<String, String> expectedLabels1 = new HashMap<>();
+        expectedLabels1.put("env", "prod");
+        expectedLabels1.put("team", "dataQuality");
+        assertEquals(expectedLabels1, rules.get(0).getLabels());
+
+        // Second rule should have default labels plus its own
+        Map<String, String> expectedLabels2 = new HashMap<>();
+        expectedLabels2.put("env", "prod");
+        expectedLabels2.put("team", "dataQuality");
+        expectedLabels2.put("priority", "high");
+        assertEquals(expectedLabels2, rules.get(1).getLabels());
+    }
+
 
     @Test
     void test_multipleRules() {

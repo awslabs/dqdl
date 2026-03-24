@@ -137,7 +137,12 @@ condition:
 
 whereClause: 'where' quotedString;
 
-dqRule: ruleType parameterWithConnectorWord* condition? whereClause? tagWithCondition*;
+defaultLabels: 'DefaultLabels' EQUAL_TO '[' (label (',' label)*)? ']';
+labels: 'labels' EQUAL_TO '[' (label (',' label)*)? ']';
+label: quotedString EQUAL_TO quotedString;
+
+
+dqRule: ruleType parameterWithConnectorWord* condition? whereClause? labels? tagWithCondition*;
 dqAnalyzer: analyzerType parameterWithConnectorWord*;
 
 // Variable Declarations
@@ -150,7 +155,7 @@ variableDeclaration:
 variableDeclarations: variableDeclaration*;
 
 topLevelRule:
-    LPAREN topLevelRule RPAREN
+    LPAREN topLevelRule RPAREN labels?
     | topLevelRule AND topLevelRule
     | topLevelRule OR topLevelRule
     | dqRule;
@@ -178,4 +183,4 @@ metadata: metadataSectionStart EQUAL_TO dictionary;
 dataSources: dataSourcesSectionStart EQUAL_TO dictionary;
 rulesOrAnalyzers: rules | analyzers | rules analyzers;
 
-document: metadata? dataSources? variableDeclarations? rulesOrAnalyzers;
+document: metadata? dataSources? variableDeclarations? defaultLabels? rulesOrAnalyzers;

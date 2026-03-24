@@ -12,6 +12,7 @@ package com.amazonaws.glue.ml.dataquality.dqdl.model;
 
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.Condition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Tag;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Labels;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterValue;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Tag.convertToStringMap;
+import static com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Labels.convertToStringMap;
 import static com.amazonaws.glue.ml.dataquality.dqdl.util.StringUtils.isBlank;
 
 @AllArgsConstructor
@@ -41,10 +43,31 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
     private final DQRuleLogicalOperator operator;
     private final List<DQRule> nestedRules;
     private final String whereClause;
+    private final Labels labels;
     private Boolean isExcludedAtRowLevelInCompositeRules = false;
     private Map<String, Tag> tags;
 
     // Adding this constructor so as to not break the Data Quality ETL package.
+    @SuppressWarnings("checkstyle:parameternumber")
+    public DQRule(final String ruleType,
+                  final Map<String, String> parameters,
+                  final Condition condition,
+                  final Condition thresholdCondition,
+                  final DQRuleLogicalOperator operator,
+                  final List<DQRule> nestedRules,
+                  final String whereClause,
+                  final Labels labels) {
+        this.ruleType = ruleType;
+        this.parameters = parameters;
+        this.parameterValueMap = DQRuleParameterValue.createParameterValueMap(parameters);
+        this.condition = condition;
+        this.thresholdCondition = thresholdCondition;
+        this.operator = operator;
+        this.nestedRules = nestedRules;
+        this.whereClause = whereClause;
+        this.labels = labels;
+    }
+
     public DQRule(final String ruleType,
                   final Map<String, String> parameters,
                   final Condition condition,
@@ -60,6 +83,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
         this.operator = operator;
         this.nestedRules = nestedRules;
         this.whereClause = whereClause;
+        this.labels = null;
     }
 
     public DQRule(final String ruleType,
@@ -76,6 +100,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
         this.operator = operator;
         this.nestedRules = nestedRules;
         this.whereClause = null;
+        this.labels = null;
     }
 
     public DQRule(final String ruleType,
@@ -89,14 +114,14 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
         this.operator = DQRuleLogicalOperator.AND;
         this.nestedRules = new ArrayList<>();
         this.whereClause = null;
+        this.labels = null;
     }
 
     // Can't overload the constructor above, due to type erasure
     public static DQRule createFromParameterValueMap(final DQRuleType ruleType,
                                                      final LinkedHashMap<String, DQRuleParameterValue> parameters,
                                                      final Condition condition) {
-        return createFromParameterValueMap(ruleType, parameters, condition,
-                null, null, null);
+        return createFromParameterValueMap(ruleType, parameters, condition, null, null, null, null);
     }
 
     public DQRule(final String ruleType,
@@ -108,6 +133,7 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
         this.parameterValueMap = DQRuleParameterValue.createParameterValueMap(parameters);
         this.condition = condition;
         this.thresholdCondition = thresholdCondition;
+        this.labels = null;
         this.operator = DQRuleLogicalOperator.AND;
         this.nestedRules = new ArrayList<>();
         this.whereClause = null;
@@ -119,21 +145,23 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
                                                      final Condition condition,
                                                      final Condition thresholdCondition,
                                                      final String whereClause,
-                                                     final Map<String, Tag> tags) {
+                                                     final Map<String, Tag> tags,
+                                                     final Labels labels) {
         DQRuleLogicalOperator operator = DQRuleLogicalOperator.AND;
         List<DQRule> nestedRules = new ArrayList<>();
 
         return new DQRule(
-            ruleType.getRuleTypeName(),
-            DQRuleParameterValue.createParameterMap(parameters),
-            parameters,
-            condition,
-            thresholdCondition,
-            operator,
-            nestedRules,
-            whereClause,
-            ruleType.isExcludedAtRowLevelInCompositeRules(),
-            tags
+                ruleType.getRuleTypeName(),
+                DQRuleParameterValue.createParameterMap(parameters),
+                parameters,
+                condition,
+                thresholdCondition,
+                operator,
+                nestedRules,
+                whereClause,
+                labels,
+                ruleType.isExcludedAtRowLevelInCompositeRules(),
+                tags
         );
     }
 
@@ -147,6 +175,14 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
 
     public Map<String, String> getTags() {
         return convertToStringMap(tags);
+    }
+
+    public Map<String, String> getLabels() {
+        return labels == null ? null : convertToStringMap(labels);
+    }
+
+    public void setLabels(Map<String, String> newLabels) {
+        labels.setRuleLabels(newLabels);
     }
 
     @Override
@@ -179,6 +215,16 @@ public class DQRule implements Serializable, HasRuleTypeAndParameters {
                 for (Map.Entry<String, Tag> entry : tags.entrySet()) {
                     sb.append(entry.getValue());
                 }
+            }
+
+            if (labels != null && !labels.getRuleLabels().isEmpty()) {
+                sb.append(" labels=[");
+
+                labels.getRuleLabels().forEach((key, value) ->
+                        sb.append(String.format("\"%s\"", key)).append("=")
+                                .append(String.format("\"%s\"", value)).append(", "));
+                sb.setLength(sb.length() - 2);
+                sb.append("]");
             }
 
             return sb.toString().trim();
