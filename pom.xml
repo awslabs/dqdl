@@ -66,6 +66,11 @@
             <name>Linan Zheng</name>
             <url>https://github.com/LinanZheng</url>
         </developer>
+        <developer>
+            <id>sudsali</id>
+            <name>Sudhanshu Sali</name>
+            <url>https://github.com/sudsali</url>
+        </developer>
     </developers>
 
     <dependencies>
