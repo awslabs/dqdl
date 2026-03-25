@@ -29,6 +29,7 @@ public class DQRuleset {
     private final Map<String, String> metadata;
     private final String primarySourceName;
     private final List<String> additionalDataSourcesNames;
+    private Map<String, String> defaultLabels;
     private final List<DQRule> rules;
     private final List<DQAnalyzer> analyzers;
 
@@ -42,6 +43,7 @@ public class DQRuleset {
         this.metadata = new HashMap<>();
         this.primarySourceName = null;
         this.additionalDataSourcesNames = new ArrayList<>();
+        this.defaultLabels = new HashMap<>();
         this.rules = rules;
         this.analyzers = analyzers;
     }
@@ -79,6 +81,13 @@ public class DQRuleset {
             sourcesStr = "DataSources = {" + LINE_SEP +
                 primarySourceStr + additionalDataSourcesStr +
                 "}";
+        }
+
+        String defaultLabelsStr = "";
+        if (defaultLabels != null && defaultLabels.size() > 0) {
+            defaultLabelsStr = "DefaultLabels=[" + defaultLabels.entrySet().stream()
+                    .map(e -> String.format("\"%s\"=\"%s\"", e.getKey(), e.getValue()))
+                    .collect(Collectors.joining(", ")) + "]";
         }
 
         String rulesStr = "";

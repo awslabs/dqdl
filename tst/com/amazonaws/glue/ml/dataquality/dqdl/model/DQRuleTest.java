@@ -19,6 +19,7 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.size.Size;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.size.SizeBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedCondition;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringOperand;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Labels;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterConstantValue;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterValue;
 import com.amazonaws.glue.ml.dataquality.dqdl.parser.DQDLParser;
@@ -290,7 +291,9 @@ class DQRuleTest {
             Arguments.of("FileFreshness \"S3://PATH\" between (now() - 2 hours) and \"21:45\""),
             Arguments.of("FileFreshness \"S3://PATH\" between (now() + 5 minutes) and \"21:45\""),
             Arguments.of("FileFreshness \"S3://PATH\" between \"2024-01-01\" and \"21:45\""),
-            Arguments.of("FileFreshness \"S3://PATH\" between \"2024-01-01\" and (now() + 10 minutes)")
+            Arguments.of("FileFreshness \"S3://PATH\" between \"2024-01-01\" and (now() + 10 minutes)"),
+            Arguments.of("FileSize < 5 B labels=[\"key\"=\"value\"]"),
+            Arguments.of("FileSize < 5 B labels=[\"key1\"=\"value1\", \"key2\"=\"value2\"]")
         );
     }
 
@@ -649,8 +652,9 @@ class DQRuleTest {
         List<DQRule> nestedRules = new ArrayList<>();
 
         String whereClause = null;
+        Labels labels = null;
 
-        DQRule rule = new DQRule(ruleType, parameters, condition, thresholdCondition, operator, nestedRules, whereClause);
+        DQRule rule = new DQRule(ruleType, parameters, condition, thresholdCondition, operator, nestedRules, whereClause, labels);
 
         assertEquals(ruleType, rule.getRuleType());
 
@@ -745,7 +749,7 @@ class DQRuleTest {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("TargetColumn", "colA");
         DQRule dqRule = new DQRule("IsComplete", parameters, new Condition(""), null,
-                DQRuleLogicalOperator.AND, null, "colB is NOT NULL");
+                DQRuleLogicalOperator.AND, null, "colB is NOT NULL", null);
         String ruleString = "IsComplete \"colA\" where \"colB is NOT NULL\"";
         assertEquals(dqRule.toString(), ruleString);
         assertEquals(dqRule.getWhereClause(), "colB is NOT NULL");
@@ -756,7 +760,7 @@ class DQRuleTest {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("TargetColumn", "colA");
         DQRule dqRule = new DQRule("ColumnValues", parameters, new Condition("in [10,20]"), new Condition("> 0.5"),
-                DQRuleLogicalOperator.AND, null, "colB is NOT NULL");
+                DQRuleLogicalOperator.AND, null, "colB is NOT NULL", null);
         String ruleString = "ColumnValues \"colA\" in [10,20] where \"colB is NOT NULL\" with threshold > 0.5";
         assertEquals(dqRule.toString(), ruleString);
         assertEquals(dqRule.getWhereClause(), "colB is NOT NULL");
@@ -802,8 +806,9 @@ class DQRuleTest {
 
         DQRuleLogicalOperator operator = DQRuleLogicalOperator.AND;
         List<DQRule> nestedRules = new ArrayList<>();
+        Labels labels = null;
 
-        DQRule rule = new DQRule(ruleType, parameters, condition, thresholdCondition, operator, nestedRules, whereClause);
+        DQRule rule = new DQRule(ruleType, parameters, condition, thresholdCondition, operator, nestedRules, whereClause, labels);
         assertEquals(ruleType, rule.getRuleType());
 
         assertTrue(rule.getParameters().containsKey(columnKey));
@@ -823,6 +828,135 @@ class DQRuleTest {
         assertEquals(operator, rule.getOperator());
         assertTrue(rule.getNestedRules().isEmpty());
         assertEquals(whereClause, rule.getWhereClause());
+    }
+
+    @Test
+    public void test_labels() throws InvalidDataQualityRulesetException {
+        String rule = "IsPrimaryKey \"colZ\" labels=[\"key\"=\"value\"]";
+        String ruleset = String.format("Rules = [ %s ]", rule);
+        DQRuleset dqRuleset = parser.parse(ruleset);
+        assertEquals(dqRuleset.getRules().get(0).toString(), rule);
+    }
+
+    @Test
+    public void test_labelsWithDuplicateKeys() throws InvalidDataQualityRulesetException {
+        String rule = "IsPrimaryKey \"colZ\" labels=[\"key\"=\"value\", \"key\"=\"value2\"]";
+        String ruleset = String.format("Rules = [ %s ]", rule);
+        try {
+            DQRuleset dqRuleset = parser.parse(ruleset);
+            fail("Should've thrown InvalidDataQualityRulesetException");
+        } catch (InvalidDataQualityRulesetException e) {
+            assertTrue(e.getMessage().contains("Duplicate label key. Key must be unique."));
+        }
+    }
+
+    @Test
+    public void test_labelsCaseSensitivity() throws InvalidDataQualityRulesetException {
+        String rule = "IsPrimaryKey \"colZ\" labels=[\"key\"=\"value\", \"Key\"=\"value2\"]";
+        String ruleset = String.format("Rules = [ %s ]", rule);
+        DQRuleset dqRuleset = parser.parse(ruleset);
+        assertEquals(dqRuleset.getRules().get(0).toString(), rule);
+    }
+
+    @Test
+    public void test_labelsWithDuplicateValues() throws InvalidDataQualityRulesetException {
+        String rule = "IsPrimaryKey \"colZ\" labels=[\"key\"=\"value\", \"k\"=\"value\"]";
+        String ruleset = String.format("Rules = [ %s ]", rule);
+        DQRuleset dqRuleset = parser.parse(ruleset);
+        assertEquals(dqRuleset.getRules().get(0).toString(), rule);
+    }
+
+    @Test
+    public void test_labelsMultipleRules() throws InvalidDataQualityRulesetException {
+        String rule1 = "IsComplete \"name\" labels=[\"key\"=\"value\"]";
+        String rule2 = "IsUnique \"name\" labels=[\"key2\"=\"value2\"]";
+        String ruleset = String.format("Rules = [" +
+                "%s," +
+                "%s ]", rule1, rule2);
+
+        DQRuleset dqRuleset = parser.parse(ruleset);
+
+        // Test individual rules
+        assertEquals(rule1, dqRuleset.getRules().get(0).toString());
+        assertEquals(rule2, dqRuleset.getRules().get(1).toString());
+
+        // Test the entire ruleset
+        String expectedRulesetString = String.format("Rules = [%n    %s,%n    %s%n]", rule1, rule2);
+        assertEquals(expectedRulesetString, dqRuleset.toString().trim());
+    }
+
+    @Test
+    public void test_labelsMaxKeyLength() throws InvalidDataQualityRulesetException {
+        String longKey = "TestingDoneByAnniezcTheMaximumAllowedLengthOfOneHundredAndTwentyEightCharactersAndShouldTriggerAnErrorInOurValidationLogicForDQDLLabels";
+        String rule = String.format("IsPrimaryKey \"colZ\" labels=[\"%s\"=\"value\"]", longKey);
+        String ruleset = String.format("Rules = [ %s ]", rule);
+        try {
+            DQRuleset dqRuleset = parser.parse(ruleset);
+            fail("Should've thrown InvalidDataQualityRulesetException");
+        } catch (InvalidDataQualityRulesetException e) {
+            assertTrue(e.getMessage().contains(String.format("Label key has length %d exceeding the maximum length of 128 characters", longKey.length())));
+        }
+    }
+
+    @Test
+    public void test_labelsMaxValueLength() throws InvalidDataQualityRulesetException {
+        String longValue = "TestingDoneByAnniezcTheMaximumAllowedLengthOfTwoHundredAndFiftySixCharactersAndShouldTriggerAnErrorInOurValidationLogicForDQDLLabelsAndWeNeedToMakeItEvenLongerToEnsureItGoesOverTheLimitSoHereAreMoreCharactersToAddToThisAlreadyLongStringToMakeItExceedTheLimit";
+        String rule = String.format("IsPrimaryKey \"colZ\" labels=[\"key\"=\"%s\"]", longValue);
+        String ruleset = String.format("Rules = [ %s ]", rule);
+        try {
+            DQRuleset dqRuleset = parser.parse(ruleset);
+            fail("Should've thrown InvalidDataQualityRulesetException");
+        } catch (InvalidDataQualityRulesetException e) {
+            assertTrue(e.getMessage().contains(String.format("Label value has length %d exceeding the maximum length of 256 characters", longValue.length())));
+        }
+    }
+
+    @Test
+    public void test_labelsMaxNumberOfLabels() throws InvalidDataQualityRulesetException {
+        String rule = "IsPrimaryKey \"colZ\" labels=[\"k\"=\"v\", \"k1\"=\"v\", \"k2\"=\"v\", \"k3\"=\"v\", \"k4\"=\"v\", \"k5\"=\"v\", \"k6\"=\"v\", \"k7\"=\"v\", \"k8\"=\"v\", \"k9\"=\"v\", \"k10\"=\"v\"]";
+        String ruleset = String.format("Rules = [ %s ]", rule);
+        try {
+            DQRuleset dqRuleset = parser.parse(ruleset);
+            fail("Should've thrown InvalidDataQualityRulesetException");
+        } catch (InvalidDataQualityRulesetException e) {
+            assertTrue(e.getMessage().contains("Number of labels exceed maximum allowed (MAX: 10)"));
+        }
+    }
+
+    @Test
+    public void test_labelsEmpty() throws InvalidDataQualityRulesetException {
+        String rule = "IsPrimaryKey \"colZ\" labels=[]";
+        String ruleset = String.format("Rules = [ %s ]", rule);
+        try {
+            DQRuleset dqRuleset = parser.parse(ruleset);
+            fail("Should've thrown InvalidDataQualityRulesetException");
+        } catch (InvalidDataQualityRulesetException e) {
+            assertTrue(e.getMessage().contains("Labels must have at least one label"));
+        }
+    }
+
+    @Test
+    public void test_labelsWithEmptyValue() throws InvalidDataQualityRulesetException {
+        String rule = "IsPrimaryKey \"colZ\" labels=[\"key\"=\"\"]";
+        String ruleset = String.format("Rules = [ %s ]", rule);
+        try {
+            DQRuleset dqRuleset = parser.parse(ruleset);
+            fail("Should've thrown InvalidDataQualityRulesetException");
+        } catch (InvalidDataQualityRulesetException e) {
+            assertTrue(e.getMessage().contains("Label key or value cannot be empty"));
+        }
+    }
+
+    @Test
+    public void test_labelsWithoutQuotation() throws InvalidDataQualityRulesetException {
+        String rule = "IsPrimaryKey \"colZ\" labels=[key=value]";
+        String ruleset = String.format("Rules = [ %s ]", rule);
+        try {
+            DQRuleset dqRuleset = parser.parse(ruleset);
+            fail("Should've thrown InvalidDataQualityRulesetException");
+        } catch (InvalidDataQualityRulesetException e) {
+            assertTrue(e.getMessage().contains("No rules or analyzers provided."));
+        }
     }
 
     @Test

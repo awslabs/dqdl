@@ -44,6 +44,7 @@ import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBased
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringBasedConditionOperator;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.StringOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Tag;
+import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.string.Labels;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.condition.variable.VariableReferenceOperand;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterConstantValue;
 import com.amazonaws.glue.ml.dataquality.dqdl.model.parameter.DQRuleParameterValue;
@@ -86,6 +87,7 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
     private String primarySource;
     private List<String> additionalSources;
+    private Labels labels = new Labels();
     private final List<DQRule> dqRules = new ArrayList<>();
     private final List<DQAnalyzer> dqAnalyzers = new ArrayList<>();
     private final Map<String, DQVariable> dqVariables = new HashMap<>();
@@ -121,7 +123,13 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
 
         if (errorMessages.isEmpty() && errorListener.getErrorMessages().isEmpty()) {
-            return Either.fromRight(new DQRuleset(metadata, primarySource, additionalSources, dqRules, dqAnalyzers));
+            Map<String, String> rulesetDefaultLabels = labels != null
+                    ? labels.getRulesetDefaultLabels()
+                    : new HashMap<>();
+            return Either.fromRight(
+                    new DQRuleset(
+                            metadata, primarySource, additionalSources, rulesetDefaultLabels, dqRules, dqAnalyzers
+                    ));
         } else {
             List<String> allErrorMessages = new ArrayList<>();
             allErrorMessages.addAll(errorMessages);
@@ -214,7 +222,31 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
 
     private Either<String, DQRule> parseTopLevelRule(DataQualityDefinitionLanguageParser.TopLevelRuleContext tlc) {
         if (tlc.LPAREN() != null && tlc.RPAREN() != null) {
-            return parseTopLevelRule(tlc.topLevelRule(0));
+            // Handle parenthesized rule with optional labels
+            Either<String, DQRule> innerRuleResult = parseTopLevelRule(tlc.topLevelRule(0));
+
+            if (innerRuleResult.isLeft()) {
+                return innerRuleResult;
+            }
+
+            DQRule innerRule = innerRuleResult.getRight();
+
+            // Check if this parenthesized expression has labels
+            if (tlc.labels() != null) {
+                // Parse labels for the parenthesized expression
+                Labels parenthesesLabels = new Labels();
+                parenthesesLabels.setRulesetDefaultLabels(labels.getRulesetDefaultLabels());
+
+                enterLabels(tlc.labels());
+                parenthesesLabels.setRuleLabels(labels.getRuleLabels());
+
+                // Apply labels to the inner rule (now labels is never null)
+                innerRule.setLabels(Labels.convertToStringMap(parenthesesLabels));
+                return Either.fromRight(innerRule);
+            } else {
+                // No labels, return inner rule as-is
+                return innerRuleResult;
+            }
         } else if (tlc.AND() != null || tlc.OR() != null) {
             DQRuleLogicalOperator op = tlc.AND() != null ? DQRuleLogicalOperator.AND : DQRuleLogicalOperator.OR;
             List<Either<String, DQRule>> nestedRuleEitherList =
@@ -232,8 +264,12 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             });
 
             if (allErrorMessages.isEmpty()) {
+                // Create composite rule with default labels initialized
+                Labels compositeLabels = new Labels();
+                compositeLabels.setRulesetDefaultLabels(labels.getRulesetDefaultLabels());
+
                 return Either.fromRight(
-                    new DQRule("Composite", null, null, null, op, allRules)
+                    new DQRule("Composite", null, null, null, op, allRules, null, compositeLabels)
                 );
             } else {
                 return Either.fromLeft(allErrorMessages.get(0));
@@ -243,6 +279,19 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         } else {
             return Either.fromLeft("No valid rule found");
         }
+    }
+
+    @Override
+    public void enterLabels(DataQualityDefinitionLanguageParser.LabelsContext ctx) {
+        labels.setRuleLabels(new HashMap<>());
+        labels.setRuleLabels(Labels.parseLabels(labels, ctx, labels.getRuleLabels(), errorMessages));
+    }
+
+    @Override
+    public void enterDefaultLabels(DataQualityDefinitionLanguageParser.DefaultLabelsContext ctx) {
+        labels.setRulesetDefaultLabels(new HashMap<>());
+        Map<String, String> rulesetDefaultLabels = labels.getRulesetDefaultLabels();
+        labels.setRulesetDefaultLabels(Labels.parseLabels(labels, ctx, rulesetDefaultLabels, errorMessages));
     }
 
     @Override
@@ -395,6 +444,18 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
             }
         }
 
+        Labels ruleLabels = new Labels();
+        ruleLabels.setRulesetDefaultLabels(labels.getRulesetDefaultLabels());
+
+        if (dqRuleContext.labels() != null) {
+            enterLabels(dqRuleContext.labels());
+            ruleLabels.setRuleLabels(labels.getRuleLabels());
+        } else {
+            if (!errorMessages.isEmpty()) {
+                return Either.fromLeft(String.join("; ", errorMessages));
+            }
+        }
+
         Condition condition;
 
         List<Either<String, Condition>> conditions = Arrays.stream(dqRuleType.getReturnType().split("\\|"))
@@ -427,7 +488,6 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
         }
 
         VariableResolutionResult resolutionResult = resolutionResultEither.getRight();
-
         return Either.fromRight(
                 DQRule.createFromParameterValueMap(
                         dqRuleType,
@@ -435,7 +495,8 @@ public class DQDLParserListener extends DataQualityDefinitionLanguageBaseListene
                         resolutionResult.getResolvedCondition(),
                         resolutionResult.getResolvedThresholdCondition(),
                         whereClause,
-                        tags
+                        tags,
+                        ruleLabels
                 )
         );
     }
