@@ -95,6 +95,13 @@
             <groupId>org.antlr</groupId>
             <artifactId>antlr4</artifactId>
             <version>${antlr.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>${antlr.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
@@ -184,6 +191,10 @@
                             <pattern>com.amazonaws.glue.ml.dataquality.</pattern>
                             <shadedPattern>software.amazon.glue.</shadedPattern>
                         </relocation>
+                        <relocation>
+                            <pattern>org.antlr.v4.runtime</pattern>
+                            <shadedPattern>software.amazon.glue.dqdl.shaded.org.antlr.v4.runtime</shadedPattern>
+                        </relocation>
                     </relocations>
                 </configuration>
                 <executions>
@@ -196,6 +207,7 @@
                             <artifactSet>
                                 <includes>
                                     <include>software.amazon.glue:*</include>
+                                    <include>org.antlr:antlr4-runtime</include>
                                 </includes>
                             </artifactSet>
                         </configuration>
