@@ -1,12 +1,17 @@
-## AWS Glue Data Quality Definition Language
+# AWS Glue Data Quality Definition Language (DQDL)
 
-This package contains the grammar in Antlr g4 format for the Data Quality Definition Language (DQDL).
+[![GitHub license](https://img.shields.io/github/license/awslabs/dqdl.svg)](https://github.com/awslabs/dqdl/blob/master/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/awslabs/dqdl.svg)](https://github.com/awslabs/dqdl/issues)
+[![Build Status](https://github.com/awslabs/dqdl/actions/workflows/maven.yml/badge.svg?branch=master)](https://github.com/awslabs/dqdl/actions/workflows/maven.yml?query=branch%3Amaster)
+[![Maven Central](https://img.shields.io/maven-central/v/software.amazon.glue/dqdl.svg)](https://search.maven.org/artifact/software.amazon.glue/dqdl)
+
+This package contains the grammar in ANTLR g4 format and Java parser for the Data Quality Definition Language (DQDL), used by [AWS Glue Data Quality](https://docs.aws.amazon.com/glue/latest/dg/glue-data-quality.html).
 
 ## Example
 
 The first step is to add a dependency to DQDL. DQDL uses logging and requires an implementation of Slf4j to be available on the classpath. If you are using Maven, then the required dependencies can be added as following.
 
-```
+```xml
 <dependencies>
     <dependency>
         <groupId>software.amazon.glue</groupId>
@@ -23,7 +28,7 @@ The first step is to add a dependency to DQDL. DQDL uses logging and requires an
 
 Once the dependencies are added, you can start using the `DQDLParser` class which allows you to parse a DQDL ruleset in the form of a string into a modeled `DQRuleset` object. The following snippet of code provides an example for how to do so.
 
-```
+```java
 import software.amazon.glue.dqdl.exception.InvalidDataQualityRulesetException;
 import software.amazon.glue.dqdl.model.DQRuleset;
 import software.amazon.glue.dqdl.parser.DQDLParser;
