@@ -173,7 +173,7 @@ jobs:
           git push origin "${BRANCH_NAME}"
 
           gh pr create \
-            --base master \
+            --base ${{ github.ref_name }} \
             --head "${BRANCH_NAME}" \
             --title "Update version in pom.xml to ${NEXT_VERSION}" \
             --body "Automated version bump after publishing ${RELEASE_VERSION} to Maven Central."
