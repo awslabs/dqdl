@@ -13,3 +13,5 @@ antlr-generated-src
 gen
 dqdl-spec
 target
+__pycache__/
+build.log

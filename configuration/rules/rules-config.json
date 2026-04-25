@@ -191,6 +191,20 @@
       "scope": "column"
     },
     {
+      "rule_type_name": "Variance",
+      "description": "Check the variance of all values in a given column",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column to check variance of"
+        }
+      ],
+      "return_type": "NUMBER",
+      "is_where_clause_supported": true,
+      "scope": "column"
+    },
+    {
       "rule_type_name": "Entropy",
       "description": "Check the entropy of all values in a given column",
       "parameters": [
