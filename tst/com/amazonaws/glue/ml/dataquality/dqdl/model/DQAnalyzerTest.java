@@ -70,6 +70,7 @@ public class DQAnalyzerTest {
             Arguments.of("Sum \"col_A-B.C\""),
             Arguments.of("Mean \"col_A-B.CD\""),
             Arguments.of("StandardDeviation \"col_A-B.CD\""),
+            Arguments.of("Variance \"col_A-B.CD\""),
             Arguments.of("Entropy \"col_A-B.CD\""),
             Arguments.of("DistinctValuesCount \"col_A-B.CD\""),
             Arguments.of("UniqueValueRatio \"col_A-B.CD\""),
