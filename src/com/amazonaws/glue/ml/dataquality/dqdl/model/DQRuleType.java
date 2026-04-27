@@ -141,7 +141,7 @@ public class DQRuleType {
         private List<DQRuleType> ruleTypes;
     }
 
-    private static final List<DQRuleType> ALL_RULES = generateRuleTypes("/rules/rules-config.json");
+    private static final List<DQRuleType> ALL_RULES = generateRuleTypes("/dqdl/rules-config.json");
 
     static List<DQRuleType> generateRuleTypes(final String rulesConfigPath) {
         try (
