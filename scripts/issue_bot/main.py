@@ -99,7 +99,7 @@ def analyze():
 
     if is_reopened:
         _write_artifact({
-            "action": "ESCALATE", "labels": [], "response": "",
+            "action": "ESCALATE", "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "",
             "reason": "issue_reopened", "title": title,
             "html_url": html_url, "number": number, "is_pr": is_pr,
             "prompt_id": "n/a", "model_id": cfg.bedrock_model_id,
@@ -120,7 +120,7 @@ def analyze():
             return
         if _bot_reply_count(comments_data) >= _MAX_BOT_REPLIES:
             _write_artifact({
-                "action": "ESCALATE", "labels": [], "response": "",
+                "action": "ESCALATE", "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "",
                 "reason": "max_replies_reached", "title": title,
                 "html_url": html_url, "number": number, "is_pr": is_pr,
                 "prompt_id": "n/a", "model_id": cfg.bedrock_model_id,
@@ -128,7 +128,7 @@ def analyze():
             return
         if _user_dissatisfied(comments_data):
             _write_artifact({
-                "action": "ESCALATE", "labels": [], "response": "",
+                "action": "ESCALATE", "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "",
                 "reason": "user_dissatisfied", "title": title,
                 "html_url": html_url, "number": number, "is_pr": is_pr,
                 "prompt_id": "n/a", "model_id": cfg.bedrock_model_id,
@@ -142,7 +142,7 @@ def analyze():
     if is_pr:
         tmpl = prompts.get_pr_file_review_prompt()
         if not tmpl:
-            _write_artifact({"action": "ESCALATE", "labels": [], "response": "",
+            _write_artifact({"action": "ESCALATE", "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "",
                 "reason": "prompt_load_failed", "title": title, "html_url": html_url,
                 "number": number, "is_pr": True, "prompt_id": "n/a", "model_id": cfg.bedrock_model_id})
             return
@@ -173,8 +173,8 @@ def analyze():
         except json.JSONDecodeError:
             inline_comments = _parse_file_review_multi(raw)
         _write_artifact({
-            "action": "RESPOND" if inline_comments else "SKIP",
-            "labels": [], "response": "",
+            "action": "RESPOND",
+            "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "",
             "inline_comments": inline_comments,
             "title": title, "html_url": html_url, "number": number,
             "is_pr": True, "prompt_id": prompts.prompt_version(tmpl),
@@ -186,7 +186,7 @@ def analyze():
     elif is_followup:
         tmpl = prompts.get_followup_prompt()
         if not tmpl:
-            _write_artifact({"action": "ESCALATE", "labels": [], "response": "",
+            _write_artifact({"action": "ESCALATE", "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "",
                 "reason": "prompt_load_failed", "title": title, "html_url": html_url,
                 "number": number, "is_pr": is_pr, "prompt_id": "n/a", "model_id": cfg.bedrock_model_id})
             return
@@ -196,7 +196,7 @@ def analyze():
     else:
         tmpl = prompts.get_issue_prompt()
         if not tmpl:
-            _write_artifact({"action": "ESCALATE", "labels": [], "response": "",
+            _write_artifact({"action": "ESCALATE", "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "",
                 "reason": "prompt_load_failed", "title": title, "html_url": html_url,
                 "number": number, "is_pr": is_pr, "prompt_id": "n/a", "model_id": cfg.bedrock_model_id})
             return
@@ -212,7 +212,7 @@ def analyze():
 
     if raw is None:
         _write_artifact({
-            "action": "ESCALATE", "labels": [], "response": "",
+            "action": "ESCALATE", "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "",
             "reason": "bedrock_unavailable", "title": title,
             "html_url": html_url, "number": number, "is_pr": is_pr,
             "prompt_id": prompt_id, "model_id": cfg.bedrock_model_id,
@@ -433,7 +433,7 @@ def _parse_response(raw, is_pr):
 
     # Fallback: parse free-text format
     lines = raw.strip().split("\n")
-    result = {"action": "ESCALATE", "labels": [], "response": "", "read_files": [], "inline_comments": []}
+    result = {"action": "ESCALATE", "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "", "read_files": [], "inline_comments": []}
     response_lines = []
 
     for line in lines:
