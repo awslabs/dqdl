@@ -174,7 +174,7 @@ def analyze():
             inline_comments = _parse_file_review_multi(raw)
         _write_artifact({
             "action": "RESPOND",
-            "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "",
+            "labels": [], "response": "No issues found." if not inline_comments else "",
             "inline_comments": inline_comments,
             "title": title, "html_url": html_url, "number": number,
             "is_pr": True, "prompt_id": prompts.prompt_version(tmpl),
