@@ -25,8 +25,8 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --help)    usage; exit 0 ;;
     --dry-run) DRY_RUN=true; shift ;;
-    --limit)   LIMIT="$2"; shift 2 ;;
-    --delay)   DELAY="$2"; shift 2 ;;
+    --limit)   [ $# -ge 2 ] || { echo "Error: --limit requires a value" >&2; exit 1; }; LIMIT="$2"; shift 2 ;;
+    --delay)   [ $# -ge 2 ] || { echo "Error: --delay requires a value" >&2; exit 1; }; DELAY="$2"; shift 2 ;;
     --*)       echo "Unknown option: $1" >&2; usage >&2; exit 1 ;;
     *)
       if [ -z "$REPO" ]; then
