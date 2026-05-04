@@ -130,3 +130,12 @@ MOCKSCRIPT
   [ "$status" -eq 0 ]
   [[ "$output" == *"0 open issues"* ]]
 }
+
+# --- Test 10: --delay flag is respected ---
+@test "delay flag is passed through" {
+  MOCK_ISSUES=$'1'
+  export MOCK_ISSUES MOCK_COMMENTS='0'
+  run bash "$SCRIPT" owner/repo --delay 0
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Triggered: 1"* ]]
+}
