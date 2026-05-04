@@ -238,10 +238,10 @@ setup() {
   MOCK_DIR="$(mktemp -d)"
   MOCK_GH_LOG="$MOCK_DIR/gh_calls.log"
   export MOCK_GH_LOG
-  # Default: no issues
-  export MOCK_ISSUES='[]'
-  # Default: no bot comments
-  export MOCK_COMMENTS='[]'
+  # Default: no issues (post-jq output: one number per line)
+  export MOCK_ISSUES=''
+  # Default: no bot comments (post-jq output: count)
+  export MOCK_COMMENTS='0'
   # Default: workflow trigger succeeds
   export MOCK_WORKFLOW_EXIT=0
   # Default: auth succeeds
@@ -252,7 +252,7 @@ setup() {
 echo "$*" >> "$MOCK_GH_LOG"
 case "$*" in
   auth\ status*) exit ${MOCK_AUTH_EXIT:-0} ;;
-  api\ *issues\?state=open*) echo "$MOCK_ISSUES" ;;
+  api\ *issues\?state=open*) printf '%s' "$MOCK_ISSUES" ;;
   api\ *comments*) echo "$MOCK_COMMENTS" ;;
   workflow\ run*) exit ${MOCK_WORKFLOW_EXIT:-0} ;;
   *) echo "UNMOCKED: $*" >&2; exit 99 ;;
@@ -268,8 +268,8 @@ teardown() {
 
 # --- Test 4: --dry-run lists issues, no workflow run calls ---
 @test "dry-run lists issues without triggering" {
-  export MOCK_ISSUES='[{"number":10},{"number":20},{"number":30}]'
-  export MOCK_COMMENTS='[]'
+  MOCK_ISSUES=$'10\n20\n30'
+  export MOCK_ISSUES MOCK_COMMENTS='0'
   run bash "$SCRIPT" owner/repo --dry-run
   [ "$status" -eq 0 ]
   [[ "$output" == *"would trigger #10"* ]]
@@ -281,8 +281,8 @@ teardown() {
 
 # --- Test 5: --limit 2 with 5 issues triggers exactly 2 ---
 @test "limit triggers only N issues" {
-  export MOCK_ISSUES='[{"number":1},{"number":2},{"number":3},{"number":4},{"number":5}]'
-  export MOCK_COMMENTS='[]'
+  MOCK_ISSUES=$'1\n2\n3\n4\n5'
+  export MOCK_ISSUES MOCK_COMMENTS='0'
   run bash "$SCRIPT" owner/repo --limit 2 --delay 0
   [ "$status" -eq 0 ]
   [[ "$output" == *"Triggered: 2"* ]]
@@ -292,8 +292,8 @@ teardown() {
 
 # --- Test 6: bot already commented → skip ---
 @test "skips issues where bot already commented" {
-  export MOCK_ISSUES='[{"number":10}]'
-  export MOCK_COMMENTS='[{"user":{"login":"github-actions[bot]"}}]'
+  MOCK_ISSUES=$'10'
+  export MOCK_ISSUES MOCK_COMMENTS='1'
   run bash "$SCRIPT" owner/repo --delay 0
   [ "$status" -eq 0 ]
   [[ "$output" == *"Skipped: 1"* ]]
@@ -302,16 +302,15 @@ teardown() {
 
 # --- Test 7: mix of commented and uncommented with limit ---
 @test "mix of commented and uncommented with limit" {
-  export MOCK_ISSUES='[{"number":1},{"number":2},{"number":3},{"number":4},{"number":5}]'
-  # We need per-issue comment responses. Use issue number in the mock.
+  # Per-issue comment responses: issues 1,2 have bot comments, 3-5 don't
   cat > "$MOCK_DIR/gh" <<'MOCKSCRIPT'
 #!/usr/bin/env bash
 echo "$*" >> "$MOCK_GH_LOG"
 case "$*" in
   auth\ status*) exit 0 ;;
-  api\ *issues\?state=open*) echo '[{"number":1},{"number":2},{"number":3},{"number":4},{"number":5}]' ;;
-  api\ *issues/1/comments*|api\ *issues/2/comments*) echo '[{"user":{"login":"github-actions[bot]"}}]' ;;
-  api\ *comments*) echo '[]' ;;
+  api\ *issues\?state=open*) printf '1\n2\n3\n4\n5' ;;
+  api\ *issues/1/comments*|api\ *issues/2/comments*) echo '1' ;;
+  api\ *comments*) echo '0' ;;
   workflow\ run*) exit 0 ;;
 esac
 MOCKSCRIPT
@@ -326,9 +325,8 @@ MOCKSCRIPT
 
 # --- Test 8: workflow trigger failure continues ---
 @test "workflow trigger failure continues and reports" {
-  export MOCK_ISSUES='[{"number":1},{"number":2}]'
-  export MOCK_COMMENTS='[]'
-  export MOCK_WORKFLOW_EXIT=1
+  MOCK_ISSUES=$'1\n2'
+  export MOCK_ISSUES MOCK_COMMENTS='0' MOCK_WORKFLOW_EXIT=1
   run bash "$SCRIPT" owner/repo --delay 0
   [ "$status" -eq 0 ]
   [[ "$output" == *"Failed: 2"* ]]
@@ -336,7 +334,7 @@ MOCKSCRIPT
 
 # --- Test 10: empty repo ---
 @test "empty repo exits 0 with zero issues message" {
-  export MOCK_ISSUES='[]'
+  export MOCK_ISSUES=''
   run bash "$SCRIPT" owner/repo
   [ "$status" -eq 0 ]
   [[ "$output" == *"0 open issues"* ]]
@@ -459,8 +457,8 @@ Append to `scripts/tests/test_backfill.bats`:
 ```bash
 # --- Test 9: --delay flag is respected ---
 @test "delay flag is passed through" {
-  export MOCK_ISSUES='[{"number":1}]'
-  export MOCK_COMMENTS='[]'
+  MOCK_ISSUES=$'1'
+  export MOCK_ISSUES MOCK_COMMENTS='0'
   run bash "$SCRIPT" owner/repo --delay 0
   [ "$status" -eq 0 ]
   [[ "$output" == *"Triggered: 1"* ]]

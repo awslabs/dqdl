@@ -66,6 +66,10 @@ The script always passes `dry_run=false` to the workflow. The script's own `--dr
 
 If `gh workflow run` fails for one issue (e.g., transient network error), the script logs the failure and continues. The summary reports the failure count. The user can re-run — idempotency ensures only failed issues are retried.
 
+### `--limit` in `--dry-run` mode
+
+In dry-run mode, `--limit` is ignored — the script lists all issues that would be triggered. This gives the operator a full picture of the backlog before committing to a batch size.
+
 ### Argument parsing
 
 A `while` loop over `$@` with `shift`. Handles `--flag value` and `--flag=value` forms. Unknown flags cause exit 1 with usage message.
@@ -109,17 +113,15 @@ Tests mock `gh` by exporting a shell function that captures arguments and return
 ### Mock Design
 
 ```bash
-# Mock gh function exported before each test
-gh() {
-  echo "$*" >> "$MOCK_GH_LOG"  # capture all calls
-  case "$*" in
-    *"issues?state=open"*)  echo "$MOCK_ISSUES_JSON" ;;
-    *"/comments"*)          echo "$MOCK_COMMENTS_JSON" ;;
-    *"workflow run"*)       return ${MOCK_WORKFLOW_EXIT:-0} ;;
-    *"auth status"*)        return ${MOCK_AUTH_EXIT:-0} ;;
-  esac
-}
-export -f gh
+# Mock gh script created in setup(), returns post-jq output
+# MOCK_ISSUES: newline-separated issue numbers (e.g., "1\n2\n3")
+# MOCK_COMMENTS: bot comment count as integer (e.g., "0" or "1")
+case "$*" in
+  *"issues?state=open"*)  printf '%s' "$MOCK_ISSUES" ;;
+  *"/comments"*)          echo "$MOCK_COMMENTS" ;;
+  *"workflow run"*)       exit ${MOCK_WORKFLOW_EXIT:-0} ;;
+  *"auth status"*)        exit ${MOCK_AUTH_EXIT:-0} ;;
+esac
 ```
 
 ## File Structure
