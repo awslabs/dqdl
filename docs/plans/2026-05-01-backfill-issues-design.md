@@ -72,7 +72,7 @@ In dry-run mode, `--limit` is ignored — the script lists all issues that would
 
 ### Argument parsing
 
-A `while` loop over `$@` with `shift`. Handles `--flag value` and `--flag=value` forms. Unknown flags cause exit 1 with usage message.
+A `while` loop over `$@` with `shift`. Handles `--flag value` form. Unknown flags cause exit 1 with usage message.
 
 ## Exit Codes
 

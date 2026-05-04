@@ -63,9 +63,9 @@ teardown() {
   export MOCK_ISSUES MOCK_COMMENTS='0'
   run bash "$SCRIPT" owner/repo --dry-run
   [ "$status" -eq 0 ]
-  [[ "$output" == *"would trigger #10"* ]]
-  [[ "$output" == *"would trigger #20"* ]]
-  [[ "$output" == *"would trigger #30"* ]]
+  [[ "$output" == *"#10"*"would trigger"* ]]
+  [[ "$output" == *"#20"*"would trigger"* ]]
+  [[ "$output" == *"#30"*"would trigger"* ]]
   # No workflow run calls
   ! grep -q "workflow run" "$MOCK_GH_LOG"
 }
