@@ -15,3 +15,11 @@ SCRIPT="$BATS_TEST_DIRNAME/../backfill_issues.sh"
   [ "$status" -eq 0 ]
   [[ "$output" == *"Usage:"* ]]
 }
+
+# --- Test 3: gh not found exits 2 ---
+@test "missing gh exits 2" {
+  # Override PATH to hide gh
+  run env PATH="/usr/bin:/bin" bash "$SCRIPT" owner/repo
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"gh CLI"* ]]
+}

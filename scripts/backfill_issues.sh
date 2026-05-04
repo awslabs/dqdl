@@ -42,3 +42,14 @@ if [ -z "$REPO" ]; then
   usage >&2
   exit 1
 fi
+
+# --- Prerequisites ---
+if ! command -v gh &>/dev/null; then
+  echo "Error: gh CLI not found. Install from https://cli.github.com/" >&2
+  exit 2
+fi
+
+if ! gh auth status &>/dev/null; then
+  echo "Error: gh CLI not authenticated. Run: gh auth login" >&2
+  exit 2
+fi
