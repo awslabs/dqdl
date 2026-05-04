@@ -84,7 +84,8 @@ for NUM in $ISSUES; do
 
   # Check for existing bot comment
   bot_comments=$(gh api "repos/$REPO/issues/$NUM/comments" \
-    --paginate --jq '[.[] | select(.user.login=="github-actions[bot]")] | length' 2>/dev/null) || bot_comments=""
+    --paginate --jq '[.[] | select(.user.login=="github-actions[bot]")] | length' 2>/dev/null \
+    | awk '{s+=$1} END {print s+0}') || bot_comments=""
 
   if [ -z "$bot_comments" ]; then
     echo "  #$NUM — failed to check comments, skipping"
