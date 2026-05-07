@@ -9,6 +9,29 @@
       "scope": "table"
     },
     {
+      "rule_type_name": "DuplicateRowCount",
+      "description": "Check the number of duplicate rows in the dataset",
+      "parameters": [],
+      "return_type": "NUMBER",
+      "is_where_clause_supported": true,
+      "scope": "table"
+    },
+    {
+      "rule_type_name": "DuplicateRowCount",
+      "description": "Check the number of duplicate rows in the dataset based on specified columns",
+      "parameters": [
+        {
+          "type": "String",
+          "name": "TargetColumn",
+          "description": "Name of column(s) to check for duplicates",
+          "is_var_arg": true
+        }
+      ],
+      "return_type": "NUMBER",
+      "is_where_clause_supported": true,
+      "scope": "column"
+    },
+    {
       "rule_type_name": "RowCountMatch",
       "description": "Checks the percentage match of the row count of the primary dataset against a reference dataset",
       "parameters": [
