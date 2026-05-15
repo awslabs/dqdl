@@ -6,6 +6,7 @@ DQDL Bot — two-phase orchestration.
 """
 
 import json
+import re
 import sys
 import os
 import datetime
@@ -99,7 +100,7 @@ def analyze():
 
     if is_reopened:
         _write_artifact({
-            "action": "ESCALATE", "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "",
+            "action": "ESCALATE", "labels": [], "response": "",
             "reason": "issue_reopened", "title": title,
             "html_url": html_url, "number": number, "is_pr": is_pr,
             "prompt_id": "n/a", "model_id": cfg.bedrock_model_id,
@@ -120,7 +121,7 @@ def analyze():
             return
         if _bot_reply_count(comments_data) >= _MAX_BOT_REPLIES:
             _write_artifact({
-                "action": "ESCALATE", "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "",
+                "action": "ESCALATE", "labels": [], "response": "",
                 "reason": "max_replies_reached", "title": title,
                 "html_url": html_url, "number": number, "is_pr": is_pr,
                 "prompt_id": "n/a", "model_id": cfg.bedrock_model_id,
@@ -128,7 +129,7 @@ def analyze():
             return
         if _user_dissatisfied(comments_data):
             _write_artifact({
-                "action": "ESCALATE", "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "",
+                "action": "ESCALATE", "labels": [], "response": "",
                 "reason": "user_dissatisfied", "title": title,
                 "html_url": html_url, "number": number, "is_pr": is_pr,
                 "prompt_id": "n/a", "model_id": cfg.bedrock_model_id,
@@ -142,32 +143,59 @@ def analyze():
     if is_pr:
         tmpl = prompts.get_pr_file_review_prompt()
         if not tmpl:
-            _write_artifact({"action": "ESCALATE", "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "",
+            _write_artifact({"action": "ESCALATE", "labels": [], "response": "",
                 "reason": "prompt_load_failed", "title": title, "html_url": html_url,
                 "number": number, "is_pr": True, "prompt_id": "n/a", "model_id": cfg.bedrock_model_id})
             return
         diff = gh.get_pr_diff(number)
         review_comments = gh.get_pr_review_comments(number)
         existing_feedback = _format_pr_feedback(comments_data, review_comments)
-        # Fetch full source files modified in the PR for complete context
+
+        # Incremental review: on synchronize, compute what changed since last push
+        incremental_diff = ""
+        incremental_files = set()
+        if is_pr_update and cfg.event_before and cfg.event_after:
+            incremental_diff = gh.get_compare_diff(cfg.event_before, cfg.event_after)
+            if incremental_diff:
+                incremental_files = _extract_diff_files(incremental_diff)
+
+        # Fetch full source files at the SHA the diff is anchored to
+        head_sha = cfg.event_after or item.get("head", {}).get("sha", "")
         pr_files = gh.get_pr_files(number)
         full_sources = ""
         for pf in pr_files:
             fname = pf.get("filename", "")
-            content = gh.get_file_content(fname)
+            content = gh.get_file_content(fname, ref=head_sha) if head_sha else gh.get_file_content(fname)
             if content:
                 entry = f"\n### `{fname}`\n```\n{content}\n```\n"
                 if len(full_sources) + len(entry) > 3_000_000:
                     full_sources += f"\n### `{fname}` — SKIPPED (context budget)\n"
                     break
                 full_sources += entry
+
+        # Build incremental review instructions
+        incremental_section = ""
+        if incremental_diff:
+            incremental_section = (
+                "\n<incremental_review_instructions>\n"
+                "This is a RE-REVIEW after the author pushed new commits. "
+                "The <incremental_diff> below shows ONLY what changed since the last push. "
+                "You MUST limit your comments to lines/files in the incremental diff. "
+                "Do NOT re-raise issues on unchanged code — the author already saw prior feedback. "
+                "Do NOT comment on lines that are not part of the incremental diff. "
+                "If the incremental diff only fixes issues from prior feedback, respond with zero comments."
+                "\n</incremental_review_instructions>\n"
+                f"<incremental_diff>\n{incremental_diff}\n</incremental_diff>\n"
+            )
+
         # System prompt: instructions + all trusted context (not scanned by guardrail)
         system_prompt = _render(tmpl, current_date=datetime.date.today().isoformat()) + (
             f"\n\n<knowledge_base>\n{context}\n</knowledge_base>\n"
             f"<codebase_map>\n{codebase_map}\n</codebase_map>\n"
             f"<full_source_files>\n{full_sources}\n</full_source_files>\n"
             f"<diff>\n{diff}\n</diff>\n"
-            f"<existing_feedback>\n{existing_feedback}\n</existing_feedback>"
+            f"<existing_feedback>\n{existing_feedback}\n</existing_feedback>\n"
+            f"{incremental_section}"
         )
         # User prompt: only user-authored content (scanned by guardrail)
         user_prompt = f"<pr>\nTitle: {title}\nBody: {body}\n</pr>"
@@ -185,21 +213,57 @@ def analyze():
             inline_comments = pr_result.get("comments", [])
         except json.JSONDecodeError:
             inline_comments = _parse_file_review_multi(raw)
+
+        # Hard filter: on incremental review, drop comments on files not in the incremental diff
+        if incremental_files and inline_comments:
+            inline_comments = [
+                c for c in inline_comments
+                if c.get("file", "") in incremental_files
+            ]
+
+        # Hard filter: drop NITs on re-reviews (code-enforced, not prompt-dependent)
+        if is_pr_update and inline_comments:
+            inline_comments = [
+                c for c in inline_comments
+                if c.get("severity", "").upper() != "NIT"
+            ]
+
+        # Format comments: prepend severity, append evidence as context
+        for c in inline_comments:
+            severity = c.get("severity", "")
+            evidence = c.get("evidence", "")
+            prefix = f"**{severity}**: " if severity else ""
+            suffix = "\n\n> " + evidence.replace("\n", "\n> ") if evidence else ""
+            c["comment"] = prefix + c.get("comment", "") + suffix
+
+        # Check CI status to give accurate signal to human reviewers
+        ci_passed, ci_summary = gh.get_ci_status(head_sha) if head_sha else (None, "")
+
+        if not inline_comments:
+            if ci_passed is True:
+                response = "No issues found. CI is passing.\n<!-- deequ-bot:clean -->"
+            elif ci_passed is False:
+                response = f"No code issues found, but {ci_summary}."
+            else:
+                response = "No issues found.\n<!-- deequ-bot:clean -->"
+        else:
+            response = ""
+
         _write_artifact({
             "action": "RESPOND",
-            "labels": [], "response": "No issues found." if not inline_comments else "",
+            "labels": [], "response": response,
             "inline_comments": inline_comments,
             "title": title, "html_url": html_url, "number": number,
-            "is_pr": True, "prompt_id": prompts.prompt_version(tmpl),
+            "is_pr": True, "is_incremental": bool(incremental_diff),
+            "prompt_id": prompts.prompt_version(tmpl),
             "model_id": cfg.bedrock_model_id,
-            "reason": "no_issues_found" if not inline_comments else "",
         })
         return
 
     elif is_followup:
         tmpl = prompts.get_followup_prompt()
         if not tmpl:
-            _write_artifact({"action": "ESCALATE", "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "",
+            _write_artifact({"action": "ESCALATE", "labels": [], "response": "",
                 "reason": "prompt_load_failed", "title": title, "html_url": html_url,
                 "number": number, "is_pr": is_pr, "prompt_id": "n/a", "model_id": cfg.bedrock_model_id})
             return
@@ -209,7 +273,7 @@ def analyze():
     else:
         tmpl = prompts.get_issue_prompt()
         if not tmpl:
-            _write_artifact({"action": "ESCALATE", "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "",
+            _write_artifact({"action": "ESCALATE", "labels": [], "response": "",
                 "reason": "prompt_load_failed", "title": title, "html_url": html_url,
                 "number": number, "is_pr": is_pr, "prompt_id": "n/a", "model_id": cfg.bedrock_model_id})
             return
@@ -225,7 +289,7 @@ def analyze():
 
     if raw is None:
         _write_artifact({
-            "action": "ESCALATE", "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "",
+            "action": "ESCALATE", "labels": [], "response": "",
             "reason": "bedrock_unavailable", "title": title,
             "html_url": html_url, "number": number, "is_pr": is_pr,
             "prompt_id": prompt_id, "model_id": cfg.bedrock_model_id,
@@ -321,7 +385,11 @@ def act():
                 sanitized_comments.append({**ic, "comment": safe_comment})
         inline_comments = sanitized_comments
         if is_pr and inline_comments:
-            gh.post_pr_review(number, response + footer, inline_comments)
+            gh.post_pr_review(number, response + footer, inline_comments, event="COMMENT")
+        elif is_pr and response and not inline_comments:
+            gh.post_pr_review(number, response + footer, [], event="COMMENT")
+        elif not response and not inline_comments:
+            logger.info(f"Skip #{number}: nothing to post after sanitization")
         else:
             gh.post_comment(number, response + footer)
         gh.add_labels(number, labels)
@@ -446,7 +514,7 @@ def _parse_response(raw, is_pr):
 
     # Fallback: parse free-text format
     lines = raw.strip().split("\n")
-    result = {"action": "ESCALATE", "labels": [], "response": "No issues found. This PR can be approved." if not inline_comments else "", "read_files": [], "inline_comments": []}
+    result = {"action": "ESCALATE", "labels": [], "response": "", "read_files": [], "inline_comments": []}
     response_lines = []
 
     for line in lines:
@@ -595,6 +663,16 @@ def _format_pr_feedback(issue_comments, review_comments):
         body = c.get("body", "") or ""
         parts.append(f"{author} on {path}:{line}: {body}")
     return "\n".join(parts) if parts else "(no existing feedback)"
+
+
+def _extract_diff_files(diff_text):
+    """Extract the set of file paths touched in a unified diff."""
+    files = set()
+    for line in diff_text.split("\n"):
+        m = re.match(r'^diff --git a/.+ b/(.+)$', line)
+        if m:
+            files.add(m.group(1))
+    return files
 
 
 def _read_requested_files(gh, file_paths, cfg):
