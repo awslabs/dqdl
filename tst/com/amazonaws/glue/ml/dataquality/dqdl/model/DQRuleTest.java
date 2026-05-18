@@ -1038,6 +1038,33 @@ class DQRuleTest {
         // The modified rule uses the simplified condition
         assertEquals(modified.toString(), "RowCount > 20");
     }
+    @Test
+    void test_DuplicateRowCount() throws InvalidDataQualityRulesetException {
+        String rule1 = "DuplicateRowCount = 0";
+        String rule2 = "DuplicateRowCount < 10";
+        String rule3 = "DuplicateRowCount between 0 and 10";
+        String rule4 = "DuplicateRowCount = 0 where \"col-A > 100\"";
+        String rule5 = "DuplicateRowCount \"id\" = 0";
+        String rule6 = "DuplicateRowCount \"id\" \"name\" > 0";
+        String rule7 = "DuplicateRowCount \"id\" \"name\" = 0 where \"status = 'active'\"";
+
+        String ruleset = String.format("Rules = [" +
+                "(%s)," +
+                "(%s)," +
+                "(%s)," +
+                "(%s)," +
+                "(%s)," +
+                "(%s)," +
+                "%s ]", rule1, rule2, rule3, rule4, rule5, rule6, rule7);
+        List<DQRule> rules = parser.parse(ruleset).getRules();
+        assertEquals("DuplicateRowCount = 0", rules.get(0).toString());
+        assertEquals("DuplicateRowCount < 10", rules.get(1).toString());
+        assertEquals("DuplicateRowCount between 0 and 10", rules.get(2).toString());
+        assertEquals("DuplicateRowCount = 0 where \"col-A > 100\"", rules.get(3).toString());
+        assertEquals("DuplicateRowCount \"id\" = 0", rules.get(4).toString());
+        assertEquals("DuplicateRowCount \"id\" \"name\" > 0", rules.get(5).toString());
+        assertEquals("DuplicateRowCount \"id\" \"name\" = 0 where \"status = 'active'\"", rules.get(6).toString());
+    }
 
     private static Map<String, String> getStringStringMap() {
         Map<String, String> ruleIdToRuleMap = new HashMap<>();
