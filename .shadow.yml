@@ -1,0 +1,20 @@
+# Shadow engine config for awslabs/dqdl.
+
+codebase:
+  src_dir: src
+  file_ext: .java
+  test_dir: tst
+  language: java
+
+bot:
+  name: shadow   # renders the <!-- shadow:clean --> marker auto-approve.yml greps for
+  attribution: "Reviewed by Shadow · github.com/sudsali/shadow"
+  escalate_label: needs-human
+  max_replies: 2
+  max_runs_per_hour: 20
+
+models:
+  investigator: us.anthropic.claude-opus-4-7
+  critic: us.anthropic.claude-opus-4-7
+  reporter: us.anthropic.claude-haiku-4-5-20251001-v1:0
+  issue: us.anthropic.claude-sonnet-4-6
